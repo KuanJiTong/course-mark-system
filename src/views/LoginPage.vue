@@ -33,7 +33,7 @@
 export default {
   data() {
     return {
-      userId: '',
+      username: '',
       password: '',
       message: null,
       inputType: 'password',
@@ -153,26 +153,3 @@ button:hover {
   justify-content: center;
 }
 </style>
-
-<!-- <form>
-  <div v-if="message" class="alert alert-danger" role="alert">
-    {{ message }}
-  </div>
-  <div class="mb-3">
-    <label for="userId" class="form-label"><b>User ID</b></label>
-    <div class="form-input">
-      <i class="bi bi-person bi-solid"></i>
-      <input id="userId" type="text" class="form-control" v-model="userId" placeholder="Enter Matric No / Staff ID"/>
-    </div>
-  </div>
-
-  <div class="mb-3">
-    <label for="password" class="form-label"><b>Password</b></label>
-    <div class="form-input">
-      <i class="bi bi-key bi-solid"></i><i :class="`bi ${passIcon} bi-hide`" @click="pass"></i>
-      <input id="password" :type="inputType" class="form-control" v-model="password" placeholder="Enter Password"/>
-    </div>
-  </div>
-
-  <button type="submit" class="btn btn-red text-white w-100"><b>Login</b></button>
-</form> -->
