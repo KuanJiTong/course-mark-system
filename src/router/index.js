@@ -1,10 +1,10 @@
 // src/router/index.js
 import { createRouter, createWebHistory } from 'vue-router'
-// import HomePage from '../views/HomePage.vue'
+import HomePage from '../views/HomePage.vue'
 import LoginPage from '../views/LoginPage.vue'
 
 const routes = [
-//   { path: '/', name: 'Home', component: HomePage },
+  { path: '/home', name: 'Home', component: HomePage },
   { path: '/', name: 'Login', component: LoginPage },
 ]
 
@@ -16,13 +16,13 @@ const router = createRouter({
 })
 
 // router.beforeEach((to, from, next) => {
-//   const sessionData = sessionStorage.getItem('utmwebfc_session'); 
+//   //const sessionData = sessionStorage.getItem('utmwebfc_session'); 
 
-//   if (!sessionData && to.path !== '/login') {
-//     next({ path: '/login' });
-//   } else {
-//     next();
-//   }
+//   //if (!sessionData && to.path !== '/login') {
+//     next({ path: '/home' });
+//   //} else {
+//   //  next();
+//   //}
 // });
 
 export default router

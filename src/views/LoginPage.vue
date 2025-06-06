@@ -91,18 +91,15 @@ h2{
 }
 
 .logo-box{
-  position: relative;
   width: 100%;
   height: 150px;
-  text-align: center;
+  display:flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.logo {
-  position: absolute;
-  bottom:-180px;
-  right: -5px;
-  width: 100%;
-  height: 350%;
+.logo{
+  width: 65%;
 }
 
 input {
