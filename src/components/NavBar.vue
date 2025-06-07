@@ -97,6 +97,7 @@ nav{
     display: flex;
     justify-content: flex-start;
     align-items: center;
+    padding-left: 1rem !important;
 }
 
 .nav-items{
@@ -121,5 +122,26 @@ nav a{
 
 .logo{
   width:100px;
+}
+
+.bi-list{
+  cursor: pointer;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background-color: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.3s ease;
+}
+
+.bi-list:hover {
+  background-color: #b5b3b368; 
+}
+
+.bi-list:active {
+  transform: scale(0.9); 
+  background-color: #e0e0e0; 
 }
 </style>

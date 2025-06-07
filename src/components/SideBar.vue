@@ -1,5 +1,6 @@
 <template>
-  <div tabindex="0" class="sidebar" @focusout="$emit('closeSideBar')">
+  <div class="sidebar">
+    <i class="bi bi-x-lg" @click="$emit('toggle')"></i>
     <div class="logo-box">
       <router-link to="/home">
         <img src="../assets/logo CMMS.png" alt="Logo" class="logo" />
@@ -10,7 +11,7 @@
       
     <div>
       <SideBarTab 
-        v-for="(item,index) in filteredNavItems"
+        v-for="(item,index) in navItems"
         :key="index"
         :item="item"
         :isActive="item.name === activeTab"
@@ -48,28 +49,7 @@ export default {
   },
   data() {
     const navItems = [
-      { name: "Home", link: "/", icon: "home" },
-      { name: "My ShareLinks", link: "/my_sharelinks", icon: "mysharelinks" },
-      { name: "Shared With Me", link: "/shared_with_me", icon: "sharewithme" },
-      { name: "Favourites", link: "/favourites", icon: "favourites" },
-      { name: "Notification", link: "/notification", icon: "notification" },
-      { name: "Group", link: "/groups", icon: "group" },
-      {
-        name: "Resource Management",
-        link: "/admin/AllResources",
-        icon: "mysharelinks",
-        role: "Admin",
-      },
-      { name: 'Category', 
-        link: '/admin/category', 
-        icon: 'category', 
-        role: 'Admin' },
-      {
-        name: "User Log",
-        link: "/admin/UserLog",
-        icon: "sharewithme",
-        role: "Admin",
-      },
+      { name: "Home", link: "/home", icon: "bi bi-house-door-fill", access: "all" },
     ];
 
     return {
@@ -82,9 +62,62 @@ export default {
     
   },
 };
+// (Lecturer)
+// Manage Students
+// Manage Assessments
+// Final Exam Entry
+// Mark Summary
+// Student Analytics
+// Export Results
+// Notify Students
+// View Remark Requests
+
+// (Student)
+// Dashboard
+// My Marks
+// Progress & Breakdown
+// Compare with Coursemates
+// Class Rank & Percentile
+// What-If Simulator
+// Submit Remark Request
+
+// (AA)
+// My Advisees
+// View Student Marks
+// At-Risk Students
+// Consultation Notes
+// Export Reports
+
+// (Admin)
+// Manage Users
+// Assign Lecturers
+// System Logs
+// Reset Passwords
 </script>
 
 <style scoped>
+.bi-x-lg{
+  position: absolute;
+  cursor: pointer;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background-color: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.3s ease;
+}
+
+.bi-x-lg:hover {
+  background-color: #b5b3b368; 
+}
+
+.bi-x-lg:active {
+  transform: scale(0.9); 
+  background-color: #e0e0e0; 
+}
+
 .sidebar {
   display: flex;
   top: 0;

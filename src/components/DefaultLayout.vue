@@ -1,8 +1,8 @@
 <template>
   <div>
-    <NavBar @toggle="openSideBar"/>
+    <NavBar @toggle="toggleSideBar"/>
       <!-- Sidebar -->
-      <SideBar v-show="sideBarOpen" @closeSideBar="closeSideBar" :activeTab="activeTab" ref="sidebar"/>
+      <SideBar v-show="sideBarOpen" @toggle="toggleSideBar" :activeTab="activeTab" ref="sidebar"/>
       <!-- Main Content Area (Slot for dynamic content) -->
     <slot></slot> <!-- Content will be injected here -->
   </div>
@@ -28,13 +28,9 @@ export default {
     };
   },
   methods: {
-    openSideBar() {
-      this.sideBarOpen = true;
+    toggleSideBar() {
+      this.sideBarOpen = !this.sideBarOpen;
     },
-    closeSideBar(){
-      console.log('hi');
-      this.sideBarOpen = false;
-    }
   },
 };
 </script>
