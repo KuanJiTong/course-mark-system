@@ -9,19 +9,21 @@ import AddFinalExamMarksPage from '../views/AddFinalExamMarksPage.vue'
 import ViewFullMarkBreakdownPage from '../views/ViewFullMarkBreakdownPage.vue'
 import AddPerformanceTrendPage from '../views/AddPerformanceTrendPage.vue'
 import CoursePage from '../views/CoursePage';
+import SectionPage from '../views/SectionPage';
 
 const routes = [
   {
     path: '/',
     component: DefaultLayout,
     children: [
-      { path: '', name: 'Home', component: HomePage },
+      { path: '/', name: 'Home', component: HomePage },
       { path: '/enroll', name: 'Enroll', component: ManageStudentEnrollmentPage },
       { path: '/manage-component-marks', name: 'ComponentMarks', component: ComponentMarksPage },
       { path: '/add-final-exam-marks', name: 'AddFinalExamMarks', component: AddFinalExamMarksPage },
       { path: '/mark-breakdown', name: 'ViewFullMarkBreakdown', component: ViewFullMarkBreakdownPage },
       { path: '/performance-trend', name: 'AddPerformanceTrend', component: AddPerformanceTrendPage },
       { path: '/course-management', name: 'CoursePage', component: CoursePage },
+      { path: '/course-management/section/:courseId', name: 'SectionPage', component: SectionPage },
     ]
   },
   {

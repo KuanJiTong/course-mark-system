@@ -2,7 +2,7 @@
   <div class="sidebar">
     <i class="bi bi-x-lg" @click="$emit('toggle')"></i>
     <div class="logo-box">
-      <router-link to="/home">
+      <router-link to="/">
         <img src="../assets/logo CMMS.png" alt="Logo" class="logo" />
       </router-link>
     </div>

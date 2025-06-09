@@ -5,7 +5,7 @@
             <i class="bi bi-list" @click="$emit('toggle')"></i>
         </li>
         <li class="nav-items">
-            <router-link to="/home">
+            <router-link to="/">
             <img src="../assets/logo CMMS.png" alt="Logo" class="logo" />
             </router-link>
         </li>
@@ -52,9 +52,9 @@
 export default {
   data() {
     return {
-      imageUrl: null,
+      imageUrl: 'https://media.licdn.com/dms/image/v2/D4E03AQGIyRHDpvcumQ/profile-displayphoto-shrink_400_400/profile-displayphoto-shrink_400_400/0/1676035880861?e=1755129600&v=beta&t=eIPrfOSOkKmfUYfnKmaeKucBScrx0LknuOsEKJEYUlQ',
       isDropdownOpen: false,
-      userSession: { name: "User" },
+      userSession: { name: "Kwek Jia Cong" },
     };
   },
   methods: {
