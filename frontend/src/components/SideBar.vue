@@ -36,6 +36,7 @@ export default {
 
       //Admin
       { name: "Course", link: "/course-management", icon: "bi bi-book-fill", access: "admin" },
+      { name: "User", link: "/user-management", icon: "bi bi-person-fill", access: "admin" },
 
     ];
 

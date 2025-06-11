@@ -26,7 +26,6 @@ $app->options('/{routes:.+}', function ($request, $response) {
 // === Include route files ===
 require __DIR__ . '/../src/routes/course-management.php';
 require __DIR__ . '/../src/routes/section-management.php';
-
-// Add more: require __DIR__ . '/../src/routes/otherRoutes.php';
+require __DIR__ . '/../src/routes/user-management.php';
 
 $app->run();

@@ -15,11 +15,14 @@ $app->get('/section', function ($request, $response) {
         // Build SQL query with optional course_id filter
         $sql = "
             SELECT 
-                section_id AS sectionId,
-                section_number AS sectionNumber,
-                capacity
-            FROM sections
-            WHERE course_id = ?
+                s.section_id AS sectionId,
+                s.section_number AS sectionNumber,
+                s.capacity,
+                s.lecturer_id AS lecturerId,
+                CONCAT(u.title, ' ', u.name) AS lecturerName
+            FROM sections s
+            LEFT JOIN users u ON s.lecturer_id = u.user_id
+            WHERE s.course_id = ?
         ";
         
         $stmt = $pdo->prepare($sql);

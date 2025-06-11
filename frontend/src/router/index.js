@@ -10,6 +10,7 @@ import ViewFullMarkBreakdownPage from '../views/ViewFullMarkBreakdownPage.vue'
 import AddPerformanceTrendPage from '../views/AddPerformanceTrendPage.vue'
 import CoursePage from '../views/CoursePage';
 import SectionPage from '../views/SectionPage';
+import UserPage from '../views/UserPage';
 
 const routes = [
   {
@@ -24,6 +25,7 @@ const routes = [
       { path: '/performance-trend', name: 'AddPerformanceTrend', component: AddPerformanceTrendPage },
       { path: '/course-management', name: 'CoursePage', component: CoursePage },
       { path: '/course-management/section/:courseId', name: 'SectionPage', component: SectionPage },
+      { path: '/user-management', name: 'UserPage', component: UserPage },
     ]
   },
   {

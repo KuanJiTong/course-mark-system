@@ -104,7 +104,7 @@ $app->get('/course/{course_id}', function ($request, $response, $args) {
 
     $courseId = (int) $args['course_id'];
 
-    $stmt = $pdo->prepare("SELECT course_code AS courseCode, course_name AS courseName FROM courses WHERE course_id = :courseId");
+    $stmt = $pdo->prepare("SELECT course_code AS courseCode, course_name AS courseName, faculty_id AS facultyId FROM courses WHERE course_id = :courseId");
     $stmt->execute(['courseId' => $courseId]);
     $course = $stmt->fetch();
 
