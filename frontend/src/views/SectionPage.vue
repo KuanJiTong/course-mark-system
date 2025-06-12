@@ -90,6 +90,7 @@
                   class="bi bi-trash-fill text-danger mx-2"
                   data-bs-toggle="tooltip"
                   title="Delete"
+                  @click="deleteSection(section.sectionId)"
                 ></i>
               </template>
 
@@ -345,6 +346,30 @@ export default {
       } catch (err) {
         console.error('Request error:', err);
         alert('Network error.');
+      }
+    },
+    async deleteSection(sectionId) {
+      if (!confirm('Are you sure you want to delete this section?')) return;
+
+      try {
+        const response = await fetch(`http://localhost:3000/section/${sectionId}`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+          alert(result.message || 'Section deleted successfully.');
+          this.fetchAllSections();
+        } else {
+          alert(result.error || 'Failed to delete section.');
+        }
+      } catch (error) {
+        console.error('Delete error:', error);
+        alert('An error occurred while deleting.');
       }
     }
   },

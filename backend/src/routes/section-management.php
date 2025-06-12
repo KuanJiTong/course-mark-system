@@ -108,6 +108,24 @@ $app->patch('/section/{id}', function ($request, $response, $args) {
     }
 });
 
+// DELETE section
+$app->delete('/section/{id}', function (Request $request, Response $response, array $args) {
+    $pdo = getPDO();
+    $sectionId = (int)$args['id'];
 
+    // Optional: check if section exists before deleting
+    $stmtCheck = $pdo->prepare("SELECT section_id FROM sections WHERE section_id = ?");
+    $stmtCheck->execute([$sectionId]);
+    if (!$stmtCheck->fetch()) {
+        $response->getBody()->write(json_encode(["error" => "Section not found"]));
+        return $response->withStatus(404)->withHeader('Content-Type', 'application/json');
+    }
 
+    // Delete section
+    $stmt = $pdo->prepare("DELETE FROM sections WHERE section_id = ?");
+    $stmt->execute([$sectionId]);
+
+    $response->getBody()->write(json_encode(["message" => "Section deleted successfully"]));
+    return $response->withStatus(200)->withHeader('Content-Type', 'application/json');
+});
 

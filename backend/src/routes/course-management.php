@@ -157,4 +157,26 @@ $app->patch('/course/{id}', function ($request, $response, $args) {
     }
 });
 
+// DELETE course
+$app->delete('/course/{id}', function (Request $request, Response $response, array $args) {
+    $pdo = getPDO();
+    $courseId = (int)$args['id'];
+
+    // Optional: check if course exists before deleting
+    $stmtCheck = $pdo->prepare("SELECT course_id FROM sections WHERE course_id = ?");
+    $stmtCheck->execute([$courseId]);
+    if (!$stmtCheck->fetch()) {
+        $response->getBody()->write(json_encode(["error" => "Course not found"]));
+        return $response->withStatus(404)->withHeader('Content-Type', 'application/json');
+    }
+
+    // Delete section
+    $stmt = $pdo->prepare("DELETE FROM courses WHERE course_id = ?");
+    $stmt->execute([$courseId]);
+
+    $response->getBody()->write(json_encode(["message" => "Course deleted successfully"]));
+    return $response->withStatus(200)->withHeader('Content-Type', 'application/json');
+});
+
+
 

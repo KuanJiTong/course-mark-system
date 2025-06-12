@@ -29,7 +29,10 @@
       </tr>
     </thead>
     <tbody>
-      <tr v-if="users.length === 0" class="text-center text-muted">
+      <tr v-if="users.length === 0 && searchQuery" class="text-center text-muted">
+        <td colspan="8">No courses found</td>
+      </tr>
+      <tr v-else-if="users.length === 0" class="text-center text-muted">
         <td colspan="7">No users added yet.</td>
       </tr>
       <tr v-for="(user, index) in users" :key="user.userId" class="text-center text-muted">
@@ -49,7 +52,7 @@
           <div class="icon-row">
             <i class="bi bi-pencil-square text-primary mx-2" data-bs-toggle="tooltip" title="Edit" @click="openEditModal(user)"></i>
             <i class="bi bi-lock-fill mx-2" data-bs-toggle="tooltip" title="Reset Password"></i>
-            <i class="bi bi-trash-fill text-danger mx-2" data-bs-toggle="tooltip" title="Delete"></i>
+            <i class="bi bi-trash-fill text-danger mx-2" data-bs-toggle="tooltip" title="Delete" @click="deleteUser(user.userId)"></i>
           </div>
         </td>
       </tr>
@@ -183,6 +186,30 @@ export default {
         console.error('Error searching users:', error);
       }
     },
+    async deleteUser(userId) {
+      if (!confirm('Are you sure you want to delete this user?')) return;
+
+      try {
+        const response = await fetch(`http://localhost:3000/user/${userId}`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+          alert(result.message || 'User deleted successfully.');
+          this.fetchAllUsers();
+        } else {
+          alert(result.error || 'Failed to delete user.');
+        }
+      } catch (error) {
+        console.error('Delete error:', error);
+        alert('An error occurred while deleting.');
+      }
+    }
   }
 };
 </script>

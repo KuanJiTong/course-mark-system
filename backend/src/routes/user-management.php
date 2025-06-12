@@ -295,6 +295,29 @@ $app->patch('/user/{id}', function ($request, $response, $args) {
 });
 
 
+// DELETE user
+$app->delete('/user/{id}', function (Request $request, Response $response, array $args) {
+    $pdo = getPDO();
+    $userId = (int)$args['id'];
+
+    // Optional: check if user exists before deleting
+    $stmtCheck = $pdo->prepare("SELECT user_id FROM users WHERE user_id = ?");
+    $stmtCheck->execute([$userId]);
+    if (!$stmtCheck->fetch()) {
+        $response->getBody()->write(json_encode(["error" => "User not found"]));
+        return $response->withStatus(404)->withHeader('Content-Type', 'application/json');
+    }
+
+    // Delete user
+    $stmt = $pdo->prepare("DELETE FROM users WHERE user_id = ?");
+    $stmt->execute([$userId]);
+
+    $response->getBody()->write(json_encode(["message" => "User deleted successfully"]));
+    return $response->withStatus(200)->withHeader('Content-Type', 'application/json');
+});
+
+
+
 
 
 

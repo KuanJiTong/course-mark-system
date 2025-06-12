@@ -46,7 +46,10 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-if="courses.length === 0" class="text-center text-muted">
+          <tr v-if="courses.length === 0 && searchQuery" class="text-center text-muted">
+            <td colspan="8">No courses found</td>
+          </tr>
+          <tr v-else-if="courses.length === 0" class="text-center text-muted">
             <td colspan="8">No courses added yet.</td>
           </tr>
           <tr v-for="(course, index) in courses" :key="index">
@@ -79,7 +82,7 @@
                 <template v-if="editingCourseId !== course.courseId">
                   <i class="bi bi-pencil-square text-primary mx-2" data-bs-toggle="tooltip" title="Edit" @click="startEdit(course)"></i>
                   <i class="bi bi-card-list text-secondary mx-2" data-bs-toggle="tooltip" title="View Sections" @click="viewSections(course)"></i>
-                  <i class="bi bi-trash-fill text-danger mx-2" data-bs-toggle="tooltip" title="Delete"></i>
+                  <i class="bi bi-trash-fill text-danger mx-2" data-bs-toggle="tooltip" title="Delete" @click="deleteCourse(course.courseId)"></i>
                 </template>
 
                 <!-- When editing -->
@@ -245,6 +248,30 @@ export default {
         console.error('Error:', error);
       });
     },
+    async deleteCourse(courseId) {
+      if (!confirm('Are you sure you want to delete this course?')) return;
+
+      try {
+        const response = await fetch(`http://localhost:3000/course/${courseId}`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+          alert(result.message || 'Course deleted successfully.');
+          this.fetchAllCourses();
+        } else {
+          alert(result.error || 'Failed to delete course.');
+        }
+      } catch (error) {
+        console.error('Delete error:', error);
+        alert('An error occurred while deleting.');
+      }
+    }
   },
 };
 </script>
