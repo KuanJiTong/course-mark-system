@@ -20,7 +20,7 @@
                     type="checkbox"
                     class="form-check-input"
                     :value="Number(role.roleId)"
-                    v-model="user.roleIds"
+                    v-model.number="user.roleIds"
                   >
                   {{ role.roleName }}
                 </label>
@@ -107,14 +107,14 @@ export default {
         createdAt: '',
         facultyId: null,
         roleIds: []
-      },
+      },//{ "userId": "1", "loginId": "A22EC0062", "name": "KUAN JI TONG", "email": "kuantong@graduate.utm.my", "facultyAbbreviation": "FC", "roleNames": [ "Student" ] }
       roles: null,
       faculties: null
     };
   },
   computed: {
     isEdit() {
-      return !!this.userData.user_id;
+      return !!this.userData.userId;
     }
   },
   watch: {
@@ -134,7 +134,12 @@ export default {
 
       if (!valid) {
         alert('Only "Lecturer" and "Academic Advisor" can be selected together.');
-        this.user.roleIds = [];
+        if(this.isEdit){
+          this.user.roleIds = this.userData.roleIds;
+        }
+        else{
+          this.user.roleIds = [];
+        }
       }
     }
   },

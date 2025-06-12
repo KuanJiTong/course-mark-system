@@ -102,18 +102,17 @@ export default {
     openEditModal(user) {
       this.selectedUser = { ...user };
       this.showModal = true;
+      console.log(user);
     },
     closeModal() {
       this.showModal = false;
     },
     async handleSubmit(user) {
-      // if (user.userId) {
-      //   // Update existing user
-      //   const index = this.users.findIndex(u => u.user_id === user.user_id);
-      //   if (index !== -1) this.users.splice(index, 1, user);
-      // } else {
+      if (user.userId) {
+        this.updateUser(user);
+      } else {
         await this.addUser(user);
-      // }
+      }
       this.closeModal();
     },
     async addUser(newUser) {
@@ -141,6 +140,48 @@ export default {
       .catch(error => {
         console.error('Error:', error);
       });
+    },
+    async updateUser(user){
+      try {
+        const response = await fetch(`http://localhost:3000/user/${user.userId}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(user),
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          console.error('Update failed:', error);
+          alert('Failed to update user.');
+        } else {
+          alert('User updated successfully.');
+          this.fetchAllUsers();
+        }
+      } catch (err) {
+        console.error('Request error:', err);
+        alert('Network error.');
+      }
+    },
+    async searchUser() {
+      try {
+        const trimmedKeyword = this.searchQuery.trim();
+        if (trimmedKeyword === '') {
+          await this.fetchAllUsers();
+          return;
+        }
+
+        const url = `http://localhost:3000/users?keyword=${encodeURIComponent(trimmedKeyword)}`;
+        
+        const response = await fetch(url);
+        if (!response.ok) throw new Error('Failed to fetch users');
+
+        const data = await response.json();
+        this.users = data;
+      } catch (error) {
+        console.error('Error searching users:', error);
+      }
     },
   }
 };

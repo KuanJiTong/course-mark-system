@@ -49,17 +49,22 @@ $app->get('/faculty', function ($request, $response) {
     }
 });
 
-// GET users
+// GET users with optional keyword search
 $app->get('/users', function ($request, $response) {
     try {
         $pdo = getPDO();
+        $queryParams = $request->getQueryParams();
+        $keyword = isset($queryParams['keyword']) ? '%' . $queryParams['keyword'] . '%' : null;
 
         $sql = "SELECT
                     u.user_id AS userId,
                     u.login_id AS loginId,
+                    u.title,
                     u.name,
                     u.email,
+                    r.role_id AS roleId,
                     r.role_name AS roleName,
+                    f.faculty_id AS facultyId,
                     f.faculty_abbreviation AS facultyAbbreviation
                 FROM
                     users u
@@ -68,10 +73,19 @@ $app->get('/users', function ($request, $response) {
                 JOIN
                     roles r ON ur.role_id = r.role_id
                 JOIN
-                    faculty f ON u.faculty_id = f.faculty_id;
-                ";
-        
-        $stmt = $pdo->query($sql);
+                    faculty f ON u.faculty_id = f.faculty_id";
+
+        if ($keyword) {
+            $sql .= " WHERE u.name LIKE :keyword OR u.email LIKE :keyword OR u.login_id LIKE :keyword";
+        }
+
+        $stmt = $pdo->prepare($sql);
+
+        if ($keyword) {
+            $stmt->bindParam(':keyword', $keyword, PDO::PARAM_STR);
+        }
+
+        $stmt->execute();
         $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         $users = [];
@@ -79,25 +93,24 @@ $app->get('/users', function ($request, $response) {
         foreach ($rows as $row) {
             $userId = $row['userId'];
 
-            // Initialize user if not already in the array
             if (!isset($users[$userId])) {
                 $users[$userId] = [
                     'userId' => $row['userId'],
                     'loginId' => $row['loginId'],
                     'name' => $row['name'],
+                    'title' => $row['title'],
                     'email' => $row['email'],
+                    'facultyId' => $row['facultyId'],
                     'facultyAbbreviation' => $row['facultyAbbreviation'],
+                    'roleIds' => [],
                     'roleNames' => []
                 ];
             }
-
-            // Add roleName to the user's roleNames array
+            $users[$userId]['roleIds'][] = $row['roleId'];
             $users[$userId]['roleNames'][] = $row['roleName'];
         }
 
-        // Re-index the array if you want a plain numeric index
         $users = array_values($users);
-
 
         $response->getBody()->write(json_encode($users));
         return $response->withHeader('Content-Type', 'application/json');
@@ -110,6 +123,7 @@ $app->get('/users', function ($request, $response) {
         return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
     }
 });
+
 
 //POST user
 $app->post('/user', function (Request $request, Response $response) {
@@ -212,6 +226,70 @@ $app->get('/lecturers/{facultyId}', function ($request, $response, $args) {
             "error" => "Database error",
             "details" => $e->getMessage()
         ]));
+        return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
+    }
+});
+
+// PATCH user
+$app->patch('/user/{id}', function ($request, $response, $args) {
+    $pdo = getPDO();
+    $userId = (int)$args['id'];
+    $data = json_decode($request->getBody()->getContents(), true);
+
+    if (!$data) {
+        $response->getBody()->write(json_encode(['error' => 'Invalid JSON']));
+        return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
+    }
+
+    $data = camelToSnakeRecursive($data); 
+
+    if (empty($data)) {
+        $response->getBody()->write(json_encode(['error' => 'No data to update']));
+        return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
+    }
+
+    try {
+        $pdo->beginTransaction();
+
+        $fields = [];
+        $values = [];
+
+        if (isset($data['password'])) {
+            $data['password'] = password_hash($data['password'], PASSWORD_DEFAULT);
+        }
+
+        $allowed = ['login_id', 'name', 'title', 'email', 'faculty_id', 'password'];
+        foreach ($data as $key => $value) {
+            if (in_array($key, $allowed)) {
+                $fields[] = "$key = ?";
+                $values[] = $key === 'password' ? password_hash($value, PASSWORD_DEFAULT) : $value;
+            }
+        }
+
+        if (!empty($fields)) {
+            $values[] = $userId;
+            $sql = "UPDATE users SET " . implode(', ', $fields) . " WHERE user_id = ?";
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute($values);
+        }
+
+        // Update roles if role_ids is present
+        if (isset($data['role_ids']) && is_array($data['role_ids'])) {
+            $stmtDel = $pdo->prepare("DELETE FROM user_roles WHERE user_id = ?");
+            $stmtDel->execute([$userId]);
+
+            $stmtRole = $pdo->prepare("INSERT INTO user_roles (user_id, role_id) VALUES (?, ?)");
+            foreach ($data['role_ids'] as $roleId) {
+                $stmtRole->execute([$userId, $roleId]);
+            }
+        }
+
+        $pdo->commit();
+        $response->getBody()->write(json_encode(['message' => 'User updated']));
+        return $response->withStatus(200)->withHeader('Content-Type', 'application/json');
+    } catch (Exception $e) {
+        $pdo->rollBack();
+        $response->getBody()->write(json_encode(['error' => 'Failed to update', 'details' => $e->getMessage()]));
         return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
     }
 });
