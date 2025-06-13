@@ -48,7 +48,9 @@
             <span v-if="editingSectionId !== section.sectionId">{{ section.capacity }}</span>
             <input v-else style="width: 100%;" v-model="section.capacity" type="text" />
           </td>
-          <td></td>
+          <td>
+            <span>{{ section.studentCount }}</span>
+          </td>
           <td>
             <span v-if="assignLecturerSectionId !== section.sectionId">{{ section.lecturerName }}</span>
             <div v-else class="wrapper">

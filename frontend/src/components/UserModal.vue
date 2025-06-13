@@ -26,7 +26,7 @@
                 </label>
               </div>
             </div>
-            <div v-if="user.roleIds.includes(2) || user.roleIds.includes(3)" class="mb-3">
+            <div v-if="user.roleIds.includes(2)" class="mb-3">
               <label class="form-label">Title</label>
               <select
                       v-model="user.title"
@@ -73,6 +73,28 @@
                 </option>
               </select>
             </div>
+            <!-- Program for Student (role ID 4) -->
+            <div v-if="user.roleIds.includes(4)" class="mb-3">
+              <label class="form-label">Program</label>
+              <select v-model="user.program" class="form-select" required>
+                <option disabled value=''>Select Program</option>
+                <option v-for="program in programs" :key="program" :value="program">
+                  {{ program }}
+                </option>
+              </select>
+            </div>
+
+            <!-- Program for Student (role ID 4) -->
+            <div v-if="user.roleIds.includes(2)" class="mb-3">
+              <label class="form-label">Department</label>
+              <select v-model="user.department" class="form-select" required>
+                <option disabled value=''>Select Program</option>
+                <option v-for="department in departments" :key="department" :value="department">
+                  {{ department }}
+                </option>
+              </select>
+            </div>
+            
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-danger" @click="$emit('close')">Cancel</button>
@@ -106,10 +128,26 @@ export default {
         password: '',
         createdAt: '',
         facultyId: null,
+        program: '',
+        department: '',
         roleIds: []
       },//{ "userId": "1", "loginId": "A22EC0062", "name": "KUAN JI TONG", "email": "kuantong@graduate.utm.my", "facultyAbbreviation": "FC", "roleNames": [ "Student" ] }
       roles: null,
-      faculties: null
+      faculties: null,
+      programs: [
+        'Bachelor of Computer Science (Software Engineering)',
+        'Bachelor of Computer Science (Data Engineering)',
+        'Bachelor of Computer Science (Graphics & Multimedia Software)',
+        'Bachelor of Computer Science (Network & Security)',
+        'Bachelor of Computer Science (Bioinformatics)',
+        'Bachelor of Computer Science (Artificial Intelligence)'
+      ],
+      departments: [
+        'Applied Computing',
+        'Computer Science',
+        'Emergent Computing',
+        'Software Engineering'
+      ]
     };
   },
   computed: {
@@ -183,6 +221,8 @@ export default {
       this.user.createdAt = '';
       this.user.facultyId = null;
       this.user.roleIds = [];
+      this.user.program = '';
+      this.user.department = '';
     },
     handleSubmit() {
       this.user.createdAt = getCurrentDateTime();

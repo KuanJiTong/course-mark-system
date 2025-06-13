@@ -188,7 +188,6 @@ export default {
       this.editingCourseId = null;
     },
     viewSections(course) {
-      console.log(course.courseCode);
       this.$router.push({ name: 'SectionPage', params: { courseId: course.courseId} });
     },
     async updateCourse(course){

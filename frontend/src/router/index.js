@@ -3,7 +3,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import DefaultLayout from '../components/DefaultLayout.vue'
 import HomePage from '../views/HomePage.vue'
 import LoginPage from '../views/LoginPage.vue'
-import ManageStudentEnrollmentPage from '../views/ManageStudentEnrollmentPage.vue'
+import StudentEnrollmentPage from '../views/StudentEnrollmentPage.vue'
 import ComponentMarksPage from '../views/ComponentMarksPage.vue'
 import AddFinalExamMarksPage from '../views/AddFinalExamMarksPage.vue'
 import ViewFullMarkBreakdownPage from '../views/ViewFullMarkBreakdownPage.vue'
@@ -11,6 +11,7 @@ import AddPerformanceTrendPage from '../views/AddPerformanceTrendPage.vue'
 import CoursePage from '../views/CoursePage';
 import SectionPage from '../views/SectionPage';
 import UserPage from '../views/UserPage';
+import LecturerCoursePage from '../views/LecturerCoursePage'
 
 const routes = [
   {
@@ -18,7 +19,6 @@ const routes = [
     component: DefaultLayout,
     children: [
       { path: '/', name: 'Home', component: HomePage },
-      { path: '/enroll', name: 'Enroll', component: ManageStudentEnrollmentPage },
       { path: '/manage-component-marks', name: 'ComponentMarks', component: ComponentMarksPage },
       { path: '/add-final-exam-marks', name: 'AddFinalExamMarks', component: AddFinalExamMarksPage },
       { path: '/mark-breakdown', name: 'ViewFullMarkBreakdown', component: ViewFullMarkBreakdownPage },
@@ -26,6 +26,8 @@ const routes = [
       { path: '/course-management', name: 'CoursePage', component: CoursePage },
       { path: '/course-management/section/:courseId', name: 'SectionPage', component: SectionPage },
       { path: '/user-management', name: 'UserPage', component: UserPage },
+      { path: '/lecturer-course-management', name: 'LecturerCoursePage', component: LecturerCoursePage },
+      { path: '/lecturer-course-management/students/:sectionId', name: 'StudentEnrollment', component: StudentEnrollmentPage },
     ]
   },
   {

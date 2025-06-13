@@ -27,5 +27,8 @@ $app->options('/{routes:.+}', function ($request, $response) {
 require __DIR__ . '/../src/routes/course-management.php';
 require __DIR__ . '/../src/routes/section-management.php';
 require __DIR__ . '/../src/routes/user-management.php';
+require __DIR__ . '/../src/routes/lecturer-course-management.php';
+require __DIR__ . '/../src/routes/student-enrollment.php';
+
 
 $app->run();

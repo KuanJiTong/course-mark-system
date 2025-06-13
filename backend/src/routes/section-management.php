@@ -19,10 +19,14 @@ $app->get('/section', function ($request, $response) {
                 s.section_number AS sectionNumber,
                 s.capacity,
                 s.lecturer_id AS lecturerId,
-                CONCAT(u.title, ' ', u.name) AS lecturerName
+                COUNT(e.enrollment_id) AS studentCount,
+                CONCAT(l.title, ' ', u.name) AS lecturerName
             FROM sections s
-            LEFT JOIN users u ON s.lecturer_id = u.user_id
+            LEFT JOIN lecturers l ON s.lecturer_id = l.lecturer_id
+            LEFT JOIN users u ON u.user_id = l.user_id
+            LEFT JOIN enrollment e ON s.section_id = e.section_id
             WHERE s.course_id = ?
+            GROUP BY s.section_id, s.section_number, s.capacity, s.lecturer_id, l.title, u.name
         ";
         
         $stmt = $pdo->prepare($sql);

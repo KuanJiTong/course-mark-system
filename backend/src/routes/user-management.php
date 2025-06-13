@@ -59,8 +59,11 @@ $app->get('/users', function ($request, $response) {
         $sql = "SELECT
                     u.user_id AS userId,
                     u.login_id AS loginId,
-                    u.title,
-                    u.name,
+                    l.title,  -- Will be NULL for non-lecturers
+                    CASE
+                        WHEN l.title IS NOT NULL THEN CONCAT(l.title, ' ', u.name)
+                        ELSE u.name
+                    END AS name,
                     u.email,
                     r.role_id AS roleId,
                     r.role_name AS roleName,
@@ -73,7 +76,9 @@ $app->get('/users', function ($request, $response) {
                 JOIN
                     roles r ON ur.role_id = r.role_id
                 JOIN
-                    faculty f ON u.faculty_id = f.faculty_id";
+                    faculty f ON u.faculty_id = f.faculty_id
+                LEFT JOIN
+                    lecturers l ON u.user_id = l.user_id";
 
         if ($keyword) {
             $sql .= " WHERE u.name LIKE :keyword OR u.email LIKE :keyword OR u.login_id LIKE :keyword";
@@ -106,8 +111,14 @@ $app->get('/users', function ($request, $response) {
                     'roleNames' => []
                 ];
             }
-            $users[$userId]['roleIds'][] = $row['roleId'];
-            $users[$userId]['roleNames'][] = $row['roleName'];
+
+            // Avoid duplicate roles
+            if (!in_array($row['roleId'], $users[$userId]['roleIds'])) {
+                $users[$userId]['roleIds'][] = $row['roleId'];
+            }
+            if (!in_array($row['roleName'], $users[$userId]['roleNames'])) {
+                $users[$userId]['roleNames'][] = $row['roleName'];
+            }
         }
 
         $users = array_values($users);
@@ -125,20 +136,22 @@ $app->get('/users', function ($request, $response) {
 });
 
 
-//POST user
+// POST user
 $app->post('/user', function (Request $request, Response $response) {
     $pdo = getPDO();
     $data = json_decode($request->getBody()->getContents(), true);
 
     // Extract and validate input
     $loginId    = $data['loginId'] ?? null;
-    $title      = $data['title'] ?? '';
+    $title      = $data['title'] ?? null;
     $name       = $data['name'] ?? null;
     $email      = $data['email'] ?? null;
     $password   = $data['password'] ?? null;
     $facultyId  = $data['facultyId'] ?? null;
     $createdAt  = $data['createdAt'] ?? null;
     $roleIds    = $data['roleIds'] ?? [];
+    $program    = $data['program'] ?? null; // for students
+    $department = $data['department'] ?? null; //lecturer
 
     if (!$loginId || !$name || !$email || !$password || !$createdAt || $facultyId === null || !is_array($roleIds)) {
         $response->getBody()->write(json_encode(["error" => "Missing required fields"]));
@@ -151,16 +164,24 @@ $app->post('/user', function (Request $request, Response $response) {
         // Hash password
         $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
 
-        // Insert user
-        $stmt = $pdo->prepare("INSERT INTO users (login_id, title, name, email, password, faculty_id, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)");
-        $stmt->execute([$loginId, $title, $name, $email, $hashedPassword, $facultyId, $createdAt]);
+        // Insert into users table
+        $stmt = $pdo->prepare("INSERT INTO users (login_id, name, email, password, faculty_id, created_at) VALUES (?, ?, ?, ?, ?, ?)");
+        $stmt->execute([$loginId, $name, $email, $hashedPassword, $facultyId, $createdAt]);
 
         $userId = $pdo->lastInsertId();
 
-        // Insert user roles
+        // Assign roles and insert into lecturer/student table based on role
         $stmtRole = $pdo->prepare("INSERT INTO user_roles (user_id, role_id) VALUES (?, ?)");
         foreach ($roleIds as $roleId) {
             $stmtRole->execute([$userId, $roleId]);
+
+            if ($roleId == 2) { // Lecturer
+                $stmtLecturer = $pdo->prepare("INSERT INTO lecturers (user_id, staff_no, title, department) VALUES (?, ?, ?, ?)");
+                $stmtLecturer->execute([$userId, $loginId, $title, $department]);
+            } elseif ($roleId == 4) { // Student
+                $stmtStudent = $pdo->prepare("INSERT INTO students (user_id, matric_no, program) VALUES (?, ?, ?)");
+                $stmtStudent->execute([$userId, $loginId, $program]);
+            }
         }
 
         $pdo->commit();
@@ -171,6 +192,7 @@ $app->post('/user', function (Request $request, Response $response) {
         ]));
 
         return $response->withStatus(201)->withHeader('Content-Type', 'application/json');
+
     } catch (Exception $e) {
         $pdo->rollBack();
         $response->getBody()->write(json_encode([
@@ -181,6 +203,7 @@ $app->post('/user', function (Request $request, Response $response) {
     }
 });
 
+
 // GET lecturers by faculty with optional search
 $app->get('/lecturers/{facultyId}', function ($request, $response, $args) {
     try {
@@ -190,25 +213,22 @@ $app->get('/lecturers/{facultyId}', function ($request, $response, $args) {
         $keyword = isset($queryParams['keyword']) ? '%' . $queryParams['keyword'] . '%' : null;
 
         $sql = "SELECT
-                    u.user_id AS lecturerId,
-                    CONCAT(u.title, ' ', u.name) AS lecturerName,
+                    l.lecturer_id AS lecturerId,
+                    CONCAT(l.title, ' ', u.name) AS lecturerName,
                     u.email
                 FROM
                     users u
                 JOIN
-                    user_roles ur ON u.user_id = ur.user_id
-                JOIN
-                    roles r ON ur.role_id = r.role_id
+                    lecturers l ON u.user_id = l.user_id
                 JOIN
                     faculty f ON u.faculty_id = f.faculty_id
                 WHERE 
-                    r.role_name = 'Lecturer' 
-                    AND f.faculty_id = ?
+                    f.faculty_id = ?
         ";
 
         // Add search filter if provided
         if ($keyword) {
-            $sql .= " AND (CONCAT(u.title, ' ', u.name) LIKE ? OR u.email LIKE ?)";
+            $sql .= " AND (CONCAT(l.title, ' ', u.name) LIKE ? OR u.email LIKE ?)";
             $stmt = $pdo->prepare($sql);
             $stmt->execute([$facultyId, $keyword, $keyword]);
         } else {

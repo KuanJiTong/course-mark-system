@@ -30,7 +30,7 @@
     </thead>
     <tbody>
       <tr v-if="users.length === 0 && searchQuery" class="text-center text-muted">
-        <td colspan="8">No courses found</td>
+        <td colspan="8">No users found</td>
       </tr>
       <tr v-else-if="users.length === 0" class="text-center text-muted">
         <td colspan="7">No users added yet.</td>
