@@ -2,8 +2,8 @@
 function getPDO() {
     $host = 'localhost';
     $db   = 'cmms'; 	// nama database anda
-    $user = 'root';		//userid
-    $pass = '123123';		//password anda
+    $user = 'root1';		//userid
+    $pass = '';		//password anda
     $charset = 'utf8mb4';
 
     $dsn = "mysql:host=$host;dbname=$db;charset=$charset";

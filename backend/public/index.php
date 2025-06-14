@@ -9,6 +9,8 @@ use Slim\Factory\AppFactory;
 $app = AppFactory::create();
 $app->addBodyParsingMiddleware();
 
+
+
 // CORS middleware
 $app->add(function ($request, $handler) {
     $response = $handler->handle($request);
@@ -29,6 +31,7 @@ require __DIR__ . '/../src/routes/section-management.php';
 require __DIR__ . '/../src/routes/user-management.php';
 require __DIR__ . '/../src/routes/lecturer-course-management.php';
 require __DIR__ . '/../src/routes/student-enrollment.php';
+require __DIR__ . '/../src/routes/manage-component-marks.php';
 
 
 $app->run();
