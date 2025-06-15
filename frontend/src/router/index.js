@@ -12,6 +12,8 @@ import CoursePage from '../views/CoursePage';
 import SectionPage from '../views/SectionPage';
 import UserPage from '../views/UserPage';
 import LecturerCoursePage from '../views/LecturerCoursePage'
+import ViewMarkBreakdownPage from '../views/ViewMarkBreakdownPage'
+
 
 const routes = [
   {
@@ -28,6 +30,7 @@ const routes = [
       { path: '/user-management', name: 'UserPage', component: UserPage },
       { path: '/lecturer-course-management', name: 'LecturerCoursePage', component: LecturerCoursePage },
       { path: '/lecturer-course-management/students/:sectionId', name: 'StudentEnrollment', component: StudentEnrollmentPage },
+      { path: '/view-mark-breakdown', name: 'ViewMarkBreakdownPage', component: ViewMarkBreakdownPage },
     ]
   },
   {
