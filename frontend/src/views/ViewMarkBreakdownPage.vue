@@ -44,7 +44,10 @@
         </tr>
       </tbody>
     </table>
-
+    <!-- Export CSV Button -->
+    <button v-if="marks.length" @click="exportCSV" class="export-btn">
+    Export Marks as CSV
+    </button>
     <div v-if="errorMessage" class="error-message">{{ errorMessage }}</div>
   </div>
 </template>
@@ -108,6 +111,24 @@ export default {
         },
     calculateTotal(coursework, finalExam) {
       return ((coursework) + (finalExam)).toFixed(2);
+    },
+    exportCSV() {
+        if (!this.selectedCourseId || !this.selectedSectionId) {
+        alert("Please select both course and section.");
+        return;
+        }
+
+        const url = `http://localhost:3000/all_marks_csv?course_id=${this.selectedCourseId}&section_id=${this.selectedSectionId}`;
+
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute(
+        'download',
+        `marks_course_${this.selectedCourseId}_section_${this.selectedSectionId}.csv`
+        );
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
     }
   },
   mounted() {
