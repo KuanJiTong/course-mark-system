@@ -6,7 +6,7 @@
         <strong>Total Component Marks:</strong> {{ totalComponentMark }} / 70
       </div>
     </div>
-
+    <button class="btn btn-primary">Test Bootstrap Button</button>
     <select v-model="selectedCourseId" class="input-field" v-if="courses.length">
       <option disabled value="">-- Select Course --</option>
       <option v-for="course in courses" :key="course.course_id" :value="course.course_id">
