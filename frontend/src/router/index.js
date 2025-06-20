@@ -13,6 +13,7 @@ import SectionPage from '../views/SectionPage';
 import UserPage from '../views/UserPage';
 import LecturerCoursePage from '../views/LecturerCoursePage'
 import ViewMarkBreakdownPage from '../views/ViewMarkBreakdownPage'
+import ComponentMarkPage from '@/views/ComponentMarkPage.vue';
 
 
 const routes = [
@@ -31,6 +32,7 @@ const routes = [
       { path: '/lecturer-course-management', name: 'LecturerCoursePage', component: LecturerCoursePage },
       { path: '/lecturer-course-management/students/:sectionId', name: 'StudentEnrollment', component: StudentEnrollmentPage },
       { path: '/view-mark-breakdown', name: 'ViewMarkBreakdownPage', component: ViewMarkBreakdownPage },
+      { path: '/component-marks/:componentId', name: 'ComponentMarkPage', component: ComponentMarkPage },
     ]
   },
   {

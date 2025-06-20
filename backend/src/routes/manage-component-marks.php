@@ -153,3 +153,19 @@ $app->get('/sections', function (Request $request, Response $response) {
     $response->getBody()->write(json_encode($data));
     return $response->withHeader('Content-Type', 'application/json');
 });
+
+$app->get('/components/{id}', function (Request $request, Response $response, $args) {
+    $pdo = getPDO();
+    $stmt = $pdo->prepare("SELECT * FROM components WHERE component_id = ?");
+    $stmt->execute([$args['id']]);
+    $component = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if (!$component) {
+        $response->getBody()->write(json_encode(['error' => 'Component not found']));
+        return $response->withHeader('Content-Type', 'application/json')->withStatus(404);
+    }
+
+    $response->getBody()->write(json_encode($component));
+    return $response->withHeader('Content-Type', 'application/json');
+});
+

@@ -1,12 +1,16 @@
 <template>
   <div class="component-marks-page">
     <div class="page-header">
-      <h2>Continuous Assessment Components (70%)</h2>
+      <h2>Continuous Assessment Components</h2>
       <div v-if="components.length" style="margin-top: 10px;">
-        <strong>Total Component Marks:</strong> {{ totalComponentMark }} / 70
+        <strong>Total Component Marks:</strong>
+{{ totalComponentMark }} / 
+<span v-if="maxComponentMark">{{ maxComponentMark }}</span>
+<span v-else class="text-danger">Not Available</span>
+
       </div>
     </div>
-    <button class="btn btn-primary">Test Bootstrap Button</button>
+
     <select v-model="selectedCourseId" class="input-field" v-if="courses.length">
       <option disabled value="">-- Select Course --</option>
       <option v-for="course in courses" :key="course.course_id" :value="course.course_id">
@@ -34,35 +38,19 @@
           <tr>
             <th>Component</th>
             <th>Max Mark</th>
-            <th>Student ID</th>
-            <th>Mark</th>
             <th>Actions</th>
           </tr>
         </thead>
         <tbody>
-          <template v-for="(component, cIndex) in components" :key="cIndex">
-            <tr v-for="(entry, sIndex) in component.marks" :key="`${cIndex}-${sIndex}`">
-              <td>{{ component.component_name }}</td>
-              <td>{{ component.max_mark }}</td>
-              <td>{{ entry.student_id }} - {{ entry.student_name }}</td>
-              <td>
-                <input
-                  type="number"
-                  v-model.number="entry.mark"
-                  class="input-field"
-                  placeholder="Enter Mark"
-                />
-              </td>
-              <td>
-                <button
-                  @click="saveMark(component.component_id, entry.student_id, entry.mark)"
-                  class="btn save-btn"
-                >
-                  💾 Save Mark
-                </button>
-              </td>
-            </tr>
-          </template>
+          <tr v-for="component in components" :key="component.component_id">
+            <td>{{ component.component_name }}</td>
+            <td>{{ component.max_mark }}</td>
+            <td>
+              <router-link :to="{ name: 'ComponentMarkPage', params: { componentId: component.component_id } }" class="btn btn-primary">
+                ➡ Enter Marks
+              </router-link>
+            </td>
+          </tr>
         </tbody>
       </table>
     </div>
@@ -83,19 +71,26 @@ export default {
         component_name: '',
         max_mark: ''
       },
+      selectedCourse: null,
       components: [],
       marks: []
     };
   },
 
   computed: {
-    totalComponentMark() {
-      return this.components.reduce((sum, c) => {
-        const mark = parseFloat(c.max_mark);
-        return sum + (isNaN(mark) ? 0 : mark);
-      }, 0);
-    }
+  selectedCourse() {
+    return this.courses.find(c => c.course_id === this.selectedCourseId) || null;
   },
+  totalComponentMark() {
+    return this.components.reduce((sum, c) => {
+      const mark = parseFloat(c.max_mark);
+      return sum + (isNaN(mark) ? 0 : mark);
+    }, 0);
+  },
+  maxComponentMark() {
+    return this.selectedCourse?.max_cm || 0;
+  }
+},
 
   methods: {
     async fetchSections() {
@@ -106,21 +101,24 @@ export default {
       this.sections = data;
     },
     async fetchCourses() {
-      try {
-        const res = await fetch(`http://localhost:3000/courses`);
-        const data = await res.json();
-        this.courses = data;
-      } catch (err) {
-        console.error("Failed to fetch courses:", err);
-        alert("Failed to load courses. Check your backend.");
-      }
-    }, 
+  try {
+    const res = await fetch(`http://localhost:3000/courses`);
+    const data = await res.json();
+    this.courses = data;
+
+    // Set selectedCourse if already selected
+    if (this.selectedCourseId) {
+      this.selectedCourse = this.courses.find(c => c.course_id === this.selectedCourseId);
+    }
+
+  } catch (err) {
+    console.error("Failed to fetch courses:", err);
+    alert("Failed to load courses. Check your backend.");
+  }
+},
 
     async fetchComponents() {
-      if (!this.selectedCourseId || !this.selectedSectionId) {
-        alert("Please select both course and section.");
-        return;
-      }
+      if (!this.selectedCourseId || !this.selectedSectionId) return;
 
       try {
         const [componentsRes, studentsRes, marksRes] = await Promise.all([
@@ -166,10 +164,7 @@ export default {
 
 
     async addComponent() {
-      if (!this.selectedCourseId || !this.selectedSectionId) {
-        alert("Please select both course and section.");
-        return;
-      }
+      if (!this.selectedCourseId || !this.selectedSectionId) return;
 
       const payload = {
         course_id: this.selectedCourseId,
@@ -237,25 +232,36 @@ export default {
 
   },
    watch: {
-    selectedCourseId(newVal) {
-      if (newVal) {
-        this.fetchComponents();
-        this.fetchSections();      // 🔁 Load sections after course selected
-        this.components = [];      // 🧹 Clear components until section is picked
-      } else {
-        this.sections = [];
-        this.components = [];
-      }
-    },
-
-    selectedSectionId(newVal) {
-      if (newVal) {
-        this.fetchComponents();   // 🔁 Load components after section selected
-      }
+  selectedCourseId(newVal) {
+    if (newVal) {
+      localStorage.setItem('selectedCourseId', newVal);
+      this.selectedCourse = this.courses.find(c => c.course_id === newVal) || null;
+      this.fetchComponents();
+      this.fetchSections();
+      this.components = [];
+    } else {
+      localStorage.removeItem('selectedCourseId');
+      this.selectedCourse = null;
+      this.sections = [];
+      this.components = [];
     }
   },
+  selectedSectionId(newVal) {
+    if (newVal) {
+      localStorage.setItem('selectedSectionId', newVal); // ⬅ Save
+      this.fetchComponents();
+    } else {
+      localStorage.removeItem('selectedSectionId');
+    }
+  }
+},
   mounted() {
-    this.fetchCourses();
+   this.fetchCourses().then(() => {
+      const savedCourseId = localStorage.getItem('selectedCourseId');
+      const savedSectionId = localStorage.getItem('selectedSectionId');
+      if (savedCourseId) this.selectedCourseId = savedCourseId;
+      if (savedSectionId) this.selectedSectionId = savedSectionId;
+    });
   }
 };
 </script>
@@ -290,10 +296,6 @@ export default {
   background-color: #4CAF50;
   color: white;
 }
-.save-btn {
-  background-color: #2196F3;
-  color: white;
-}
 .marks-table {
   width: 100%;
   border-collapse: collapse;
@@ -304,4 +306,4 @@ export default {
   padding: 10px;
   text-align: center;
 }
-</style>
+</style>  
