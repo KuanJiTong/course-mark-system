@@ -55,10 +55,10 @@
 
 
 <script>
-import DefaultLayout from '../components/DefaultLayout.vue';
+// import DefaultLayout from '../components/DefaultLayout.vue';
 
 export default {
-  components: { DefaultLayout },
+  // components: { DefaultLayout },
   data() {
     return {
       selectedCourseId: '',
