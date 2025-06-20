@@ -78,9 +78,7 @@ export default {
   },
 
   computed: {
-  selectedCourse() {
-    return this.courses.find(c => c.course_id === this.selectedCourseId) || null;
-  },
+  
   totalComponentMark() {
     return this.components.reduce((sum, c) => {
       const mark = parseFloat(c.max_mark);
@@ -89,6 +87,12 @@ export default {
   },
   maxComponentMark() {
     return this.selectedCourse?.max_cm || 0;
+  },
+  totalComponentMark() {
+    return this.components.reduce((sum, c) => {
+      const mark = parseFloat(c.max_mark);
+      return sum + (isNaN(mark) ? 0 : mark);
+    }, 0);
   }
 },
 

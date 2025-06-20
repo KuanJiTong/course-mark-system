@@ -102,7 +102,7 @@ $app->post('/marks', function (Request $request, Response $response) {
 
 
 
-$app->get('/courses', function ($request, $response, $args) {
+$app->get('/fetchCourses', function ($request, $response, $args) {
     $pdo = getPDO();
     $stmt = $pdo->query("SELECT * FROM courses");
     $courses = $stmt->fetchAll(PDO::FETCH_ASSOC);

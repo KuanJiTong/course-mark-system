@@ -1,6 +1,6 @@
 <template>
   <div class="final-exam-marks">
-    <h1>Add Final Exam Marks (30%)</h1>
+    <h1>Add Final Exam Marks ({{ maxFinalMark }}%)</h1>
 
     <!-- Course and Section Selection -->
     <div class="form-group">
@@ -36,8 +36,15 @@
       </div>
 
       <div class="form-group">
-        <label for="marks">Final Exam Mark (out of 30):</label>
-        <input type="number" id="marks" v-model.number="marks" min="0" max="30" required />
+        <label for="marks">Final Exam Mark (out of {{ maxFinalMark }}):</label>
+<input
+  type="number"
+  id="marks"
+  v-model.number="marks"
+  :max="maxFinalMark"
+  min="0"
+  required
+/>
       </div>
 
       <button type="submit">💾 Save Marks</button>
@@ -72,6 +79,14 @@ export default {
       errorMessage: ''
     };
   },
+  computed: {
+  selectedCourse() {
+    return this.courses.find(c => c.course_id === this.selectedCourseId) || null;
+  },
+  maxFinalMark() {
+    return this.selectedCourse?.max_fm;
+  }
+},
   methods: {
     async fetchCourses() {
       try {
@@ -132,11 +147,32 @@ export default {
       } catch (err) {
         this.errorMessage = 'Error submitting data.';
       }
-    }
+    },
+    async fetchExistingMark() {
+  if (!this.studentId || !this.selectedCourseId || !this.selectedSectionId) return;
+
+  try {
+    const res = await fetch(`http://localhost:3000/final_exam/student?student_id=${this.studentId}&course_id=${this.selectedCourseId}&section_id=${this.selectedSectionId}`);
+    const data = await res.json();
+    this.marks = data.mark ?? ''; // Set marks to value or empty string
+  } catch (err) {
+    console.error("Failed to fetch existing mark", err);
+    this.errorMessage = 'Could not fetch existing mark.';
+  }
+}
   },
   mounted() {
     this.fetchCourses();
+  },
+  watch: {
+  studentId(newVal) {
+    if (newVal) {
+      this.fetchExistingMark();
+    } else {
+      this.marks = '';
+    }
   }
+}
 };
 </script>
 

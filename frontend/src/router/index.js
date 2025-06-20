@@ -15,7 +15,6 @@ import LecturerCoursePage from '../views/LecturerCoursePage'
 import ViewMarkBreakdownPage from '../views/ViewMarkBreakdownPage'
 import ComponentMarkPage from '@/views/ComponentMarkPage.vue';
 
-
 const routes = [
   {
     path: '/',
@@ -33,6 +32,7 @@ const routes = [
       { path: '/lecturer-course-management/students/:sectionId', name: 'StudentEnrollment', component: StudentEnrollmentPage },
       { path: '/view-mark-breakdown', name: 'ViewMarkBreakdownPage', component: ViewMarkBreakdownPage },
       { path: '/component-marks/:componentId', name: 'ComponentMarkPage', component: ComponentMarkPage },
+
     ]
   },
   {
