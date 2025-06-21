@@ -169,3 +169,34 @@ $app->get('/components/{id}', function (Request $request, Response $response, $a
     return $response->withHeader('Content-Type', 'application/json');
 });
 
+$app->put('/components/{id}', function (Request $request, Response $response, $args) {
+    $pdo = getPDO();
+    $data = $request->getParsedBody();
+    $componentId = $args['id'];
+
+    if (!isset($data['component_name'], $data['max_mark'])) {
+        $response->getBody()->write(json_encode(['error' => 'Missing fields']));
+        return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
+    }
+
+    $stmt = $pdo->prepare("UPDATE components SET component_name = ?, max_mark = ? WHERE component_id = ?");
+    $stmt->execute([$data['component_name'], $data['max_mark'], $componentId]);
+
+    $response->getBody()->write(json_encode(['message' => 'Component updated']));
+    return $response->withHeader('Content-Type', 'application/json');
+});
+
+
+$app->delete('/components/{id}', function (Request $request, Response $response, $args) {
+    $pdo = getPDO();
+    $componentId = $args['id'];
+
+    // Optional: delete related marks first
+    $pdo->prepare("DELETE FROM marks WHERE component_id = ?")->execute([$componentId]);
+
+    $stmt = $pdo->prepare("DELETE FROM components WHERE component_id = ?");
+    $stmt->execute([$componentId]);
+
+    $response->getBody()->write(json_encode(['message' => 'Component deleted']));
+    return $response->withHeader('Content-Type', 'application/json');
+});

@@ -32,6 +32,13 @@
       <button @click="addComponent" class="btn add-btn">➕ Add Component</button>
     </div>
 
+    <div v-if="editMode" class="component-form edit-form">
+    <input v-model="editComponentData.component_name" class="input-field" />
+    <input v-model="editComponentData.max_mark" type="number" class="input-field" />
+    <button @click="updateComponent" class="btn add-btn">✅ Update</button>
+    <button @click="cancelEdit" class="btn">❌ Cancel</button>
+  </div>
+
     <div class="marks-table-container" v-if="components.length">
       <table class="marks-table">
         <thead>
@@ -46,9 +53,15 @@
             <td>{{ component.component_name }}</td>
             <td>{{ component.max_mark }}</td>
             <td>
-              <router-link :to="{ name: 'ComponentMarkPage', params: { componentId: component.component_id } }" class="btn btn-primary">
+              <router-link
+                :to="{ name: 'ComponentMarkPage', params: { componentId: component.component_id } }"
+                class="btn btn-primary"
+              >
                 ➡ Enter Marks
               </router-link>
+
+              <button @click="editComponent(component)" class="btn btn-warning">✏ Edit</button>
+              <button @click="deleteComponent(component.component_id)" class="btn btn-danger">🗑 Delete</button>
             </td>
           </tr>
         </tbody>
@@ -73,21 +86,22 @@ export default {
       },
       selectedCourse: null,
       components: [],
-      marks: []
+      marks: [],
+      editMode: false,
+      editComponentData: {
+        component_id: null,
+        component_name: '',
+        max_mark: ''
+      }
     };
   },
 
   computed: {
   
-  totalComponentMark() {
-    return this.components.reduce((sum, c) => {
-      const mark = parseFloat(c.max_mark);
-      return sum + (isNaN(mark) ? 0 : mark);
-    }, 0);
-  },
   maxComponentMark() {
-    return this.selectedCourse?.max_cm || 0;
-  },
+  const cm = this.selectedCourse?.max_cm;
+  return cm !== null && cm !== undefined ? cm : null;
+},
   totalComponentMark() {
     return this.components.reduce((sum, c) => {
       const mark = parseFloat(c.max_mark);
@@ -105,6 +119,8 @@ export default {
       this.sections = data;
     },
     async fetchCourses() {
+      console.log("Courses:", this.courses);
+
   try {
     const res = await fetch(`http://localhost:3000/courses`);
     const data = await res.json();
@@ -232,7 +248,49 @@ export default {
           component.mark = markRecord.mark;
         }
       });
-    }
+    },editComponent(component) {
+  this.editMode = true;
+  this.editComponentData = { ...component };
+},
+
+cancelEdit() {
+  this.editMode = false;
+  this.editComponentData = { component_id: null, component_name: '', max_mark: '' };
+},
+
+async updateComponent() {
+  try {
+    const res = await fetch(`http://localhost:3000/components/${this.editComponentData.component_id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(this.editComponentData)
+    });
+    const data = await res.json();
+    alert(data.message || 'Component updated');
+    this.cancelEdit();
+    this.fetchComponents();
+  } catch (err) {
+    console.error(err);
+    alert("Failed to update component");
+  }
+},
+
+async deleteComponent(componentId) {
+  if (!confirm('Are you sure you want to delete this component?')) return;
+
+  try {
+    const res = await fetch(`http://localhost:3000/components/${componentId}`, {
+      method: 'DELETE'
+    });
+    const data = await res.json();
+    alert(data.message || 'Component deleted');
+    this.fetchComponents();
+  } catch (err) {
+    console.error(err);
+    alert("Failed to delete component");
+  }
+}
+
 
   },
    watch: {

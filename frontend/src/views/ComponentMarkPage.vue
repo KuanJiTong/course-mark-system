@@ -2,9 +2,7 @@
   <div class="container mt-4">
     <h3>Enter Marks for: {{ component?.component_name }}</h3>
 
-    <button class="btn btn-secondary mb-3" @click="$router.back()">
-      ⬅ Go Back
-    </button>
+   
 
     <table class="table table-bordered mt-3">
       <thead>
