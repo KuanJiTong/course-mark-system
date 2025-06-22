@@ -22,7 +22,26 @@ $app->get('/student/marks', function (Request $request, Response $response) {
     $stmt->execute([$params['course_id'], $params['section_id'], $params['student_id']]);
     $marks = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    $response->getBody()->write(json_encode($marks));
+        // Fetch final exam mark
+    $stmt2 = $pdo->prepare('SELECT mark FROM final_exam WHERE student_id = ? AND course_id = ? AND section_id = ?');
+    $stmt2->execute([$params['student_id'], $params['course_id'], $params['section_id']]);
+    $finalExam = $stmt2->fetch(PDO::FETCH_ASSOC);
+    $final_exam_mark = $finalExam ? floatval($finalExam['mark']) : null;
+
+    // Calculate total mark (sum of all component marks + final exam)
+    $total = 0;
+    foreach ($marks as $m) {
+        $total += floatval($m['mark']);
+    }
+    if ($final_exam_mark !== null) {
+        $total += $final_exam_mark;
+    }
+
+    $response->getBody()->write(json_encode([
+        'marks' => $marks,
+        'final_exam_mark' => $final_exam_mark,
+        'total_mark' => $total
+    ]));
     return $response->withHeader('Content-Type', 'application/json');
 });
 

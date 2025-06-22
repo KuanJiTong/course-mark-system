@@ -32,8 +32,11 @@
         </tr>
       </thead>
       <tbody>
-        <tr v-for="(item, idx) in marks" :key="item.student_id">
-          <td>{{ `Student ${idx + 1}` }}</td>
+        <tr v-for="item in marks" :key="item.student_id" :class="{ 'highlight': item.student_id == currentStudentId }">
+          <td>
+            <span v-if="item.student_id == currentStudentId">You</span>
+            <span v-else>Classmate</span>
+          </td>
           <td>{{ item.coursework_mark }}</td>
           <td>{{ item.final_exam_mark }}</td>
           <td>{{ calculateTotal(item.coursework_mark, item.final_exam_mark) }}</td>
@@ -62,14 +65,18 @@ export default {
     };
   },
   computed: {
+    currentStudentId() {
+      // TODO: Replace with actual logged-in student ID
+      return 1;
+    },
     barChartData() {
       if (!this.marks.length) return { labels: [], datasets: [] };
       return {
-        labels: this.marks.map((item, idx) => `Student ${idx + 1}`),
+        labels: this.marks.map(item => item.student_id == this.currentStudentId ? 'You' : 'Classmate'),
         datasets: [
           {
             label: 'Total Mark',
-            backgroundColor: '#0d6efd',
+            backgroundColor: this.marks.map(item => item.student_id == this.currentStudentId ? '#ffc107' : '#0d6efd'),
             data: this.marks.map(item => Number(this.calculateTotal(item.coursework_mark, item.final_exam_mark)))
           }
         ]
@@ -174,5 +181,9 @@ th {
 .error-message {
   color: red;
   margin-top: 10px;
+}
+.highlight {
+  background-color: #fff3cd !important;
+  font-weight: bold;
 }
 </style> 
