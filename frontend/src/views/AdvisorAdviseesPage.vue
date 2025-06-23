@@ -37,12 +37,19 @@ export default {
   components: { AdvisorAdviseeMarksPage },
   data() {
     return {
+      userID: 1,
       advisees: [],
       loaded: false,
       selectedAdvisee: null,
     };
   },
-     methods: {
+  computed: {
+    advisorIdVar() {
+      // Replace with actual logic to get logged-in advisor ID
+      return 1;
+    }
+  },
+  methods: {
     goToMarksPage(student) {
       this.$router.push({
         name: 'AdvisorAdviseeMarks',
@@ -54,8 +61,7 @@ export default {
     },
   },
   mounted() {
-    // Replace 123 with the actual advisor_id (can be dynamic based on login/session)
-    fetch('http://localhost:3000/advisor/advisees?advisor_id=1')
+      fetch(`http://localhost:3000/advisor/advisees?advisor_id=${this.userID}`)
       .then(res => res.json())
       .then(data => {
         this.advisees = data;

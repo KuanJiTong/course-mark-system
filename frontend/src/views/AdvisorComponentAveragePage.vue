@@ -56,6 +56,7 @@
 export default {
   data() {
     return {
+      userID: 1,
       advisees: [],
       selectedAdviseeId: '',
       studentEnrollments: [],
@@ -78,8 +79,7 @@ export default {
   },
   methods: {
     async fetchAdvisees() {
-      // TODO: Replace advisor_id=1 with dynamic value
-      const res = await fetch('http://localhost:3000/advisor/advisees?advisor_id=1');
+      const res = await fetch(`http://localhost:3000/advisor/advisees?advisor_id=${this.userID}`);
       this.advisees = await res.json();
     },
     async fetchStudentEnrollments() {
@@ -122,7 +122,8 @@ export default {
       if (!this.selectedAdviseeId || !this.selectedCourseId || !this.selectedSectionId) return;
       const url = `http://localhost:3000/student/marks?student_id=${this.selectedAdviseeId}&course_id=${this.selectedCourseId}&section_id=${this.selectedSectionId}`;
       const res = await fetch(url);
-      this.adviseeMarks = await res.json();
+      const data = await res.json();
+      this.adviseeMarks = Array.isArray(data.marks) ? data.marks : [];
     },
     getAdviseeMark(component_id) {
       const found = this.adviseeMarks.find(m => m.component_id == component_id);

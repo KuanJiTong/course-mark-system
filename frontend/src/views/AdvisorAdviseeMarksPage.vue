@@ -60,8 +60,8 @@ export default {
         enrollments.forEach(enrollment => {
           fetch(`http://localhost:3000/student/marks?student_id=${this.resolvedStudentId}&course_id=${enrollment.course_id}&section_id=${enrollment.section_id}`)
             .then(res => res.json())
-            .then(marks => {
-              this.marks[enrollment.section_id] = marks;
+            .then(data => {
+              this.marks[enrollment.section_id] = Array.isArray(data.marks) ? data.marks : [];
             });
         });
       });

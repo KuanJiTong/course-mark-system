@@ -56,6 +56,7 @@ export default {
   components: { Bar },
   data() {
     return {
+      studentID: 1,
       courses: [],
       sections: [],
       marks: [],
@@ -66,8 +67,7 @@ export default {
   },
   computed: {
     currentStudentId() {
-      // TODO: Replace with actual logged-in student ID
-      return 1;
+      return this.studentID;
     },
     barChartData() {
       if (!this.marks.length) return { labels: [], datasets: [] };

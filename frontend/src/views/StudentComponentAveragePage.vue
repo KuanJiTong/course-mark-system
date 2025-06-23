@@ -43,6 +43,7 @@
 export default {
   data() {
     return {
+      studentID: 1, 
       courses: [],
       sections: [],
       averages: [],

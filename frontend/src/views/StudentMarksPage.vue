@@ -43,6 +43,7 @@
 export default {
   data() {
     return {
+      studentID: 1, 
       courses: [],
       sections: [],
       marks: [],
@@ -50,6 +51,11 @@ export default {
       selectedSectionId: '',
       errorMessage: ''
     };
+  },
+  computed: {
+    studentIdVar() {
+      return 1;
+    }
   },
   methods: {
     async fetchCourses() {
@@ -76,15 +82,14 @@ export default {
     async fetchMarks() {
       try {
         this.marks = [];
-        // TODO: Replace with actual logged-in student ID
-        const student_id = 1;
-        const url = `http://localhost:3000/student/marks?student_id=${student_id}&course_id=${this.selectedCourseId}&section_id=${this.selectedSectionId}`;
+        const url = `http://localhost:3000/student/marks?student_id=${this.studentID}&course_id=${this.selectedCourseId}&section_id=${this.selectedSectionId}`;
         const res = await fetch(url);
         if (!res.ok) {
           this.errorMessage = 'Failed to load marks (server error).';
           return;
         }
-        this.marks = await res.json();
+        const data = await res.json();
+        this.marks = Array.isArray(data.marks) ? data.marks : [];
       } catch (err) {
         this.errorMessage = 'Failed to load marks (network error).';
       }

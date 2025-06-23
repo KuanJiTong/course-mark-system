@@ -51,6 +51,7 @@
 export default {
   data() {
     return {
+      userID: 1, 
       courses: [],
       sections: [],
       remarks: [],
@@ -76,8 +77,7 @@ export default {
       this.fetchRemarks();
     },
     async fetchAdvisees() {
-      // TODO: Replace advisor_id=1 with dynamic value
-      const res = await fetch('http://localhost:3000/advisor/advisees?advisor_id=1');
+      const res = await fetch(`http://localhost:3000/advisor/advisees?advisor_id=${this.userID}`);
       this.advisees = await res.json();
     },
     async fetchRemarks() {

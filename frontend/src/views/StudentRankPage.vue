@@ -31,6 +31,7 @@
 export default {
   data() {
     return {
+      studentID: 1, 
       courses: [],
       sections: [],
       selectedCourseId: '',
@@ -63,9 +64,7 @@ export default {
     },
     async fetchRank() {
       try {
-        // TODO: Replace with actual logged-in student ID
-        const student_id = 1;
-        const url = `http://localhost:3000/student/rank?student_id=${student_id}&course_id=${this.selectedCourseId}&section_id=${this.selectedSectionId}`;
+         const url = `http://localhost:3000/student/rank?student_id=${this.studentID}&course_id=${this.selectedCourseId}&section_id=${this.selectedSectionId}`;
         const res = await fetch(url);
         if (!res.ok) {
           this.errorMessage = 'Failed to load rank (server error).';
