@@ -68,6 +68,7 @@
 export default {
   data() {
     return {
+      studentID: 1,
       courses: [],
       sections: [],
       components: [],
@@ -110,10 +111,8 @@ export default {
     },
     async submitRequest() {
       try {
-        // TODO: Replace with actual logged-in student ID
-        const student_id = 1;
         const payload = {
-          student_id,
+          student_id: this.studentID,
           course_id: this.courseId,
           section_id: this.sectionId,
           component_id: this.componentId || null,
@@ -142,9 +141,7 @@ export default {
     },
     async fetchRequests() {
       try {
-        // TODO: Replace with actual logged-in student ID
-        const student_id = 1;
-        const res = await fetch(`http://localhost:3000/student/remark-requests?student_id=${student_id}`);
+        const res = await fetch(`http://localhost:3000/student/remark-requests?student_id=${this.studentID}`);
         this.requests = await res.json();
       } catch {
         this.requests = [];

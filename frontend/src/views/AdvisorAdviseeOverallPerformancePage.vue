@@ -1,0 +1,175 @@
+<template>
+  <div class="advisor-overall-performance">
+    <h1>Advisee's Overall Course Performance</h1>
+    <div class="form-group">
+      <label for="advisee">Advisee:</label>
+      <select v-model="selectedAdviseeId" @change="fetchAllData" required>
+        <option disabled value="">-- Select Advisee --</option>
+        <option v-for="advisee in advisees" :key="advisee.student_id" :value="advisee.student_id">
+          {{ advisee.student_name }} ({{ advisee.matric_no }})
+        </option>
+      </select>
+    </div>
+    <div v-if="enrollments.length">
+      <div v-for="enrollment in enrollments" :key="enrollment.section_id" class="course-section-summary">
+        <h2>{{ enrollment.course_name }} (Section {{ enrollment.section_number }})</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Component</th>
+              <th>Mark</th>
+              <th>Max Mark</th>
+              <th>Class Average</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="comp in getComponentMarks(enrollment.section_id)" :key="comp.component_id">
+              <td>{{ comp.component_name }}</td>
+              <td>{{ comp.mark }}</td>
+              <td>{{ comp.max_mark }}</td>
+              <td>{{ getClassAverage(enrollment.section_id, comp.component_id) }}</td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="summary-row">
+          <span><strong>Final Exam Mark:</strong> {{ getFinalExamMark(enrollment.section_id) }}</span>
+          <span><strong>Total Mark:</strong> {{ getTotalMark(enrollment.section_id) }}</span>
+          <span v-if="getRankInfo(enrollment.section_id)"><strong>Rank:</strong> {{ getRankInfo(enrollment.section_id).rank }} / {{ getRankInfo(enrollment.section_id).total_students }}</span>
+          <span v-if="getRankInfo(enrollment.section_id)"><strong>Percentile:</strong> {{ getRankInfo(enrollment.section_id).percentile }}%</span>
+        </div>
+      </div>
+    </div>
+    <div v-if="selectedAdviseeId && !enrollments.length && loaded">No enrollments found for this advisee.</div>
+    <div v-if="errorMessage" class="error-message">{{ errorMessage }}</div>
+  </div>
+</template>
+
+<script>
+export default {
+  data() {
+    return {
+      userID: 1, 
+      advisees: [],
+      selectedAdviseeId: '',
+      enrollments: [],
+      marks: {}, // section_id -> array of marks
+      classAverages: {}, // section_id -> array of averages
+      finalExamMarks: {}, // section_id -> mark
+      totalMarks: {}, // section_id -> total
+      rankInfo: {}, // section_id -> {rank, total_students, percentile}
+      loaded: false,
+      errorMessage: ''
+    };
+  },
+  methods: {
+    async fetchAdvisees() {
+      const res = await fetch(`http://localhost:3000/advisor/advisees?advisor_id=${this.userID}`);
+      this.advisees = await res.json();
+    },
+    async fetchAllData() {
+      this.enrollments = [];
+      this.marks = {};
+      this.classAverages = {};
+      this.finalExamMarks = {};
+      this.totalMarks = {};
+      this.rankInfo = {};
+      this.loaded = false;
+      this.errorMessage = '';
+      if (!this.selectedAdviseeId) return;
+      // Fetch enrollments
+      const enrollRes = await fetch(`http://localhost:3000/student/enrollments?student_id=${this.selectedAdviseeId}`);
+      this.enrollments = await enrollRes.json();
+      // For each enrollment, fetch marks, class averages, and rank
+      await Promise.all(this.enrollments.map(async (enrollment) => {
+        // Marks
+        const marksRes = await fetch(`http://localhost:3000/student/marks?student_id=${this.selectedAdviseeId}&course_id=${enrollment.course_id}&section_id=${enrollment.section_id}`);
+        const marksData = await marksRes.json();
+        this.marks[enrollment.section_id] = marksData.marks || [];
+        this.finalExamMarks[enrollment.section_id] = marksData.final_exam_mark ?? '-';
+        this.totalMarks[enrollment.section_id] = marksData.total_mark ?? '-';
+        // Class averages
+        const avgRes = await fetch(`http://localhost:3000/class/component-averages?course_id=${enrollment.course_id}&section_id=${enrollment.section_id}`);
+        this.classAverages[enrollment.section_id] = await avgRes.json();
+        // Rank
+        const rankRes = await fetch(`http://localhost:3000/student/rank?student_id=${this.selectedAdviseeId}&course_id=${enrollment.course_id}&section_id=${enrollment.section_id}`);
+        this.rankInfo[enrollment.section_id] = await rankRes.json();
+      }));
+      this.loaded = true;
+    },
+    getComponentMarks(section_id) {
+      const arr = Array.isArray(this.marks[section_id]) ? this.marks[section_id] : [];
+      return arr.filter(m => m.component_name !== 'Final Exam');
+    },
+    getFinalExamMark(section_id) {
+      return this.finalExamMarks[section_id] ?? '-';
+    },
+    getTotalMark(section_id) {
+      return this.totalMarks[section_id] ?? '-';
+    },
+    getClassAverage(section_id, component_id) {
+      const arr = this.classAverages[section_id] || [];
+      const found = arr.find(a => a.component_id == component_id);
+      return found && found.average_mark ? Number(found.average_mark).toFixed(2) : '-';
+    },
+    getRankInfo(section_id) {
+      return this.rankInfo[section_id] || null;
+    }
+  },
+  async mounted() {
+    await this.fetchAdvisees();
+  }
+};
+</script>
+
+<style scoped>
+.advisor-overall-performance {
+  max-width: 900px;
+  margin: auto;
+  padding: 20px;
+}
+h1 {
+  font-size: 24px;
+  margin-bottom: 20px;
+}
+.form-group {
+  margin-bottom: 15px;
+}
+label {
+  font-weight: bold;
+}
+select {
+  width: 100%;
+  padding: 8px;
+  font-size: 16px;
+}
+.course-section-summary {
+  margin-bottom: 2.5rem;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  padding: 1.5rem;
+  background: #fafbfc;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 0.5rem;
+}
+th, td {
+  border: 1px solid #ddd;
+  padding: 0.5rem 1rem;
+  text-align: left;
+}
+th {
+  background: #f5f5f5;
+}
+.summary-row {
+  margin-top: 1rem;
+  display: flex;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+.error-message {
+  color: red;
+  margin-top: 10px;
+}
+</style> 

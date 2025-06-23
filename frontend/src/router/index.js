@@ -16,6 +16,7 @@ import ViewMarkBreakdownPage from '../views/ViewMarkBreakdownPage'
 import ComponentMarkPage from '@/views/ComponentMarkPage.vue';
 import StudentDashboardPage from '../views/StudentDashboardPage.vue'
 import StudentDashboardLayout from '../components/StudentDashboardLayout.vue'
+import AdvisorDashboardLayout from '../components/AdvisorDashboardLayout.vue'
 
 const routes = [
   {
@@ -44,13 +45,25 @@ const routes = [
     children: [
       { path: '/student-dashboard', name: 'StudentDashboard', component: StudentDashboardPage },
       { path: '/student-marks', name: 'StudentMarks', component: () => import('../views/StudentMarksPage.vue') },
-      // { path: '/student-progress', name: 'StudentProgress', component: () => import('../views/AddPerformanceTrendPage.vue') },
       { path: '/student-compare', name: 'StudentCompare', component: () => import('../views/StudentComparePage.vue') },
       { path: '/student-rank', name: 'StudentRank', component: () => import('../views/StudentRankPage.vue') },
       { path: '/student-component-averages', name: 'StudentComponentAverages', component: () => import('../views/StudentComponentAveragePage.vue') },
-      // { path: '/student-whatif', name: 'StudentWhatIf', component: { template: '<div style="padding:2rem"><h2>What-If Simulator (Coming Soon)</h2><p>Simulate your future performance by adjusting marks.</p></div>' } },
       { path: '/student-remark', name: 'StudentRemark', component: () => import('../views/StudentRemarkPage.vue') },
       
+    ]
+  },
+  {
+    path: '/',
+    component: AdvisorDashboardLayout,
+    children: [
+      { path: '/advisor-dashboard', name: 'AdvisorDashboard', component: { template: '<div style="padding:2rem"><h2>Advisor Dashboard</h2><p>Welcome to the advisor dashboard.</p></div>' } },
+      { path: '/advisor-advisees', name: 'AdvisorAdvisees', component: () => import('../views/AdvisorAdviseesPage.vue') },
+      { path: '/advisor-advisee-marks', name: 'AdvisorAdviseeMarks', component: () => import('../views/AdvisorAdviseeMarksPage.vue') },
+      { path: '/advisor-compare', name: 'AdvisorCompare', component: () => import('../views/AdvisorComparePage.vue') },
+      { path: '/advisor-rank', name: 'AdvisorRank', component: () => import('../views/AdvisorRankPage.vue') },
+      { path: '/advisor-component-averages', name: 'AdvisorComponentAverages', component: () => import('../views/AdvisorComponentAveragePage.vue') },
+      { path: '/advisor-student-remarks', name: 'AdvisorStudentRemarks', component: () => import('../views/AdvisorStudentRemarksPage.vue') },
+      { path: '/advisor/advisee-overall-performance', name: 'AdvisorAdviseeOverallPerformance', component: () => import('../views/AdvisorAdviseeOverallPerformancePage.vue') },
     ]
   },
   {
