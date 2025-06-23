@@ -39,6 +39,14 @@ export default {
       { name: "User", link: "/user-management", icon: "bi bi-person-fill", access: "admin" },
       { name: "Course", link: "/lecturer-course-management", icon: "bi bi-book-fill", access: "lecturer" },
 
+      // // Student
+      // { name: "Dashboard", link: "/student-dashboard", icon: "bi bi-speedometer2", access: "student" },
+      // { name: "My Marks", link: "/student-marks", icon: "bi bi-clipboard-data", access: "student" },
+      // { name: "Progress & Breakdown", link: "/student-progress", icon: "bi bi-bar-chart-line", access: "student" },
+      // { name: "Compare with Coursemates", link: "/student-compare", icon: "bi bi-people-fill", access: "student" },
+      // { name: "Class Rank & Percentile", link: "/student-rank", icon: "bi bi-trophy", access: "student" },
+      // { name: "What-If Simulator", link: "/student-whatif", icon: "bi bi-sliders", access: "student" },
+      // { name: "Submit Remark Request", link: "/student-remark", icon: "bi bi-chat-dots", access: "student" },
 
     ];
 

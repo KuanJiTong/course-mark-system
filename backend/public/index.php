@@ -46,6 +46,7 @@ require __DIR__ . '/../src/routes/student-enrollment.php';
 require __DIR__ . '/../src/routes/manage-component-marks.php';
 require __DIR__ . '/../src/routes/add-final-exam-marks.php';
 require __DIR__ . '/../src/routes/view-mark-breakdown.php';
+require __DIR__ . '/../src/routes/student-view.php';
 
 
 $app->run();

@@ -14,6 +14,8 @@ import UserPage from '../views/UserPage';
 import LecturerCoursePage from '../views/LecturerCoursePage'
 import ViewMarkBreakdownPage from '../views/ViewMarkBreakdownPage'
 import ComponentMarkPage from '@/views/ComponentMarkPage.vue';
+import StudentDashboardPage from '../views/StudentDashboardPage.vue'
+import StudentDashboardLayout from '../components/StudentDashboardLayout.vue'
 
 const routes = [
   {
@@ -33,6 +35,22 @@ const routes = [
       { path: '/view-mark-breakdown', name: 'ViewMarkBreakdownPage', component: ViewMarkBreakdownPage },
       { path: '/component-marks/:componentId', name: 'ComponentMarkPage', component: ComponentMarkPage },
 
+    ]
+  },
+
+  {
+    path: '/',
+    component: StudentDashboardLayout,
+    children: [
+      { path: '/student-dashboard', name: 'StudentDashboard', component: StudentDashboardPage },
+      { path: '/student-marks', name: 'StudentMarks', component: () => import('../views/StudentMarksPage.vue') },
+      // { path: '/student-progress', name: 'StudentProgress', component: () => import('../views/AddPerformanceTrendPage.vue') },
+      { path: '/student-compare', name: 'StudentCompare', component: () => import('../views/StudentComparePage.vue') },
+      { path: '/student-rank', name: 'StudentRank', component: () => import('../views/StudentRankPage.vue') },
+      { path: '/student-component-averages', name: 'StudentComponentAverages', component: () => import('../views/StudentComponentAveragePage.vue') },
+      // { path: '/student-whatif', name: 'StudentWhatIf', component: { template: '<div style="padding:2rem"><h2>What-If Simulator (Coming Soon)</h2><p>Simulate your future performance by adjusting marks.</p></div>' } },
+      { path: '/student-remark', name: 'StudentRemark', component: () => import('../views/StudentRemarkPage.vue') },
+      
     ]
   },
   {
