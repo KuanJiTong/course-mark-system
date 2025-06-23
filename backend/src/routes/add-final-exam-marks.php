@@ -45,3 +45,29 @@ $app->get('/final_exam', function (Request $request, Response $response) {
     $response->getBody()->write(json_encode($examMarks));
     return $response->withHeader('Content-Type', 'application/json');
 });
+
+$app->get('/courses', function ($request, $response, $args) {
+    $pdo = getPDO();
+    $stmt = $pdo->query("SELECT * FROM courses"); // ✅ includes max_fm
+    $courses = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    $response->getBody()->write(json_encode($courses));
+    return $response->withHeader('Content-Type', 'application/json');
+});
+
+$app->get('/final_exam/student', function (Request $request, Response $response) {
+    $pdo = getPDO();
+    $params = $request->getQueryParams();
+
+    if (!isset($params['student_id'], $params['course_id'], $params['section_id'])) {
+        $response->getBody()->write(json_encode(['error' => 'Missing parameters']));
+        return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
+    }
+
+    $stmt = $pdo->prepare("SELECT mark FROM final_exam WHERE student_id = ? AND course_id = ? AND section_id = ?");
+    $stmt->execute([$params['student_id'], $params['course_id'], $params['section_id']]);
+    $mark = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    $response->getBody()->write(json_encode($mark ?: ['mark' => null]));
+    return $response->withHeader('Content-Type', 'application/json');
+});

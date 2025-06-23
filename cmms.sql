@@ -3,9 +3,9 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jun 13, 2025 at 04:55 PM
--- Server version: 11.5.2-MariaDB
--- PHP Version: 8.0.30
+-- Generation Time: Jun 21, 2025 at 05:15 AM
+-- Server version: 10.4.32-MariaDB
+-- PHP Version: 8.2.12
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -20,6 +20,31 @@ SET time_zone = "+00:00";
 --
 -- Database: `cmms`
 --
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `components`
+--
+
+CREATE TABLE `components` (
+  `component_id` int(11) NOT NULL,
+  `course_id` int(11) NOT NULL,
+  `section_id` int(11) NOT NULL,
+  `component_name` varchar(100) NOT NULL,
+  `max_mark` decimal(5,2) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `components`
+--
+
+INSERT INTO `components` (`component_id`, `course_id`, `section_id`, `component_name`, `max_mark`) VALUES
+(2, 1, 1, 'Assignment', 10.00),
+(3, 1, 1, 'exercise', 20.00),
+(4, 1, 2, 'quiz', 5.00),
+(5, 2, 6, 'quiz', 5.00),
+(7, 1, 2, 'test', 40.00);
 
 -- --------------------------------------------------------
 
@@ -65,7 +90,9 @@ CREATE TABLE `enrollment` (
 INSERT INTO `enrollment` (`enrollment_id`, `student_id`, `section_id`) VALUES
 (1, 1, 1),
 (2, 2, 1),
-(3, 26, 1);
+(3, 26, 1),
+(4, 26, 2),
+(5, 16, 2);
 
 -- --------------------------------------------------------
 
@@ -89,6 +116,29 @@ INSERT INTO `faculty` (`faculty_id`, `faculty_abbreviation`, `faculty_name`) VAL
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `final_exam`
+--
+
+CREATE TABLE `final_exam` (
+  `exam_id` int(11) NOT NULL,
+  `student_id` int(11) NOT NULL,
+  `course_id` int(11) NOT NULL,
+  `section_id` int(11) NOT NULL,
+  `mark` decimal(5,2) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `final_exam`
+--
+
+INSERT INTO `final_exam` (`exam_id`, `student_id`, `course_id`, `section_id`, `mark`) VALUES
+(1, 1, 1, 1, 35.00),
+(2, 26, 1, 2, 33.00),
+(3, 16, 1, 2, 6.00);
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `lecturers`
 --
 
@@ -108,6 +158,35 @@ INSERT INTO `lecturers` (`lecturer_id`, `user_id`, `title`, `staff_no`, `departm
 (1, 9, 'Dr.', 'S001', 'Software Engineering'),
 (2, 10, 'Prof. Madya Dr.', 'S002', 'Software Engineering'),
 (3, 11, 'Assoc. Prof.', 'S003', 'Computer Science');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `marks`
+--
+
+CREATE TABLE `marks` (
+  `mark_id` int(11) NOT NULL,
+  `student_id` int(11) NOT NULL,
+  `component_id` int(11) NOT NULL,
+  `mark` decimal(5,2) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `marks`
+--
+
+INSERT INTO `marks` (`mark_id`, `student_id`, `component_id`, `mark`) VALUES
+(4, 1, 2, 9.00),
+(5, 2, 2, 0.00),
+(6, 26, 2, 0.00),
+(7, 26, 4, 4.00),
+(8, 16, 4, 5.00),
+(9, 26, 7, 40.00),
+(10, 16, 7, 0.00),
+(11, 1, 3, 6.00),
+(12, 2, 3, 0.00),
+(13, 26, 3, 0.00);
 
 -- --------------------------------------------------------
 
@@ -295,10 +374,10 @@ CREATE TABLE `user_roles` (
 --
 
 INSERT INTO `user_roles` (`user_id`, `role_id`) VALUES
+(8, 4),
 (9, 2),
 (10, 2),
 (11, 2),
-(8, 4),
 (12, 4),
 (13, 4),
 (14, 4),
@@ -339,6 +418,14 @@ INSERT INTO `user_roles` (`user_id`, `role_id`) VALUES
 --
 
 --
+-- Indexes for table `components`
+--
+ALTER TABLE `components`
+  ADD PRIMARY KEY (`component_id`),
+  ADD KEY `course_id` (`course_id`),
+  ADD KEY `section_id` (`section_id`);
+
+--
 -- Indexes for table `courses`
 --
 ALTER TABLE `courses`
@@ -363,11 +450,28 @@ ALTER TABLE `faculty`
   ADD UNIQUE KEY `faculty_name` (`faculty_name`);
 
 --
+-- Indexes for table `final_exam`
+--
+ALTER TABLE `final_exam`
+  ADD PRIMARY KEY (`exam_id`),
+  ADD KEY `student_id` (`student_id`),
+  ADD KEY `course_id` (`course_id`),
+  ADD KEY `section_id` (`section_id`);
+
+--
 -- Indexes for table `lecturers`
 --
 ALTER TABLE `lecturers`
   ADD PRIMARY KEY (`lecturer_id`),
   ADD UNIQUE KEY `user_id` (`user_id`);
+
+--
+-- Indexes for table `marks`
+--
+ALTER TABLE `marks`
+  ADD PRIMARY KEY (`mark_id`),
+  ADD KEY `student_id` (`student_id`),
+  ADD KEY `component_id` (`component_id`);
 
 --
 -- Indexes for table `roles`
@@ -412,6 +516,12 @@ ALTER TABLE `user_roles`
 --
 
 --
+-- AUTO_INCREMENT for table `components`
+--
+ALTER TABLE `components`
+  MODIFY `component_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+
+--
 -- AUTO_INCREMENT for table `courses`
 --
 ALTER TABLE `courses`
@@ -421,7 +531,7 @@ ALTER TABLE `courses`
 -- AUTO_INCREMENT for table `enrollment`
 --
 ALTER TABLE `enrollment`
-  MODIFY `enrollment_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `enrollment_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT for table `faculty`
@@ -430,10 +540,22 @@ ALTER TABLE `faculty`
   MODIFY `faculty_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
+-- AUTO_INCREMENT for table `final_exam`
+--
+ALTER TABLE `final_exam`
+  MODIFY `exam_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+
+--
 -- AUTO_INCREMENT for table `lecturers`
 --
 ALTER TABLE `lecturers`
   MODIFY `lecturer_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+
+--
+-- AUTO_INCREMENT for table `marks`
+--
+ALTER TABLE `marks`
+  MODIFY `mark_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
 
 --
 -- AUTO_INCREMENT for table `roles`
@@ -464,6 +586,13 @@ ALTER TABLE `users`
 --
 
 --
+-- Constraints for table `components`
+--
+ALTER TABLE `components`
+  ADD CONSTRAINT `components_ibfk_1` FOREIGN KEY (`course_id`) REFERENCES `courses` (`course_id`),
+  ADD CONSTRAINT `components_ibfk_2` FOREIGN KEY (`section_id`) REFERENCES `sections` (`section_id`);
+
+--
 -- Constraints for table `courses`
 --
 ALTER TABLE `courses`
@@ -477,10 +606,25 @@ ALTER TABLE `enrollment`
   ADD CONSTRAINT `fk_student_enrollment` FOREIGN KEY (`student_id`) REFERENCES `students` (`student_id`);
 
 --
+-- Constraints for table `final_exam`
+--
+ALTER TABLE `final_exam`
+  ADD CONSTRAINT `final_exam_ibfk_1` FOREIGN KEY (`student_id`) REFERENCES `students` (`student_id`),
+  ADD CONSTRAINT `final_exam_ibfk_2` FOREIGN KEY (`course_id`) REFERENCES `courses` (`course_id`),
+  ADD CONSTRAINT `final_exam_ibfk_3` FOREIGN KEY (`section_id`) REFERENCES `sections` (`section_id`);
+
+--
 -- Constraints for table `lecturers`
 --
 ALTER TABLE `lecturers`
   ADD CONSTRAINT `lecturers_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`);
+
+--
+-- Constraints for table `marks`
+--
+ALTER TABLE `marks`
+  ADD CONSTRAINT `marks_ibfk_1` FOREIGN KEY (`student_id`) REFERENCES `students` (`student_id`),
+  ADD CONSTRAINT `marks_ibfk_2` FOREIGN KEY (`component_id`) REFERENCES `components` (`component_id`);
 
 --
 -- Constraints for table `sections`

@@ -102,7 +102,7 @@ $app->post('/marks', function (Request $request, Response $response) {
 
 
 
-$app->get('/courses', function ($request, $response, $args) {
+$app->get('/fetchCourses', function ($request, $response, $args) {
     $pdo = getPDO();
     $stmt = $pdo->query("SELECT * FROM courses");
     $courses = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -151,5 +151,52 @@ $app->get('/sections', function (Request $request, Response $response) {
     $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     $response->getBody()->write(json_encode($data));
+    return $response->withHeader('Content-Type', 'application/json');
+});
+
+$app->get('/components/{id}', function (Request $request, Response $response, $args) {
+    $pdo = getPDO();
+    $stmt = $pdo->prepare("SELECT * FROM components WHERE component_id = ?");
+    $stmt->execute([$args['id']]);
+    $component = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if (!$component) {
+        $response->getBody()->write(json_encode(['error' => 'Component not found']));
+        return $response->withHeader('Content-Type', 'application/json')->withStatus(404);
+    }
+
+    $response->getBody()->write(json_encode($component));
+    return $response->withHeader('Content-Type', 'application/json');
+});
+
+$app->put('/components/{id}', function (Request $request, Response $response, $args) {
+    $pdo = getPDO();
+    $data = $request->getParsedBody();
+    $componentId = $args['id'];
+
+    if (!isset($data['component_name'], $data['max_mark'])) {
+        $response->getBody()->write(json_encode(['error' => 'Missing fields']));
+        return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
+    }
+
+    $stmt = $pdo->prepare("UPDATE components SET component_name = ?, max_mark = ? WHERE component_id = ?");
+    $stmt->execute([$data['component_name'], $data['max_mark'], $componentId]);
+
+    $response->getBody()->write(json_encode(['message' => 'Component updated']));
+    return $response->withHeader('Content-Type', 'application/json');
+});
+
+
+$app->delete('/components/{id}', function (Request $request, Response $response, $args) {
+    $pdo = getPDO();
+    $componentId = $args['id'];
+
+    // Optional: delete related marks first
+    $pdo->prepare("DELETE FROM marks WHERE component_id = ?")->execute([$componentId]);
+
+    $stmt = $pdo->prepare("DELETE FROM components WHERE component_id = ?");
+    $stmt->execute([$componentId]);
+
+    $response->getBody()->write(json_encode(['message' => 'Component deleted']));
     return $response->withHeader('Content-Type', 'application/json');
 });
