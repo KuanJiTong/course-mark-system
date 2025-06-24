@@ -68,6 +68,7 @@ export default {
   // components: { DefaultLayout },
   data() {
     return {
+      userID: null,
       selectedCourseId: '',
       selectedSectionId: '',
       courses: [],
@@ -162,6 +163,16 @@ export default {
 }
   },
   mounted() {
+    // Check authentication
+    const user = JSON.parse(sessionStorage.getItem('user'));
+    if (!user || !user.user_id) {
+      this.$router.push('/login?message=Please login to access final exam marks');
+      return;
+    }
+    
+    this.userID = user.user_id;
+    console.log('Authenticated user ID for final exam marks:', this.userID);
+    
     this.fetchCourses();
   },
   watch: {

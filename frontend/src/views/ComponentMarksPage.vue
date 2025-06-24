@@ -75,6 +75,7 @@
 export default {
   data() {
     return {
+      userID: null,
       selectedCourseId: '',
       selectedSectionId: '',
       courses: [],
@@ -318,7 +319,17 @@ async deleteComponent(componentId) {
   }
 },
   mounted() {
-   this.fetchCourses().then(() => {
+    // Check authentication
+    const user = JSON.parse(sessionStorage.getItem('user'));
+    if (!user || !user.user_id) {
+      this.$router.push('/login?message=Please login to access component marks');
+      return;
+    }
+    
+    this.userID = user.user_id;
+    console.log('Authenticated user ID for component marks:', this.userID);
+    
+    this.fetchCourses().then(() => {
       const savedCourseId = localStorage.getItem('selectedCourseId');
       const savedSectionId = localStorage.getItem('selectedSectionId');
       if (savedCourseId) this.selectedCourseId = savedCourseId;

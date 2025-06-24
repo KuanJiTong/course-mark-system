@@ -37,6 +37,7 @@
 export default {
   data() {
     return {
+      userID: null,
       componentId: this.$route.params.componentId,
       component: null,
       studentMarks: [],
@@ -92,6 +93,16 @@ export default {
     }
   },
   async mounted() {
+    // Check authentication
+    const user = JSON.parse(sessionStorage.getItem('user'));
+    if (!user || !user.user_id) {
+      this.$router.push('/login?message=Please login to access component marks');
+      return;
+    }
+    
+    this.userID = user.user_id;
+    console.log('Authenticated user ID for component marks:', this.userID);
+    
     await this.fetchComponentDetails();
     await this.fetchStudentsAndMarks();
   }

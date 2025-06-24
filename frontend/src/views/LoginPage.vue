@@ -7,10 +7,10 @@
         </div>
         <h2>Login</h2>
         <div>
-          <label for="userId" class="form-label"><b>Username</b></label>
+          <label for="userId" class="form-label"><b>User ID</b></label>
           <div class="form-input">
             <i class="bi bi-person bi-solid"></i>
-            <input id="userId" type="text" class="form-control" v-model="username" placeholder="Enter Username"/>
+            <input id="userId" type="text" class="form-control" v-model="userID" placeholder="Enter User ID"/>
           </div>
         </div>
 
@@ -22,7 +22,12 @@
           </div>
         </div>
         
-        <button type="submit">Login</button>
+        <!-- Add error/success message display -->
+        <div v-if="message" class="alert" :class="message.includes('error') ? 'alert-danger' : 'alert-success'" style="margin-bottom: 1rem;">
+          {{ message }}
+        </div>
+        
+        <button type="submit" @click="login">Login</button>
       </div>
     </div>
   </div>
@@ -33,13 +38,19 @@
 export default {
   data() {
     return {
-      username: '',
+      userID: '',
       password: '',
       message: null,
       inputType: 'password',
       passIcon: 'bi-eye-slash',
       hide: true
     };
+  },
+  mounted() {
+    // Check if user was redirected from logout
+    if (this.$route.query.logout) {
+      this.message = 'You have been successfully logged out.';
+    }
   },
   methods: {
     pass(){
@@ -54,6 +65,43 @@ export default {
         this.passIcon = 'bi-eye-slash';
       }
     },
+    async login() {
+      console.log('Login button clicked');
+      this.message = null;
+      try {
+        console.log('Sending login request...');
+        const res = await fetch('http://localhost:3000/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userID: this.userID, password: this.password })
+        });
+        console.log('Response received:', res.status);
+        const data = await res.json();
+        console.log('Response data:', data);
+        if (res.ok && data.token) {
+          sessionStorage.setItem('jwt', data.token);
+          sessionStorage.setItem('user', JSON.stringify(data.user));
+          // Role-based redirect
+          const roles = data.user.roles.map(r => r.toLowerCase());
+          if (roles.includes('student')) {
+            this.$router.push('/student-dashboard');
+          } else if (roles.includes('advisor')) {
+            this.$router.push('/advisor-dashboard');
+          } else if (roles.includes('lecturer')) {
+            this.$router.push('/lecturer-course-management');
+          } else if (roles.includes('admin')) {
+            this.$router.push('/user-management');
+          } else {
+            this.$router.push('/');
+          }
+        } else {
+          this.message = data.error || 'Login failed';
+        }
+      } catch (e) {
+        console.error('Login error:', e);
+        this.message = 'Network error: ' + e.message;
+      }
+    }
   }
 }
 </script>

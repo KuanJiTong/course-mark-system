@@ -28,6 +28,7 @@ export default {
   },
   data() {
     return {
+      userID: null,
       // Sample data for the performance trend graph
       chartData: {
         labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5'],  // X-axis: Weeks
@@ -95,6 +96,17 @@ export default {
         }
       }
     };
+  },
+  mounted() {
+    // Check authentication
+    const user = JSON.parse(sessionStorage.getItem('user'));
+    if (!user || !user.user_id) {
+      this.$router.push('/login?message=Please login to access performance trends');
+      return;
+    }
+    
+    this.userID = user.user_id;
+    console.log('Authenticated user ID for performance trends:', this.userID);
   }
 };
 </script>

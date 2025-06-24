@@ -51,7 +51,7 @@
 export default {
   data() {
     return {
-      userID: 1, 
+      userID: null, // Will be set from sessionStorage
       courses: [],
       sections: [],
       remarks: [],
@@ -62,9 +62,25 @@ export default {
     };
   },
   methods: {
+    // Get authenticated user data
+    getAuthenticatedUser() {
+      const userData = sessionStorage.getItem('user');
+      if (userData) {
+        const user = JSON.parse(userData);
+        this.userID = user.user_id;
+        console.log('Authenticated advisor ID for student remarks:', this.userID);
+        return true;
+      }
+      return false;
+    },
     async fetchCourses() {
-      const res = await fetch('http://localhost:3000/courses');
-      this.courses = await res.json();
+      try {
+        const res = await fetch('http://localhost:3000/courses');
+        if (!res.ok) throw new Error('Failed to fetch courses');
+        this.courses = await res.json();
+      } catch (error) {
+        console.error('Error fetching courses:', error);
+      }
     },
     async fetchSections() {
       if (!this.selectedCourseId) {
@@ -72,34 +88,50 @@ export default {
         this.fetchRemarks();
         return;
       }
-      const res = await fetch(`http://localhost:3000/sections?course_id=${this.selectedCourseId}`);
-      this.sections = await res.json();
-      this.fetchRemarks();
+      try {
+        const res = await fetch(`http://localhost:3000/sections?course_id=${this.selectedCourseId}`);
+        if (!res.ok) throw new Error('Failed to fetch sections');
+        this.sections = await res.json();
+        this.fetchRemarks();
+      } catch (error) {
+        console.error('Error fetching sections:', error);
+      }
     },
     async fetchAdvisees() {
-      const res = await fetch(`http://localhost:3000/advisor/advisees?advisor_id=${this.userID}`);
-      this.advisees = await res.json();
+      try {
+        const res = await fetch(`http://localhost:3000/advisor/advisees?advisor_id=${this.userID}`);
+        if (!res.ok) throw new Error('Failed to fetch advisees');
+        this.advisees = await res.json();
+      } catch (error) {
+        console.error('Error fetching advisees:', error);
+      }
     },
     async fetchRemarks() {
       this.remarks = [];
       this.loaded = false;
-      // Fetch all remarks for all advisees
-      const allRemarks = [];
-      for (const advisee of this.advisees) {
-        let url = `http://localhost:3000/student/remark-requests?student_id=${advisee.student_id}`;
-        const res = await fetch(url);
-        const data = await res.json();
-        // Optionally filter by course/section
-        const filtered = data.filter(r =>
-          (!this.selectedCourseId || r.course_id == this.selectedCourseId) &&
-          (!this.selectedSectionId || r.section_id == this.selectedSectionId)
-        );
-        for (const remark of filtered) {
-          allRemarks.push({ ...remark, student_id: advisee.student_id });
+      try {
+        // Fetch all remarks for all advisees
+        const allRemarks = [];
+        for (const advisee of this.advisees) {
+          let url = `http://localhost:3000/student/remark-requests?student_id=${advisee.student_id}`;
+          const res = await fetch(url);
+          if (!res.ok) continue;
+          const data = await res.json();
+          // Optionally filter by course/section
+          const filtered = data.filter(r =>
+            (!this.selectedCourseId || r.course_id == this.selectedCourseId) &&
+            (!this.selectedSectionId || r.section_id == this.selectedSectionId)
+          );
+          for (const remark of filtered) {
+            allRemarks.push({ ...remark, student_id: advisee.student_id });
+          }
         }
+        this.remarks = allRemarks.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+        this.loaded = true;
+      } catch (error) {
+        console.error('Error fetching remarks:', error);
+        this.loaded = true;
       }
-      this.remarks = allRemarks.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-      this.loaded = true;
     },
     getAdviseeName(student_id) {
       const found = this.advisees.find(a => a.student_id == student_id);
@@ -107,9 +139,14 @@ export default {
     }
   },
   async mounted() {
-    await this.fetchCourses();
-    await this.fetchAdvisees();
-    await this.fetchRemarks();
+    if (this.getAuthenticatedUser()) {
+      await this.fetchCourses();
+      await this.fetchAdvisees();
+      await this.fetchRemarks();
+    } else {
+      console.error('Authentication required. Please login.');
+      this.$router.push('/login');
+    }
   }
 };
 </script>
