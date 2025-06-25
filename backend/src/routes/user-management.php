@@ -336,6 +336,24 @@ $app->delete('/user/{id}', function (Request $request, Response $response, array
     return $response->withStatus(200)->withHeader('Content-Type', 'application/json');
 });
 
+$app->get('/student-id', function ($request, $response) {
+    $pdo = getPDO();
+    $user_id = $request->getQueryParams()['user_id'] ?? null;
+    if (!$user_id) {
+        $response->getBody()->write(json_encode(['error' => 'Missing user_id']));
+        return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
+    }
+    $stmt = $pdo->prepare("SELECT student_id FROM students WHERE user_id = ?");
+    $stmt->execute([$user_id]);
+    $student = $stmt->fetch(PDO::FETCH_ASSOC);
+    if ($student) {
+        $response->getBody()->write(json_encode($student));
+    } else {
+        $response->getBody()->write(json_encode(['error' => 'Student not found']));
+        return $response->withHeader('Content-Type', 'application/json')->withStatus(404);
+    }
+    return $response->withHeader('Content-Type', 'application/json');
+});
 
 
 

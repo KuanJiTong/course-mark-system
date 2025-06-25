@@ -37,9 +37,9 @@
             <span v-if="item.student_id == currentStudentId">You</span>
             <span v-else>Classmate</span>
           </td>
-          <td>{{ item.coursework_mark }}</td>
+          <td>{{ calculateCoursework(item.marks) }}</td>
           <td>{{ item.final_exam_mark }}</td>
-          <td>{{ calculateTotal(item.coursework_mark, item.final_exam_mark) }}</td>
+          <td>{{ item.total }}</td>
         </tr>
       </tbody>
     </table>
@@ -78,7 +78,7 @@ export default {
           {
             label: 'Total Mark',
             backgroundColor: this.marks.map(item => item.student_id == this.currentStudentId ? '#ffc107' : '#0d6efd'),
-            data: this.marks.map(item => Number(this.calculateTotal(item.coursework_mark, item.final_exam_mark)))
+            data: this.marks.map(item => Number(item.total))
           }
         ]
       };
@@ -97,13 +97,22 @@ export default {
     }
   },
   methods: {
-    getAuthenticatedUser() {
+    // Get student_id from user_id
+    async getStudentIdFromUserId() {
       const userData = sessionStorage.getItem('user');
       if (userData) {
         const user = JSON.parse(userData);
-        this.studentID = user.user_id;
-        console.log('Authenticated student ID for comparison:', this.studentID);
-        return true;
+        const userId = user.user_id;
+        try {
+          const res = await fetch(`http://localhost:3000/student-id?user_id=${userId}`);
+          if (!res.ok) throw new Error('Failed to fetch student_id');
+          const data = await res.json();
+          this.studentID = data.student_id;
+          return true;
+        } catch (err) {
+          this.errorMessage = 'Failed to get student ID.';
+          return false;
+        }
       }
       return false;
     },
@@ -138,24 +147,26 @@ export default {
           this.errorMessage = 'Failed to load marks (server error).';
           return;
         }
-        this.marks = await res.json();
+        const result = await res.json();
+        this.marks = result.data || [];
       } catch (err) {
         this.errorMessage = 'Failed to load marks (network error).';
       }
     },
-    calculateTotal(coursework, finalExam) {
-      const cw = Number(coursework) || 0;
-      const fe = Number(finalExam) || 0;
-      return (cw + fe).toFixed(2);
+    calculateCoursework(marksObj) {
+      // Sum all component marks (object values)
+      return Object.values(marksObj || {}).reduce((sum, val) => sum + Number(val), 0);
     }
   },
   mounted() {
-    if (this.getAuthenticatedUser()) {
-      this.fetchCourses();
-    } else {
-      this.errorMessage = 'Authentication required. Please login.';
-      this.$router.push('/login');
-    }
+    this.getStudentIdFromUserId().then(success => {
+      if (success) {
+        this.fetchCourses();
+      } else {
+        this.errorMessage = 'Authentication required. Please login.';
+        this.$router.push('/login');
+      }
+    });
   }
 };
 </script>

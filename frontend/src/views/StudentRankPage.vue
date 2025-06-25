@@ -41,13 +41,21 @@ export default {
     };
   },
   methods: {
-    getAuthenticatedUser() {
+    async getStudentIdFromUserId() {
       const userData = sessionStorage.getItem('user');
       if (userData) {
         const user = JSON.parse(userData);
-        this.studentID = user.user_id;
-        console.log('Authenticated student ID for ranking:', this.studentID);
-        return true;
+        const userId = user.user_id;
+        try {
+          const res = await fetch(`http://localhost:3000/student-id?user_id=${userId}`);
+          if (!res.ok) throw new Error('Failed to fetch student_id');
+          const data = await res.json();
+          this.studentID = data.student_id;
+          return true;
+        } catch (err) {
+          this.errorMessage = 'Failed to get student ID.';
+          return false;
+        }
       }
       return false;
     },
@@ -87,12 +95,14 @@ export default {
     }
   },
   mounted() {
-    if (this.getAuthenticatedUser()) {
-      this.fetchCourses();
-    } else {
-      this.errorMessage = 'Authentication required. Please login.';
-      this.$router.push('/login');
-    }
+    this.getStudentIdFromUserId().then(success => {
+      if (success) {
+        this.fetchCourses();
+      } else {
+        this.errorMessage = 'Authentication required. Please login.';
+        this.$router.push('/login');
+      }
+    });
   }
 };
 </script>

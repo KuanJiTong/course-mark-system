@@ -18,6 +18,7 @@ import StudentDashboardPage from '../views/StudentDashboardPage.vue'
 import StudentDashboardLayout from '../components/StudentDashboardLayout.vue'
 import AdvisorDashboardLayout from '../components/AdvisorDashboardLayout.vue'
 
+
 const routes = [
   {
     path: '/',
@@ -28,7 +29,7 @@ const routes = [
       { path: '/add-final-exam-marks', name: 'AddFinalExamMarks', component: AddFinalExamMarksPage, meta: { roles: ['Lecturer'] } },
       { path: '/mark-breakdown', name: 'ViewFullMarkBreakdown', component: ViewFullMarkBreakdownPage, meta: { roles: ['Lecturer'] } },
       { path: '/performance-trend', name: 'AddPerformanceTrend', component: AddPerformanceTrendPage, meta: { roles: ['Lecturer'] } },
-      { path: '/course-management', name: 'CoursePage', component: CoursePage, meta: { roles: ['Lecturer'] } },
+      { path: '/course-management', name: 'CoursePage', component: CoursePage, meta: { roles: ['Admin'] } },
       { path: '/course-management/section/:courseId', name: 'SectionPage', component: SectionPage, meta: { roles: ['Lecturer'] } },
       { path: '/user-management', name: 'UserPage', component: UserPage, meta: { roles: ['Admin'] } },
       { path: '/lecturer-course-management', name: 'LecturerCoursePage', component: LecturerCoursePage, meta: { roles: ['Lecturer'] } },
@@ -55,7 +56,7 @@ const routes = [
     path: '/',
     component: AdvisorDashboardLayout,
     children: [
-        { path: '/advisor-dashboard', name: 'AdvisorDashboard', component: { template: '<div style="padding:2rem"><h2>Advisor Dashboard</h2><p>Welcome to the advisor dashboard.</p></div>' }, meta: { roles: ['Advisor'] } },
+      { path: '/advisor-dashboard', name: 'AdvisorDashboard', component: { template: '<div style="padding:2rem"><h2>Advisor Dashboard</h2><p>Welcome to the advisor dashboard.</p></div>' }, meta: { roles: ['Advisor'] } },
       { path: '/advisor-advisees', name: 'AdvisorAdvisees', component: () => import('../views/AdvisorAdviseesPage.vue'), meta: { roles: ['Advisor'] } },
       { path: '/advisor-advisee-marks', name: 'AdvisorAdviseeMarks', component: () => import('../views/AdvisorAdviseeMarksPage.vue'), meta: { roles: ['Advisor'] } },
       { path: '/advisor-compare', name: 'AdvisorCompare', component: () => import('../views/AdvisorComparePage.vue'), meta: { roles: ['Advisor'] } },

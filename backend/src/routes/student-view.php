@@ -13,6 +13,14 @@ $app->get('/student/marks', function (Request $request, Response $response) {
         return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
     }
 
+   // Check if student is enrolled in the section (simpler, more reliable)
+    $enrollStmt = $pdo->prepare('SELECT 1 FROM enrollment WHERE student_id = ? AND section_id = ?');
+    $enrollStmt->execute([$params['student_id'], $params['section_id']]);
+    if (!$enrollStmt->fetch()) {
+        $response->getBody()->write(json_encode(['error' => 'Student is not enrolled in this course section']));
+        return $response->withHeader('Content-Type', 'application/json')->withStatus(403);
+    }
+
     $stmt = $pdo->prepare('
         SELECT m.mark_id, m.student_id, m.component_id, m.mark, c.component_name, c.max_mark
         FROM marks m
