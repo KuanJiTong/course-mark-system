@@ -58,14 +58,22 @@ export default {
     }
   },
   methods: {
-    // Get authenticated user data
-    getAuthenticatedUser() {
+    // Get student_id from user_id
+    async getStudentIdFromUserId() {
       const userData = sessionStorage.getItem('user');
       if (userData) {
         const user = JSON.parse(userData);
-        this.studentID = user.user_id;
-        console.log('Authenticated student ID:', this.studentID);
-        return true;
+        const userId = user.user_id;
+        try {
+          const res = await fetch(`http://localhost:3000/student-id?user_id=${userId}`);
+          if (!res.ok) throw new Error('Failed to fetch student_id');
+          const data = await res.json();
+          this.studentID = data.student_id;
+          return true;
+        } catch (err) {
+          this.errorMessage = 'Failed to get student ID.';
+          return false;
+        }
       }
       return false;
     },
@@ -77,6 +85,11 @@ export default {
           return;
         }
         this.courses = await res.json();
+        // Auto-select first course if available
+        if (this.courses.length && !this.selectedCourseId) {
+          this.selectedCourseId = this.courses[0].course_id;
+          await this.fetchSections();
+        }
       } catch (err) {
         this.errorMessage = 'Failed to load courses.';
       }
@@ -86,14 +99,25 @@ export default {
         this.sections = [];
         const res = await fetch(`http://localhost:3000/sections?course_id=${this.selectedCourseId}`);
         this.sections = await res.json();
+        // Auto-select first section if available
+        if (this.sections.length && !this.selectedSectionId) {
+          this.selectedSectionId = this.sections[0].section_id;
+          await this.fetchMarks();
+        }
       } catch {
         this.errorMessage = 'Failed to load sections.';
       }
     },
     async fetchMarks() {
+      // Guard: Only fetch if all required params are set
+      if (!this.studentID || !this.selectedCourseId || !this.selectedSectionId) {
+        this.errorMessage = 'Please select a course and section.';
+        return;
+      }
       try {
         this.marks = [];
         const url = `http://localhost:3000/student/marks?student_id=${this.studentID}&course_id=${this.selectedCourseId}&section_id=${this.selectedSectionId}`;
+        console.log('Fetching marks with:', this.studentID, this.selectedCourseId, this.selectedSectionId);
         const res = await fetch(url);
         if (!res.ok) {
           this.errorMessage = 'Failed to load marks (server error).';
@@ -107,12 +131,14 @@ export default {
     }
   },
   mounted() {
-    if (this.getAuthenticatedUser()) {
-      this.fetchCourses();
-    } else {
-      this.errorMessage = 'Authentication required. Please login.';
-      this.$router.push('/login');
-    }
+    this.getStudentIdFromUserId().then(success => {
+      if (success) {
+        this.fetchCourses();
+      } else {
+        this.errorMessage = 'Authentication required. Please login.';
+        this.$router.push('/login');
+      }
+    });
   }
 };
 </script>

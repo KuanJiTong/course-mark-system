@@ -29,16 +29,34 @@ export default {
   },
   props: {
     activeTab: String,
+     userRole: {
+      type: String,
+      required: true
+    },
+     allowedRoles: {
+      type: Array,
+      default: () => ['admin', 'lecturer', 'student']
+    }
   },
   data() {
     const navItems = [
       { name: "Home", link: "/", icon: "bi bi-house-door-fill", access: "all" },
 
-      //Admin
+      // Admin
+      // { name: "Dashboard", link: "/admin-dashboard", icon: "bi bi-speedometer2", access: "admin" },
       { name: "Course", link: "/course-management", icon: "bi bi-book-fill", access: "admin" },
       { name: "User", link: "/user-management", icon: "bi bi-person-fill", access: "admin" },
-      { name: "Course", link: "/lecturer-course-management", icon: "bi bi-book-fill", access: "lecturer" },
 
+      // Lecturer
+      // { name: "Dashboard", link: "/lecturer-dashboard", icon: "bi bi-speedometer2", access: "lecturer" },
+      { name: "My Courses", link: "/lecturer-course-management", icon: "bi bi-journal-bookmark-fill", access: "lecturer" },
+      { name: "Manage Students", link: "/lecturer-course-management/students/1", icon: "bi bi-people-fill", access: "lecturer" },
+      { name: "Component Marks", link: "/manage-component-marks", icon: "bi bi-clipboard-data", access: "lecturer" },
+      { name: "Final Exam Entry", link: "/add-final-exam-marks", icon: "bi bi-pencil-square", access: "lecturer" },
+      { name: "Mark Breakdown", link: "/mark-breakdown", icon: "bi bi-graph-up", access: "lecturer" },
+      { name: "Performance Trend", link: "/performance-trend", icon: "bi bi-bar-chart-line", access: "lecturer" },
+      { name: "View Mark Breakdown", link: "/view-mark-breakdown", icon: "bi bi-list-columns-reverse", access: "lecturer" },
+      { name: "Component Mark Detail", link: "/component-marks/1", icon: "bi bi-clipboard-check", access: "lecturer" },
       // // Student
       // { name: "Dashboard", link: "/student-dashboard", icon: "bi bi-speedometer2", access: "student" },
       // { name: "My Marks", link: "/student-marks", icon: "bi bi-clipboard-data", access: "student" },
@@ -55,6 +73,20 @@ export default {
       user: null,
       imageUrl: null,
     };
+  },
+  computed: {
+    filteredNavItems() {
+      return this.navItems.filter(item => {
+        if (item.access === 'all') return true;
+        if (Array.isArray(item.access)) {
+          return item.access.includes(this.userRole);
+        }
+        return item.access === this.userRole;
+      });
+    },
+    hasSidebarAccess() {
+      return this.allowedRoles.includes(this.userRole);
+    }
   },
   methods: {
     
