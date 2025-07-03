@@ -51,7 +51,7 @@
         <td class="p-2 text-center">
           <div class="icon-row">
             <i class="bi bi-pencil-square text-primary mx-2" data-bs-toggle="tooltip" title="Edit" @click="openEditModal(user)"></i>
-            <i class="bi bi-lock-fill mx-2" data-bs-toggle="tooltip" title="Reset Password"></i>
+            <i class="bi bi-lock-fill mx-2" data-bs-toggle="tooltip" title="Reset Password" @click="openResetModal(user)"></i>
             <i class="bi bi-trash-fill text-danger mx-2" data-bs-toggle="tooltip" title="Delete" @click="deleteUser(user.userId)"></i>
           </div>
         </td>
@@ -66,16 +66,32 @@
     @close="closeModal"
     @submit-user="handleSubmit"
   />
+
+  <ResetPasswordModal
+    :visible="showResetPasswordModal"
+    :userId="selectedUserId"
+    :loginId="selectedLoginId"
+    @reset-password="handleResetPassword"
+    @close="closeResetModal"
+  />
 </template>
 
 <script>
 import UserModal from '../components/UserModal.vue'; // Adjust path based on your structure
+import ResetPasswordModal from '../components/ResetPasswordModal.vue'; // Adjust path based on your structure
+
 
 export default {
-  components: { UserModal },
+  components: { 
+    UserModal,
+    ResetPasswordModal
+  },
   data() {
     return {
       showModal: false,
+      showResetPasswordModal: false,
+      selectedUserId: null,
+      selectedLoginId: null,
       selectedUser: {},
       users: [],
       searchQuery: ''
@@ -109,6 +125,16 @@ export default {
     },
     closeModal() {
       this.showModal = false;
+    },
+    openResetModal(user) {
+      this.selectedUserId = user.userId;
+      this.selectedLoginId = user.loginId;
+      this.showResetPasswordModal = true;
+    },
+    closeResetModal() {
+      this.selectedUserId = null;
+      this.selectedLoginId = null;
+      this.showResetPasswordModal  = false;
     },
     async handleSubmit(user) {
       if (user.userId) {
@@ -161,6 +187,30 @@ export default {
         } else {
           alert('User updated successfully.');
           this.fetchAllUsers();
+        }
+      } catch (err) {
+        console.error('Request error:', err);
+        alert('Network error.');
+      }
+    },
+    async handleResetPassword(passwordData, userId) {
+      try {
+        const response = await fetch(`http://localhost:3000/user/${userId}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(passwordData),
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          console.error('Update failed:', error);
+          alert('Failed to change password.');
+        } else {
+          alert('Password changed successfully.');
+          this.fetchAllUsers();
+          this.showModal = false;
         }
       } catch (err) {
         console.error('Request error:', err);
