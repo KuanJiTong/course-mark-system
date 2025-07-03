@@ -31,7 +31,7 @@
 export default {
   data() {
     return {
-      studentID: 1, 
+      studentID: null,
       courses: [],
       sections: [],
       selectedCourseId: '',
@@ -41,6 +41,24 @@ export default {
     };
   },
   methods: {
+    async getStudentIdFromUserId() {
+      const userData = sessionStorage.getItem('user');
+      if (userData) {
+        const user = JSON.parse(userData);
+        const userId = user.user_id;
+        try {
+          const res = await fetch(`http://localhost:3000/student-id?user_id=${userId}`);
+          if (!res.ok) throw new Error('Failed to fetch student_id');
+          const data = await res.json();
+          this.studentID = data.student_id;
+          return true;
+        } catch (err) {
+          this.errorMessage = 'Failed to get student ID.';
+          return false;
+        }
+      }
+      return false;
+    },
     async fetchCourses() {
       try {
         const res = await fetch('http://localhost:3000/courses');
@@ -77,7 +95,14 @@ export default {
     }
   },
   mounted() {
-    this.fetchCourses();
+    this.getStudentIdFromUserId().then(success => {
+      if (success) {
+        this.fetchCourses();
+      } else {
+        this.errorMessage = 'Authentication required. Please login.';
+        this.$router.push('/login');
+      }
+    });
   }
 };
 </script>

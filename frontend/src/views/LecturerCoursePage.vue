@@ -80,19 +80,33 @@ export default {
   name: "CourseManagement",
   data() {
     return {
-      lecturerId: 1,
+      lecturerId: null,
       courses: [],
       searchQuery: "",
     };
   },
   async created(){
+    // Check authentication
+    const user = JSON.parse(sessionStorage.getItem('user'));
+    if (!user || !user.user_id) {
+      this.$router.push('/login?message=Please login to access lecturer courses');
+      return;
+    }
+    
+    this.lecturerId = user.user_id;
+    console.log('Authenticated lecturer ID:', this.lecturerId);
+    
     await this.fetchAllLecturerCourses();
   },
   methods: {
     async fetchAllLecturerCourses(){
       try {
-        const lecturerId = this.lecturerId; 
-        const url = `http://localhost:3000/lecturer-course/${lecturerId}`;
+        if (!this.lecturerId) {
+          console.error('No lecturer ID available');
+          return;
+        }
+        
+        const url = `http://localhost:3000/lecturer-course/${this.lecturerId}`;
 
         const response = await fetch(url);
         if (!response.ok) throw new Error('Failed to fetch courses');
@@ -105,7 +119,10 @@ export default {
     },
     async searchCourses() {
       try {
-        const lecturerId = this.lecturerId;
+        if (!this.lecturerId) {
+          console.error('No lecturer ID available');
+          return;
+        }
 
         const trimmedKeyword = this.searchQuery.trim();
         if (trimmedKeyword === '') {
@@ -113,7 +130,7 @@ export default {
           return;
         }
 
-        const url = `http://localhost:3000/course?faculty_id=${lecturerId}&keyword=${encodeURIComponent(trimmedKeyword)}`;
+        const url = `http://localhost:3000/course?faculty_id=${this.lecturerId}&keyword=${encodeURIComponent(trimmedKeyword)}`;
         
         const response = await fetch(url);
         if (!response.ok) throw new Error('Failed to fetch courses');

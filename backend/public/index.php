@@ -48,6 +48,7 @@ require __DIR__ . '/../src/routes/add-final-exam-marks.php';
 require __DIR__ . '/../src/routes/view-mark-breakdown.php';
 require __DIR__ . '/../src/routes/student-view.php';
 require __DIR__ . '/../src/routes/advisor-view.php';
+require __DIR__ . '/../src/routes/auth.php';
 
 
 $app->run();

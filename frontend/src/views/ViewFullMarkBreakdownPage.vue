@@ -32,6 +32,7 @@
 export default {
   data() {
     return {
+      userID: null,
       // Sample data for students with mark breakdown for assignments, quizzes, midterm, and final exam
       students: [
         { 
@@ -67,6 +68,17 @@ export default {
       const total = (student.assignments + student.quizzes + student.midterm + student.finalExam) / 4;
       return total.toFixed(2); // Round to 2 decimal places
     }
+  },
+  mounted() {
+    // Check authentication
+    const user = JSON.parse(sessionStorage.getItem('user'));
+    if (!user || !user.user_id) {
+      this.$router.push('/login?message=Please login to access full mark breakdown');
+      return;
+    }
+    
+    this.userID = user.user_id;
+    console.log('Authenticated user ID for full mark breakdown:', this.userID);
   }
 };
 </script>

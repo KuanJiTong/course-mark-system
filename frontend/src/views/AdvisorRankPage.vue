@@ -40,7 +40,7 @@
 export default {
   data() {
     return {
-      userID: 1, 
+      userID: null, // Will be set from sessionStorage
       advisees: [],
       selectedAdviseeId: '',
       studentEnrollments: [],
@@ -61,17 +61,40 @@ export default {
     }
   },
   methods: {
+    // Get authenticated user data
+    getAuthenticatedUser() {
+      const userData = sessionStorage.getItem('user');
+      if (userData) {
+        const user = JSON.parse(userData);
+        this.userID = user.user_id;
+        console.log('Authenticated advisor ID for ranking:', this.userID);
+        return true;
+      }
+      return false;
+    },
     async fetchAdvisees() {
-      const res = await fetch(`http://localhost:3000/advisor/advisees?advisor_id=${this.userID}`);
-      this.advisees = await res.json();
+      try {
+        const res = await fetch(`http://localhost:3000/advisor/advisees?advisor_id=${this.userID}`);
+        if (!res.ok) throw new Error('Failed to fetch advisees');
+        this.advisees = await res.json();
+      } catch (error) {
+        console.error('Error fetching advisees:', error);
+        this.errorMessage = 'Failed to load advisees.';
+      }
     },
     async fetchStudentEnrollments() {
       if (!this.selectedAdviseeId) return;
-      const res = await fetch(`http://localhost:3000/student/enrollments?student_id=${this.selectedAdviseeId}`);
-      this.studentEnrollments = await res.json();
-      this.selectedCourseId = '';
-      this.selectedSectionId = '';
-      this.rankInfo = null;
+      try {
+        const res = await fetch(`http://localhost:3000/student/enrollments?student_id=${this.selectedAdviseeId}`);
+        if (!res.ok) throw new Error('Failed to fetch enrollments');
+        this.studentEnrollments = await res.json();
+        this.selectedCourseId = '';
+        this.selectedSectionId = '';
+        this.rankInfo = null;
+      } catch (error) {
+        console.error('Error fetching enrollments:', error);
+        this.errorMessage = 'Failed to load enrollments.';
+      }
     },
     async onAdviseeChange() {
       await this.fetchStudentEnrollments();
@@ -100,7 +123,12 @@ export default {
     }
   },
   async mounted() {
-    await this.fetchAdvisees();
+    if (this.getAuthenticatedUser()) {
+      await this.fetchAdvisees();
+    } else {
+      this.errorMessage = 'Authentication required. Please login.';
+      this.$router.push('/login');
+    }
   }
 };
 </script>

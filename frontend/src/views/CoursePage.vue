@@ -103,6 +103,7 @@ export default {
   name: "CourseManagement",
   data() {
     return {
+      userID: null,
       facultyId: 1,
       editingCourseId: null,
       newCourse: {
@@ -119,6 +120,16 @@ export default {
     };
   },
   async created(){
+    // Check authentication
+    const user = JSON.parse(sessionStorage.getItem('user'));
+    if (!user || !user.user_id) {
+      this.$router.push('/login?message=Please login to access course management');
+      return;
+    }
+    
+    this.userID = user.user_id;
+    console.log('Authenticated user ID for course management:', this.userID);
+    
     await this.fetchAllCourses();
   },
   methods: {

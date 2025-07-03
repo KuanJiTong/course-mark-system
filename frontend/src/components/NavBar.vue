@@ -9,7 +9,7 @@
             <img src="../assets/logo CMMS.png" alt="Logo" class="logo" />
             </router-link>
         </li>
-        <li class="nav-items dropdown" @click="toggleDropdown" @focusout="closeDropdown" tabindex="0">
+        <li class="nav-items dropdown" @click="toggleDropdown" tabindex="0">
             <a href="#" class="d-flex align-items-center link-dark text-decoration-none dropdown-toggle">
                 <img
                     v-if="!imageUrl"
@@ -40,7 +40,7 @@
                 <hr class="dropdown-divider" />
             </li>
             <li>
-                <router-link class="dropdown-item" @click="logout">Sign out</router-link>
+                <button class="dropdown-item" @click="logout">Sign out</button>
             </li>
         </ul>
       </li>
@@ -54,18 +54,50 @@ export default {
     return {
       imageUrl: 'https://media.licdn.com/dms/image/v2/D4E03AQGIyRHDpvcumQ/profile-displayphoto-shrink_400_400/profile-displayphoto-shrink_400_400/0/1676035880861?e=1755129600&v=beta&t=eIPrfOSOkKmfUYfnKmaeKucBScrx0LknuOsEKJEYUlQ',
       isDropdownOpen: false,
-      userSession: { name: "Kwek Jia Cong" },
+      userSession: null,
     };
+  },
+  mounted() {
+    console.log('NavBar component mounted');
+    // Get user data from sessionStorage
+    const userData = sessionStorage.getItem('user');
+    if (userData) {
+      this.userSession = JSON.parse(userData);
+      console.log('User session loaded:', this.userSession);
+    } else {
+      console.log('No user session found');
+    }
+    
+    // Add click outside handler to close dropdown
+    document.addEventListener('click', (event) => {
+      const dropdown = this.$el.querySelector('.dropdown');
+      if (dropdown && !dropdown.contains(event.target)) {
+        this.isDropdownOpen = false;
+      }
+    });
   },
   methods: {
     toggleDropdown() {
+      console.log('Toggle dropdown clicked');
       this.isDropdownOpen = !this.isDropdownOpen;
     },
-    closeDropdown() {
-      this.isDropdownOpen = false;
-    },
     logout() {
-      console.log("Logged out");
+      console.log('=== LOGOUT METHOD STARTED ===');
+      console.log('Logout method called');
+      
+      // Clear session data
+      sessionStorage.removeItem('jwt');
+      sessionStorage.removeItem('user');
+      
+      console.log('Session data cleared');
+      
+      // Close dropdown
+      this.isDropdownOpen = false;
+      
+      // Redirect to login page with logout parameter
+      this.$router.push({ path: '/login', query: { logout: 'true' } });
+      
+      console.log("Logged out successfully");
     },
   },
 };
