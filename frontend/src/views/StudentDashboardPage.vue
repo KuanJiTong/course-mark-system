@@ -1,6 +1,10 @@
 <template>
   <div class="student-dashboard">
     <h1>Student Dashboard</h1>
+    <div v-if="userInfo" class="welcome-section">
+      <h2>Welcome, {{ userInfo.name }}!</h2>
+      <p>Student ID: {{ userInfo.user_id }}</p>
+    </div>
     <div class="dashboard-grid">
       <div class="dashboard-card">
         <h3>View Component-wise Marks & Total</h3>
@@ -33,12 +37,48 @@
 <script>
 export default {
   name: 'StudentDashboardPage',
+  data() {
+    return {
+      userInfo: null
+    };
+  },
+  methods: {
+    getAuthenticatedUser() {
+      const userData = sessionStorage.getItem('user');
+      if (userData) {
+        this.userInfo = JSON.parse(userData);
+        console.log('Authenticated student:', this.userInfo);
+        return true;
+      }
+      return false;
+    }
+  },
+  mounted() {
+    if (!this.getAuthenticatedUser()) {
+      console.error('Authentication required. Please login.');
+      this.$router.push('/login');
+    }
+  }
 };
 </script>
 
 <style scoped>
 .student-dashboard {
   padding: 32px;
+}
+.welcome-section {
+  background: #f8f9fa;
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 24px;
+}
+.welcome-section h2 {
+  margin: 0 0 8px 0;
+  color: #333;
+}
+.welcome-section p {
+  margin: 0;
+  color: #666;
 }
 .dashboard-grid {
   display: grid;

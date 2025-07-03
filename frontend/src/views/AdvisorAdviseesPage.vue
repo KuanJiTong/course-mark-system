@@ -37,7 +37,7 @@ export default {
   components: { AdvisorAdviseeMarksPage },
   data() {
     return {
-      userID: 1,
+      userID: null,
       advisees: [],
       loaded: false,
       selectedAdvisee: null,
@@ -45,11 +45,20 @@ export default {
   },
   computed: {
     advisorIdVar() {
-      // Replace with actual logic to get logged-in advisor ID
-      return 1;
+      return this.userID;
     }
   },
   methods: {
+    getAuthenticatedUser() {
+      const userData = sessionStorage.getItem('user');
+      if (userData) {
+        const user = JSON.parse(userData);
+        this.userID = user.user_id;
+        console.log('Authenticated advisor ID:', this.userID);
+        return true;
+      }
+      return false;
+    },
     goToMarksPage(student) {
       this.$router.push({
         name: 'AdvisorAdviseeMarks',
@@ -59,18 +68,29 @@ export default {
         }
       });
     },
-  },
-  mounted() {
-      fetch(`http://localhost:3000/advisor/advisees?advisor_id=${this.userID}`)
-      .then(res => res.json())
-      .then(data => {
+    async fetchAdvisees() {
+      try {
+        const res = await fetch(`http://localhost:3000/advisor/advisees?advisor_id=${this.userID}`);
+        if (!res.ok) {
+          throw new Error('Failed to fetch advisees');
+        }
+        const data = await res.json();
         this.advisees = data;
         this.loaded = true;
-      })
-      .catch(() => {
+      } catch (error) {
+        console.error('Error fetching advisees:', error);
         this.advisees = [];
         this.loaded = true;
-      });
+      }
+    }
+  },
+  mounted() {
+    if (this.getAuthenticatedUser()) {
+      this.fetchAdvisees();
+    } else {
+      console.error('Authentication required. Please login.');
+      this.$router.push('/login');
+    }
   },
 };
 </script>

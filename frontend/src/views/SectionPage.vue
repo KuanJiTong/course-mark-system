@@ -121,6 +121,7 @@ export default {
   name: "SectionPage",
   data() {
     return {
+      userID: null,
       courseId: null,
       course: null,
       editingSectionId: null,
@@ -141,10 +142,20 @@ export default {
     };
   },
   async created(){
-      this.courseId = this.$route.params.courseId;
-      await this.fetchCourse();
-      await this.fetchAllSections();
-      await this.fetchAllLecturers();
+    // Check authentication
+    const user = JSON.parse(sessionStorage.getItem('user'));
+    if (!user || !user.user_id) {
+      this.$router.push('/login?message=Please login to access section management');
+      return;
+    }
+    
+    this.userID = user.user_id;
+    console.log('Authenticated user ID for section management:', this.userID);
+    
+    this.courseId = this.$route.params.courseId;
+    await this.fetchCourse();
+    await this.fetchAllSections();
+    await this.fetchAllLecturers();
   },
   methods: {
     async fetchAllSections(){

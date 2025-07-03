@@ -38,6 +38,7 @@ export default {
   },
   data() {
     return {
+      advisorID: null, // Will be set from sessionStorage
       enrollments: [],
       marks: {},
       loaded: false,
@@ -51,28 +52,62 @@ export default {
       return this.studentName || this.$route.query.studentName;
     }
   },
-  mounted() {
-    fetch(`http://localhost:3000/student/enrollments?student_id=${this.resolvedStudentId}`)
-      .then(res => res.json())
-      .then(enrollments => {
+  methods: {
+    // Get authenticated user data
+    getAuthenticatedUser() {
+      const userData = sessionStorage.getItem('user');
+      if (userData) {
+        const user = JSON.parse(userData);
+        this.advisorID = user.user_id;
+        console.log('Authenticated advisor ID for advisee marks:', this.advisorID);
+        return true;
+      }
+      return false;
+    },
+    async fetchEnrollments() {
+      try {
+        const res = await fetch(`http://localhost:3000/student/enrollments?student_id=${this.resolvedStudentId}`);
+        if (!res.ok) throw new Error('Failed to fetch enrollments');
+        
+        const enrollments = await res.json();
         this.enrollments = enrollments;
         this.loaded = true;
+        
+        // Fetch marks for each enrollment
         enrollments.forEach(enrollment => {
-          fetch(`http://localhost:3000/student/marks?student_id=${this.resolvedStudentId}&course_id=${enrollment.course_id}&section_id=${enrollment.section_id}`)
-            .then(res => res.json())
-            .then(data => {
-              this.marks[enrollment.section_id] = Array.isArray(data.marks) ? data.marks : [];
-            });
+          this.fetchMarks(enrollment);
         });
-      });
-        },
-  methods: {
+      } catch (error) {
+        console.error('Error fetching enrollments:', error);
+        this.loaded = true;
+      }
+    },
+    async fetchMarks(enrollment) {
+      try {
+        const res = await fetch(`http://localhost:3000/student/marks?student_id=${this.resolvedStudentId}&course_id=${enrollment.course_id}&section_id=${enrollment.section_id}`);
+        if (!res.ok) throw new Error('Failed to fetch marks');
+        
+        const data = await res.json();
+        this.marks[enrollment.section_id] = Array.isArray(data.marks) ? data.marks : [];
+      } catch (error) {
+        console.error('Error fetching marks:', error);
+        this.marks[enrollment.section_id] = [];
+      }
+    },
     downloadCSV() {
       // Download CSV for each course/section the advisee is enrolled in
       this.enrollments.forEach(enrollment => {
         const url = `http://localhost:3000/all_marks_csv?course_id=${enrollment.course_id}&section_id=${enrollment.section_id}`;
         window.open(url, '_blank');
       });
+    }
+  },
+  mounted() {
+    if (this.getAuthenticatedUser()) {
+      this.fetchEnrollments();
+    } else {
+      console.error('Authentication required. Please login.');
+      this.$router.push('/login');
     }
   }
 };

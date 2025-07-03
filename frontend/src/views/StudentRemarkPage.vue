@@ -68,7 +68,7 @@
 export default {
   data() {
     return {
-      studentID: 1,
+      studentID: null,
       courses: [],
       sections: [],
       components: [],
@@ -82,6 +82,16 @@ export default {
     };
   },
   methods: {
+    getAuthenticatedUser() {
+      const userData = sessionStorage.getItem('user');
+      if (userData) {
+        const user = JSON.parse(userData);
+        this.studentID = user.user_id;
+        console.log('Authenticated student ID for remarks:', this.studentID);
+        return true;
+      }
+      return false;
+    },
     async fetchCourses() {
       try {
         const res = await fetch('http://localhost:3000/courses');
@@ -149,8 +159,13 @@ export default {
     }
   },
   mounted() {
-    this.fetchCourses();
-    this.fetchRequests();
+    if (this.getAuthenticatedUser()) {
+      this.fetchCourses();
+      this.fetchRequests();
+    } else {
+      this.errorMessage = 'Authentication required. Please login.';
+      this.$router.push('/login');
+    }
   }
 };
 </script>

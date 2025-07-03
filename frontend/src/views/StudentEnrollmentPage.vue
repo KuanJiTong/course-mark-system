@@ -69,17 +69,24 @@ export default {
   components:{ StudentEnrollModal },
   data() {
     return {
+      lecturerID: null,
       sectionId: null,
       students: [],
       searchQuery: "",
       showModal: false
     };
   },
-  async created(){
-    this.sectionId = this.$route.params.sectionId;
-    await this.fetchAllStudents();
-  },
   methods: {
+    getAuthenticatedUser() {
+      const userData = sessionStorage.getItem('user');
+      if (userData) {
+        const user = JSON.parse(userData);
+        this.lecturerID = user.user_id;
+        console.log('Authenticated lecturer ID for enrollment management:', this.lecturerID);
+        return true;
+      }
+      return false;
+    },
     async fetchAllStudents(){
       try {
         const sectionId = this.sectionId; 
@@ -174,6 +181,15 @@ export default {
         console.error('Delete error:', error);
         alert('An error occurred while deleting.');
       }
+    }
+  },
+  async created(){
+    if (this.getAuthenticatedUser()) {
+      this.sectionId = this.$route.params.sectionId;
+      await this.fetchAllStudents();
+    } else {
+      console.error('Authentication required. Please login.');
+      this.$router.push('/login');
     }
   },
 };

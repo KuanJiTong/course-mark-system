@@ -48,7 +48,7 @@
 export default {
   data() {
     return {
-      userID: 1, 
+      userID: null, // Will be set from sessionStorage
       advisees: [],
       selectedAdviseeId: '',
       enrollments: [],
@@ -62,9 +62,26 @@ export default {
     };
   },
   methods: {
+    // Get authenticated user data
+    getAuthenticatedUser() {
+      const userData = sessionStorage.getItem('user');
+      if (userData) {
+        const user = JSON.parse(userData);
+        this.userID = user.user_id;
+        console.log('Authenticated advisor ID for overall performance:', this.userID);
+        return true;
+      }
+      return false;
+    },
     async fetchAdvisees() {
-      const res = await fetch(`http://localhost:3000/advisor/advisees?advisor_id=${this.userID}`);
-      this.advisees = await res.json();
+      try {
+        const res = await fetch(`http://localhost:3000/advisor/advisees?advisor_id=${this.userID}`);
+        if (!res.ok) throw new Error('Failed to fetch advisees');
+        this.advisees = await res.json();
+      } catch (error) {
+        console.error('Error fetching advisees:', error);
+        this.errorMessage = 'Failed to load advisees.';
+      }
     },
     async fetchAllData() {
       this.enrollments = [];
@@ -76,25 +93,47 @@ export default {
       this.loaded = false;
       this.errorMessage = '';
       if (!this.selectedAdviseeId) return;
-      // Fetch enrollments
-      const enrollRes = await fetch(`http://localhost:3000/student/enrollments?student_id=${this.selectedAdviseeId}`);
-      this.enrollments = await enrollRes.json();
-      // For each enrollment, fetch marks, class averages, and rank
-      await Promise.all(this.enrollments.map(async (enrollment) => {
-        // Marks
-        const marksRes = await fetch(`http://localhost:3000/student/marks?student_id=${this.selectedAdviseeId}&course_id=${enrollment.course_id}&section_id=${enrollment.section_id}`);
-        const marksData = await marksRes.json();
-        this.marks[enrollment.section_id] = marksData.marks || [];
-        this.finalExamMarks[enrollment.section_id] = marksData.final_exam_mark ?? '-';
-        this.totalMarks[enrollment.section_id] = marksData.total_mark ?? '-';
-        // Class averages
-        const avgRes = await fetch(`http://localhost:3000/class/component-averages?course_id=${enrollment.course_id}&section_id=${enrollment.section_id}`);
-        this.classAverages[enrollment.section_id] = await avgRes.json();
-        // Rank
-        const rankRes = await fetch(`http://localhost:3000/student/rank?student_id=${this.selectedAdviseeId}&course_id=${enrollment.course_id}&section_id=${enrollment.section_id}`);
-        this.rankInfo[enrollment.section_id] = await rankRes.json();
-      }));
-      this.loaded = true;
+      
+      try {
+        // Fetch enrollments
+        const enrollRes = await fetch(`http://localhost:3000/student/enrollments?student_id=${this.selectedAdviseeId}`);
+        if (!enrollRes.ok) throw new Error('Failed to fetch enrollments');
+        this.enrollments = await enrollRes.json();
+        
+        // For each enrollment, fetch marks, class averages, and rank
+        await Promise.all(this.enrollments.map(async (enrollment) => {
+          try {
+            // Marks
+            const marksRes = await fetch(`http://localhost:3000/student/marks?student_id=${this.selectedAdviseeId}&course_id=${enrollment.course_id}&section_id=${enrollment.section_id}`);
+            if (marksRes.ok) {
+              const marksData = await marksRes.json();
+              this.marks[enrollment.section_id] = marksData.marks || [];
+              this.finalExamMarks[enrollment.section_id] = marksData.final_exam_mark ?? '-';
+              this.totalMarks[enrollment.section_id] = marksData.total_mark ?? '-';
+            }
+            
+            // Class averages
+            const avgRes = await fetch(`http://localhost:3000/class/component-averages?course_id=${enrollment.course_id}&section_id=${enrollment.section_id}`);
+            if (avgRes.ok) {
+              this.classAverages[enrollment.section_id] = await avgRes.json();
+            }
+            
+            // Rank
+            const rankRes = await fetch(`http://localhost:3000/student/rank?student_id=${this.selectedAdviseeId}&course_id=${enrollment.course_id}&section_id=${enrollment.section_id}`);
+            if (rankRes.ok) {
+              this.rankInfo[enrollment.section_id] = await rankRes.json();
+            }
+          } catch (error) {
+            console.error(`Error fetching data for section ${enrollment.section_id}:`, error);
+          }
+        }));
+        
+        this.loaded = true;
+      } catch (error) {
+        console.error('Error fetching overall performance data:', error);
+        this.errorMessage = 'Failed to load performance data.';
+        this.loaded = true;
+      }
     },
     getComponentMarks(section_id) {
       const arr = Array.isArray(this.marks[section_id]) ? this.marks[section_id] : [];
@@ -116,7 +155,12 @@ export default {
     }
   },
   async mounted() {
-    await this.fetchAdvisees();
+    if (this.getAuthenticatedUser()) {
+      await this.fetchAdvisees();
+    } else {
+      this.errorMessage = 'Authentication required. Please login.';
+      this.$router.push('/login');
+    }
   }
 };
 </script>

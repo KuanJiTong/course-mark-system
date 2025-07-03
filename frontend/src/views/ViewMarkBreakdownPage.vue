@@ -92,7 +92,7 @@ import StudentProgressChart from '@/components/StudentProgressChart.vue';
 import StudentPieChart from '@/components/StudentPieChart.vue';
 export default {
   components: {
-    StudentProgressChart,
+    // StudentProgressChart,
     StudentProgressChart,
     StudentPieChart
   },
