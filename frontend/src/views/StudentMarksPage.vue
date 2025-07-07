@@ -3,19 +3,10 @@
     <h1>My Marks</h1>
     <div class="form-group">
       <label for="course">Course:</label>
-      <select v-model="selectedCourseId" @change="fetchSections" required>
+      <select class="form-select" v-model="selectedSectionId" @change="fetchMarks" required>
         <option disabled value="">-- Select Course --</option>
-        <option v-for="course in courses" :key="course.course_id" :value="course.course_id">
-          {{ course.course_name }}
-        </option>
-      </select>
-    </div>
-    <div class="form-group" v-if="sections.length">
-      <label for="section">Section:</label>
-      <select v-model="selectedSectionId" @change="fetchMarks" required>
-        <option disabled value="">-- Select Section --</option>
-        <option v-for="section in sections" :key="section.section_id" :value="section.section_id">
-          Section {{ section.section_number }}
+        <option v-for="course in courses" :key="course.sectionId" :value="course.sectionId">
+          {{ course.courseCode }}-{{ course.sectionNumber }} {{ course.courseName }}
         </option>
       </select>
     </div>
@@ -28,10 +19,20 @@
         </tr>
       </thead>
       <tbody>
-        <tr v-for="mark in marks" :key="mark.mark_id">
-          <td>{{ mark.component_name }}</td>
+        <tr v-for="mark in marks" :key="mark.markId">
+          <td>{{ mark.componentName }}</td>
           <td>{{ mark.mark }}</td>
-          <td>{{ mark.max_mark }}</td>
+          <td>{{ mark.maxMark }}</td>
+        </tr>
+        <tr>
+          <td>Final Exam</td>
+          <td>{{ finalExam.mark }}</td>
+          <td>{{ finalExam.maxFm }}</td>
+        </tr>
+        <tr>
+          <td><b>Total</b></td>
+          <td><b>{{ totalMark }}</b></td>
+          <td><b>100</b></td>
         </tr>
       </tbody>
     </table>
@@ -42,82 +43,48 @@
 <script>
 export default {
   data() {
+    const user = JSON.parse(sessionStorage.getItem('user'));
+
     return {
-      studentID: null, // Will be set from sessionStorage
+      studentId: user.studentId,
       courses: [],
-      sections: [],
       marks: [],
-      selectedCourseId: '',
-      selectedSectionId: '',
+      finalExam: null,
+      totalMark: null,
+      selectedSectionId: null,
       errorMessage: ''
     };
   },
-  computed: {
-    studentIdVar() {
-      return this.studentID;
-    }
+  async created(){
+    await this.fetchCourses();
   },
   methods: {
-    // Get student_id from user_id
-    async getStudentIdFromUserId() {
-      const userData = sessionStorage.getItem('user');
-      if (userData) {
-        const user = JSON.parse(userData);
-        const userId = user.user_id;
-        try {
-          const res = await fetch(`http://localhost:3000/student-id?user_id=${userId}`);
-          if (!res.ok) throw new Error('Failed to fetch student_id');
-          const data = await res.json();
-          this.studentID = data.student_id;
-          return true;
-        } catch (err) {
-          this.errorMessage = 'Failed to get student ID.';
-          return false;
-        }
-      }
-      return false;
-    },
     async fetchCourses() {
       try {
-        const res = await fetch('http://localhost:3000/courses');
+        const res = await fetch(`http://localhost:3000/enrolled-courses?student_id=${this.studentId}`);
         if (!res.ok) {
           this.errorMessage = 'Server error loading courses';
           return;
         }
         this.courses = await res.json();
         // Auto-select first course if available
-        if (this.courses.length && !this.selectedCourseId) {
-          this.selectedCourseId = this.courses[0].course_id;
-          await this.fetchSections();
+        if (this.courses.length && !this.selectedSectionId) {
+          this.selectedSectionId = this.courses[0].sectionId;
+          await this.fetchMarks();
         }
       } catch (err) {
         this.errorMessage = 'Failed to load courses.';
       }
     },
-    async fetchSections() {
-      try {
-        this.sections = [];
-        const res = await fetch(`http://localhost:3000/sections?course_id=${this.selectedCourseId}`);
-        this.sections = await res.json();
-        // Auto-select first section if available
-        if (this.sections.length && !this.selectedSectionId) {
-          this.selectedSectionId = this.sections[0].section_id;
-          await this.fetchMarks();
-        }
-      } catch {
-        this.errorMessage = 'Failed to load sections.';
-      }
-    },
     async fetchMarks() {
       // Guard: Only fetch if all required params are set
-      if (!this.studentID || !this.selectedCourseId || !this.selectedSectionId) {
-        this.errorMessage = 'Please select a course and section.';
+      if (!this.studentId || !this.selectedSectionId) {
+        this.errorMessage = 'Please select a course.';
         return;
       }
       try {
         this.marks = [];
-        const url = `http://localhost:3000/student/marks?student_id=${this.studentID}&course_id=${this.selectedCourseId}&section_id=${this.selectedSectionId}`;
-        console.log('Fetching marks with:', this.studentID, this.selectedCourseId, this.selectedSectionId);
+        const url = `http://localhost:3000/student/marks?student_id=${this.studentId}&section_id=${this.selectedSectionId}`;
         const res = await fetch(url);
         if (!res.ok) {
           this.errorMessage = 'Failed to load marks (server error).';
@@ -125,21 +92,13 @@ export default {
         }
         const data = await res.json();
         this.marks = Array.isArray(data.marks) ? data.marks : [];
+        this.finalExam = data.finalExam;
+        this.totalMark = data.totalMark;
       } catch (err) {
         this.errorMessage = 'Failed to load marks (network error).';
       }
     }
   },
-  mounted() {
-    this.getStudentIdFromUserId().then(success => {
-      if (success) {
-        this.fetchCourses();
-      } else {
-        this.errorMessage = 'Authentication required. Please login.';
-        this.$router.push('/login');
-      }
-    });
-  }
 };
 </script>
 

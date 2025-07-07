@@ -1,47 +1,58 @@
 <template>
   <div class="container mt-4">
-    <h3>Enter Marks for: {{ component?.component_name }}</h3>
+    <h3><b>{{ component?.courseCode }}-{{ component?.sectionNumber }} {{ component?.courseName }}</b></h3>
+    <h3>Enter Marks for: {{ component?.componentName }} (Max: {{ component?.maxMark }})</h3>
 
-   
-
-    <table class="table table-bordered mt-3">
+    <table class="table table-bordered mt-3" v-if="studentMarks.length">
       <thead>
         <tr>
           <th>#</th>
           <th>Student</th>
-          <th>Mark (max: {{ component?.max_mark }})</th>
+          <th>Matric No</th>
+          <th>Mark (max: {{ component?.maxMark }})</th>
         </tr>
       </thead>
       <tbody>
-        <tr v-for="(entry, index) in studentMarks" :key="entry.student_id">
+        <tr v-for="(entry, index) in studentMarks" :key="entry.studentId">
           <td>{{ index + 1 }}</td>
-          <td>{{ entry.student_name }}</td>
+          <td>{{ entry.studentName }}</td>
+          <td>{{ entry.matricNo }}</td>
           <td>
             <input
               type="number"
               class="form-control"
               v-model.number="entry.mark"
-              :max="component?.max_mark"
+              :max="component?.maxMark"
+              min="0"
             />
           </td>
         </tr>
       </tbody>
     </table>
 
-    <button class="btn btn-success" @click="submitAllMarks">💾 Save All</button>
+    <button class="btn btn-success mt-3" @click="submitAllMarks" :disabled="!studentMarks.length">
+      💾 Save All
+    </button>
+
+    <div v-if="successMessage" class="success-message mt-2">{{ successMessage }}</div>
+    <div v-if="errorMessage" class="error-message mt-2">{{ errorMessage }}</div>
   </div>
 </template>
-
 
 <script>
 export default {
   data() {
     return {
-      userID: null,
       componentId: this.$route.params.componentId,
       component: null,
       studentMarks: [],
+      successMessage: '',
+      errorMessage: ''
     };
+  },
+  async created() {
+    await this.fetchComponentDetails();
+    await this.fetchStudentsAndMarks();
   },
   methods: {
     async fetchComponentDetails() {
@@ -49,62 +60,63 @@ export default {
       this.component = await res.json();
     },
     async fetchStudentsAndMarks() {
-      const { course_id, section_id } = this.component;
+      try {
+        const { sectionId } = this.component;
 
-      const [studentsRes, marksRes] = await Promise.all([
-        fetch(`http://localhost:3000/students?course_id=${course_id}&section_id=${section_id}`),
-        fetch(`http://localhost:3000/marks?course_id=${course_id}&section_id=${section_id}`)
-      ]);
+        const [studentsRes, marksRes] = await Promise.all([
+          fetch(`http://localhost:3000/student-enrollment/${sectionId}`),
+          fetch(`http://localhost:3000/marks?section_id=${sectionId}`)
+        ]);
 
-      const students = await studentsRes.json();
-      const marks = await marksRes.json();
+        const students = await studentsRes.json();
+        const marks = await marksRes.json();
 
-      this.studentMarks = students.map(student => {
-        const match = marks.find(
-        m => m.student_id === student.student_id && String(m.component_id) === String(this.componentId)
-        );
-        return {
-          student_id: student.student_id,
-          student_name: student.student_name,
-          mark: match ? match.mark : ''
-        };
-      });
+        this.studentMarks = students.map(student => {
+          const existing = marks.find(
+            m => m.studentId === student.studentId
+          );
+
+          return {
+            studentId: student.studentId,
+            studentName: student.studentName,
+            matricNo: student.matricNo,
+            mark: existing ? existing.mark : ''
+          };
+        });
+
+        this.successMessage = '';
+        this.errorMessage = '';
+      } catch (err) {
+        this.errorMessage = 'Failed to load students or marks.';
+        console.error(err);
+      }
     },
     async submitAllMarks() {
       try {
-        const promises = this.studentMarks.map(entry =>
+        const payloads = this.studentMarks.map(entry => ({
+          componentId: this.componentId,
+          studentId: entry.studentId,
+          mark: entry.mark
+        }));
+
+        const requests = payloads.map(payload =>
           fetch('http://localhost:3000/marks', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              component_id: this.componentId,
-              student_id: entry.student_id,
-              mark: entry.mark
-            })
+            body: JSON.stringify(payload)
           })
         );
 
-        await Promise.all(promises);
-        alert("All marks saved successfully!");
-      } catch (error) {
-        alert("Failed to save marks.");
-        console.error(error);
+        await Promise.all(requests);
+        this.successMessage = 'All marks saved successfully!';
+        this.errorMessage = '';
+        await this.fetchStudentsAndMarks();
+      } catch (err) {
+        this.errorMessage = 'Failed to save marks.';
+        this.successMessage = '';
+        console.error(err);
       }
     }
-  },
-  async mounted() {
-    // Check authentication
-    const user = JSON.parse(sessionStorage.getItem('user'));
-    if (!user || !user.user_id) {
-      this.$router.push('/login?message=Please login to access component marks');
-      return;
-    }
-    
-    this.userID = user.user_id;
-    console.log('Authenticated user ID for component marks:', this.userID);
-    
-    await this.fetchComponentDetails();
-    await this.fetchStudentsAndMarks();
   }
 };
 </script>

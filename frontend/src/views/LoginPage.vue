@@ -7,10 +7,10 @@
         </div>
         <h2>Login</h2>
         <div>
-          <label for="userId" class="form-label"><b>User ID</b></label>
+          <label for="userId" class="form-label"><b>Login ID</b></label>
           <div class="form-input">
             <i class="bi bi-person bi-solid"></i>
-            <input id="userId" type="text" class="form-control" v-model="userID" placeholder="Enter User ID"/>
+            <input id="userId" type="text" class="form-control" v-model="loginID" placeholder="Enter User ID"/>
           </div>
         </div>
 
@@ -38,7 +38,7 @@
 export default {
   data() {
     return {
-      userID: '',
+      loginID: '',
       password: '',
       message: null,
       inputType: 'password',
@@ -73,7 +73,7 @@ export default {
         const res = await fetch('http://localhost:3000/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userID: this.userID, password: this.password })
+          body: JSON.stringify({ loginID: this.loginID, password: this.password })
         });
         console.log('Response received:', res.status);
         const data = await res.json();
@@ -81,19 +81,7 @@ export default {
         if (res.ok && data.token) {
           sessionStorage.setItem('jwt', data.token);
           sessionStorage.setItem('user', JSON.stringify(data.user));
-          // Role-based redirect
-          const roles = data.user.roles.map(r => r.toLowerCase());
-          if (roles.includes('student')) {
-            this.$router.push('/student-dashboard');
-          } else if (roles.includes('advisor')) {
-            this.$router.push('/advisor-dashboard');
-          } else if (roles.includes('lecturer')) {
-            this.$router.push('/lecturer-course-management');
-          } else if (roles.includes('admin')) {
-            this.$router.push('/user-management');
-          } else {
-            this.$router.push('/');
-          }
+          this.$router.push('/');
         } else {
           this.message = data.error || 'Login failed';
         }

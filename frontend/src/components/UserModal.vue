@@ -159,27 +159,53 @@ export default {
     userData: {
       immediate: true,
       handler(newVal) {
-        if (newVal && Object.keys(newVal).length) {
-          this.user = { ...newVal };
-          if (this.user.password) this.user.password = '';
+        if (this.isEdit && newVal && Object.keys(newVal).length) {
+          this.user = {
+  // Start with defaults
+  loginId: '',
+  title: '',
+  name: '',
+  email: '',
+  password: '',
+  createdAt: '',
+  facultyId: null,
+  program: '',
+  department: '',
+  roleIds: [],
+
+  // Overwrite with incoming values
+  ...newVal
+};
+
+// Normalize types
+this.user.roleIds = (newVal.roleIds || []).map(id => Number(id));
+this.user.password = ''; // Always blank out password when editing
+
+          console.log('Loaded user for edit:', this.user);
+        } else {
+          this.reset();
         }
       }
     },
-    'user.roleIds'(newVal) {
-      const valid =
-        newVal.length === 0 || newVal.length === 1 ||
-        (newVal.includes(2) && newVal.includes(3) && newVal.length === 2);
+  'user.roleIds'(newVal) {
+    const roleIds = newVal.map(Number); // ensure they're all numbers
 
-      if (!valid) {
-        alert('Only "Lecturer" and "Academic Advisor" can be selected together.');
-        if(this.isEdit){
-          this.user.roleIds = this.userData.roleIds;
-        }
-        else{
-          this.user.roleIds = [];
-        }
+    const valid =
+      roleIds.length === 0 ||
+      roleIds.length === 1 ||
+      (roleIds.length === 2 && roleIds.includes(2) && roleIds.includes(3));
+
+    if (!valid) {
+      alert('Only "Lecturer" and "Academic Advisor" can be selected together.');
+
+      // Also ensure we reset to numbers
+      if (this.isEdit && this.userData.roleIds) {
+        this.user.roleIds = this.userData.roleIds.map(Number);
+      } else {
+        this.user.roleIds = [];
       }
     }
+  }
   },
   async created(){
     await this.fetchAllfaculties();
@@ -225,10 +251,13 @@ export default {
       this.user.department = '';
     },
     handleSubmit() {
-      this.user.createdAt = getCurrentDateTime();
+      if (!this.isEdit) {
+        this.user.createdAt = getCurrentDateTime();
+      }
       this.$emit('submit-user', { ...this.user });
       this.reset();
     }
+
   }
 };
 </script>

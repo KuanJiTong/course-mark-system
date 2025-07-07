@@ -1,189 +1,154 @@
 <template>
-  <div class="final-exam-marks">
-    <h1>Add Final Exam Marks ({{ maxFinalMark }}%)</h1>
+  <div class="container mt-4">
+    <h3>Enter Final Exam Marks (Max: {{ maxFinalMark }}%)</h3>
 
     <!-- Course and Section Selection -->
-    <div class="form-group">
+    <div class="form-group mb-3">
       <label for="course">Course:</label>
-      <select v-model="selectedCourseId" @change="fetchSections" required>
+      <select class="form-select" v-model="selectedSectionId" @change="fetchStudentsAndMarks" required>
         <option disabled value="">-- Select Course --</option>
-        <option v-for="course in courses" :key="course.course_id" :value="course.course_id">
-          {{ course.course_name }}
+        <option v-for="course in courses" :key="course.sectionId" :value="course.sectionId">
+          {{ course.courseCode }}-{{ course.sectionNumber }} {{ course.courseName }}
         </option>
       </select>
     </div>
 
-    <div class="form-group" v-if="sections.length">
-      <label for="section">Section:</label>
-      <select v-model="selectedSectionId" @change="fetchStudents" required>
-        <option disabled value="">-- Select Section --</option>
-        <option v-for="section in sections" :key="section.section_id" :value="section.section_id">
-          Section {{ section.section_number }}
-        </option>
-      </select>
-    </div>
+    <!-- Table of Students and Marks -->
+    <table class="table table-bordered mt-3" v-if="studentMarks.length">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Student</th>
+          <th>Matric No</th>
+          <th>Final Mark (max: {{ maxFinalMark }})</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="(entry, index) in studentMarks" :key="entry.studentId">
+          <td>{{ index + 1 }}</td>
+          <td>{{ entry.studentName }}</td>
+          <td>{{ entry.matricNo }}</td>
+          <td>
+            <input
+              type="number"
+              class="form-control"
+              v-model.number="entry.mark"
+              :max="maxFinalMark"
+              min="0"
+            />
+          </td>
+        </tr>
+      </tbody>
+    </table>
 
-    <!-- Student and Marks Entry -->
-    <form @submit.prevent="submitMarks" v-if="students && students.length">
-      <div class="form-group">
-        <label for="studentId">Student:</label>
-        <select v-model="studentId" required>
-          <option disabled value="">-- Select Student --</option>
-          <option v-for="student in students" :key="student.student_id" :value="student.student_id">
-            {{ student.student_id }} - {{ student.student_name }}
-          </option>
-        </select>
-      </div>
+    <button class="btn btn-success mt-3" @click="submitAllMarks" :disabled="!studentMarks.length">
+      💾 Save All
+    </button>
 
-      <div class="form-group">
-        <label for="marks">Final Exam Mark (out of {{ maxFinalMark }}):</label>
-<input
-  type="number"
-  id="marks"
-  v-model.number="marks"
-  :max="maxFinalMark"
-  min="0"
-  required
-/>
-      </div>
-
-      <button type="submit">💾 Save Marks</button>
-    </form>
-
-    <!-- Messages -->
-    <div v-if="successMessage" class="success-message">
-      {{ successMessage }}
-    </div>
-    <div v-if="errorMessage" class="error-message">
-      {{ errorMessage }}
-    </div>
+    <div v-if="successMessage" class="success-message mt-2">{{ successMessage }}</div>
+    <div v-if="errorMessage" class="error-message mt-2">{{ errorMessage }}</div>
   </div>
 </template>
 
 
-<script>
-// import DefaultLayout from '../components/DefaultLayout.vue';
 
+<script>
 export default {
-  // components: { DefaultLayout },
   data() {
+    const user = JSON.parse(sessionStorage.getItem('user'));
+
     return {
-      userID: null,
-      selectedCourseId: '',
+      lecturerId: user?.lecturerId || '',
       selectedSectionId: '',
       courses: [],
-      sections: [],
-      students: [],
-      studentId: '',
-      marks: '',
+      studentMarks: [],
       successMessage: '',
       errorMessage: ''
     };
   },
   computed: {
-  selectedCourse() {
-    return this.courses.find(c => c.course_id === this.selectedCourseId) || null;
+    selectedCourse() {
+      return this.courses.find(c => c.sectionId === this.selectedSectionId) || {};
+    },
+    maxFinalMark() {
+      return this.selectedCourse?.maxFm || 100;
+    },
   },
-  maxFinalMark() {
-    return this.selectedCourse?.max_fm;
-  }
-},
+  async created() {
+    await this.fetchAllLecturerCourses();
+  },
   methods: {
-    async fetchCourses() {
+    async fetchAllLecturerCourses() {
       try {
-        const res = await fetch('http://localhost:3000/courses');
-        this.courses = await res.json();
-      } catch (err) {
-        this.errorMessage = 'Failed to load courses.';
-      }
-    },
-    async fetchSections() {
-      try {
-        const res = await fetch(`http://localhost:3000/sections?course_id=${this.selectedCourseId}`);
-        this.sections = await res.json();
-      } catch (err) {
-        this.errorMessage = 'Failed to load sections.';
-      }
-    },
-    async fetchStudents() {
-      try {
-        const res = await fetch(`http://localhost:3000/students?course_id=${this.selectedCourseId}&section_id=${this.selectedSectionId}`);
-        this.students = await res.json();
-      } catch (err) {
-        this.errorMessage = 'Failed to load students.';
-      }
-    },
-    async submitMarks() {
-      this.successMessage = '';
-      this.errorMessage = '';
-
-      if (!this.selectedCourseId || !this.selectedSectionId || !this.studentId || this.marks === '') {
-        this.errorMessage = 'All fields are required.';
-        return;
-      }
-
-      const payload = {
-        student_id: this.studentId,
-        course_id: this.selectedCourseId,
-        section_id: this.selectedSectionId,
-        mark: this.marks
-      };
-
-      try {
-        const res = await fetch('http://localhost:3000/final_exam', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-
+        const res = await fetch(`http://localhost:3000/lecturer-course/${this.lecturerId}`);
         const data = await res.json();
+        this.courses = data;
 
-        if (res.ok) {
-          this.successMessage = data.message || 'Final exam mark saved.';
-          this.studentId = '';
-          this.marks = '';
-        } else {
-          this.errorMessage = data.error || 'Failed to save final exam mark.';
+        if (this.courses.length && !this.selectedSectionId) {
+          this.selectedSectionId = this.courses[0].sectionId;
+          await this.fetchStudentsAndMarks();
         }
       } catch (err) {
-        this.errorMessage = 'Error submitting data.';
+        console.error("Error fetching courses", err);
       }
     },
-    async fetchExistingMark() {
-  if (!this.studentId || !this.selectedCourseId || !this.selectedSectionId) return;
+    async fetchStudentsAndMarks() {
+      try {
+        const [studentsRes, marksRes] = await Promise.all([
+          fetch(`http://localhost:3000/student-enrollment/${this.selectedSectionId}`),
+          fetch(`http://localhost:3000/final_exam?section_id=${this.selectedSectionId}`)
+        ]);
 
-  try {
-    const res = await fetch(`http://localhost:3000/final_exam/student?student_id=${this.studentId}&course_id=${this.selectedCourseId}&section_id=${this.selectedSectionId}`);
-    const data = await res.json();
-    this.marks = data.mark ?? ''; // Set marks to value or empty string
-  } catch (err) {
-    console.error("Failed to fetch existing mark", err);
-    this.errorMessage = 'Could not fetch existing mark.';
-  }
-}
-  },
-  mounted() {
-    // Check authentication
-    const user = JSON.parse(sessionStorage.getItem('user'));
-    if (!user || !user.user_id) {
-      this.$router.push('/login?message=Please login to access final exam marks');
-      return;
+        const students = await studentsRes.json();
+        const marks = await marksRes.json();
+
+        this.studentMarks = students.map(student => {
+          const existing = marks.find(m =>
+            m.studentId === student.studentId
+          );
+
+          return {
+            studentId: student.studentId,
+            studentName: student.studentName,
+            matricNo: student.matricNo,
+            mark: existing ? existing.mark : ''
+          };
+        });
+
+        this.successMessage = '';
+        this.errorMessage = '';
+      } catch (err) {
+        this.errorMessage = 'Failed to load students or marks.';
+        console.error(err);
+      }
+    },
+    async submitAllMarks() {
+      try {
+        const payloads = this.studentMarks.map(entry => ({
+          studentId: entry.studentId,
+          sectionId: this.selectedSectionId,
+          mark: entry.mark
+        }));
+
+        const requests = payloads.map(payload =>
+          fetch('http://localhost:3000/final_exam', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          })
+        );
+
+        await Promise.all(requests);
+        this.successMessage = 'All final exam marks saved successfully!';
+        this.errorMessage = '';
+        await this.fetchStudentsAndMarks();
+      } catch (err) {
+        this.errorMessage = 'Failed to save marks.';
+        this.successMessage = '';
+        console.error(err);
+      }
     }
-    
-    this.userID = user.user_id;
-    console.log('Authenticated user ID for final exam marks:', this.userID);
-    
-    this.fetchCourses();
-  },
-  watch: {
-  studentId(newVal) {
-    if (newVal) {
-      this.fetchExistingMark();
-    } else {
-      this.marks = '';
-    }
   }
-}
 };
 </script>
 

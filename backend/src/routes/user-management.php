@@ -59,11 +59,8 @@ $app->get('/users', function ($request, $response) {
         $sql = "SELECT
                     u.user_id AS userId,
                     u.login_id AS loginId,
-                    l.title,  -- Will be NULL for non-lecturers
-                    CASE
-                        WHEN l.title IS NOT NULL THEN CONCAT(l.title, ' ', u.name)
-                        ELSE u.name
-                    END AS name,
+                    u.name AS name,
+                    l.title AS title,  -- Will be NULL for non-lecturers
                     u.email,
                     r.role_id AS roleId,
                     r.role_name AS roleName,
@@ -254,6 +251,7 @@ $app->get('/lecturers/{facultyId}', function ($request, $response, $args) {
 $app->patch('/user/{id}', function ($request, $response, $args) {
     $pdo = getPDO();
     $userId = (int)$args['id'];
+
     $data = json_decode($request->getBody()->getContents(), true);
 
     if (!$data) {
@@ -261,7 +259,7 @@ $app->patch('/user/{id}', function ($request, $response, $args) {
         return $response->withStatus(400)->withHeader('Content-Type', 'application/json');
     }
 
-    $data = camelToSnakeRecursive($data); 
+    $data = camelToSnakeRecursive($data);
 
     if (empty($data)) {
         $response->getBody()->write(json_encode(['error' => 'No data to update']));
@@ -271,14 +269,11 @@ $app->patch('/user/{id}', function ($request, $response, $args) {
     try {
         $pdo->beginTransaction();
 
+        // Update users table (excluding title)
         $fields = [];
         $values = [];
 
-        if (isset($data['password'])) {
-            $data['password'] = password_hash($data['password'], PASSWORD_DEFAULT);
-        }
-
-        $allowed = ['login_id', 'name', 'title', 'email', 'faculty_id', 'password'];
+        $allowed = ['login_id', 'name', 'email', 'faculty_id', 'password'];
         foreach ($data as $key => $value) {
             if (in_array($key, $allowed)) {
                 $fields[] = "$key = ?";
@@ -295,21 +290,44 @@ $app->patch('/user/{id}', function ($request, $response, $args) {
 
         // Update roles if role_ids is present
         if (isset($data['role_ids']) && is_array($data['role_ids'])) {
+            // Delete old roles
             $stmtDel = $pdo->prepare("DELETE FROM user_roles WHERE user_id = ?");
             $stmtDel->execute([$userId]);
 
+            // Insert new roles
             $stmtRole = $pdo->prepare("INSERT INTO user_roles (user_id, role_id) VALUES (?, ?)");
             foreach ($data['role_ids'] as $roleId) {
                 $stmtRole->execute([$userId, $roleId]);
+            }
+
+            // ✅ Update lecturer title if role_id 2 (Lecturer) is included
+            if (in_array(2, $data['role_ids']) && isset($data['title'])) {
+                // Check if lecturer already exists
+                $stmtCheckLecturer = $pdo->prepare("SELECT COUNT(*) FROM lecturers WHERE user_id = ?");
+                $stmtCheckLecturer->execute([$userId]);
+
+                if ($stmtCheckLecturer->fetchColumn() > 0) {
+                    // Update title
+                    $stmtUpdateLecturer = $pdo->prepare("UPDATE lecturers SET title = ? WHERE user_id = ?");
+                    $stmtUpdateLecturer->execute([$data['title'], $userId]);
+                } else {
+                    // Insert new lecturer record
+                    $stmtInsertLecturer = $pdo->prepare("INSERT INTO lecturers (user_id, title) VALUES (?, ?)");
+                    $stmtInsertLecturer->execute([$userId, $data['title']]);
+                }
             }
         }
 
         $pdo->commit();
         $response->getBody()->write(json_encode(['message' => 'User updated']));
         return $response->withStatus(200)->withHeader('Content-Type', 'application/json');
+
     } catch (Exception $e) {
         $pdo->rollBack();
-        $response->getBody()->write(json_encode(['error' => 'Failed to update', 'details' => $e->getMessage()]));
+        $response->getBody()->write(json_encode([
+            'error' => 'Failed to update',
+            'details' => $e->getMessage()
+        ]));
         return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
     }
 });

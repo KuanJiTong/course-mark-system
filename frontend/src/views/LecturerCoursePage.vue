@@ -31,10 +31,10 @@
         </thead>
         <tbody>
           <tr v-if="courses.length === 0 && searchQuery" class="text-center text-muted">
-            <td colspan="7">No courses found</td>
+            <td colspan="10">No courses found</td>
           </tr>
           <tr v-else-if="courses.length === 0" class="text-center text-muted">
-            <td colspan="7">No courses added yet.</td>
+            <td colspan="10">No courses added yet.</td>
           </tr>
           <tr v-for="(course, index) in courses" :key="index">
             <td>{{ index + 1 }}</td>
@@ -79,23 +79,15 @@
 export default {
   name: "CourseManagement",
   data() {
+    const user = JSON.parse(sessionStorage.getItem('user'));
+
     return {
-      lecturerId: null,
+      lecturerId: user.lecturerId,
       courses: [],
       searchQuery: "",
     };
   },
   async created(){
-    // Check authentication
-    const user = JSON.parse(sessionStorage.getItem('user'));
-    if (!user || !user.user_id) {
-      this.$router.push('/login?message=Please login to access lecturer courses');
-      return;
-    }
-    
-    this.lecturerId = user.user_id;
-    console.log('Authenticated lecturer ID:', this.lecturerId);
-    
     await this.fetchAllLecturerCourses();
   },
   methods: {
@@ -130,7 +122,7 @@ export default {
           return;
         }
 
-        const url = `http://localhost:3000/course?faculty_id=${this.lecturerId}&keyword=${encodeURIComponent(trimmedKeyword)}`;
+        const url = `http://localhost:3000/lecturer-course/${this.lecturerId}?keyword=${encodeURIComponent(trimmedKeyword)}`;
         
         const response = await fetch(url);
         if (!response.ok) throw new Error('Failed to fetch courses');

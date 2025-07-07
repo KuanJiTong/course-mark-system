@@ -3,9 +3,9 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jun 21, 2025 at 05:15 AM
--- Server version: 10.4.32-MariaDB
--- PHP Version: 8.2.12
+-- Generation Time: Jul 07, 2025 at 09:18 AM
+-- Server version: 11.5.2-MariaDB
+-- PHP Version: 8.0.30
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -24,12 +24,31 @@ SET time_zone = "+00:00";
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `advisor_advisee`
+--
+
+CREATE TABLE `advisor_advisee` (
+  `advisor_id` int(11) NOT NULL,
+  `student_id` int(11) NOT NULL,
+  `assigned_at` datetime DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `advisor_advisee`
+--
+
+INSERT INTO `advisor_advisee` (`advisor_id`, `student_id`, `assigned_at`) VALUES
+(1, 1, '2025-06-22 19:19:51'),
+(1, 3, '2025-06-22 19:19:51');
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `components`
 --
 
 CREATE TABLE `components` (
   `component_id` int(11) NOT NULL,
-  `course_id` int(11) NOT NULL,
   `section_id` int(11) NOT NULL,
   `component_name` varchar(100) NOT NULL,
   `max_mark` decimal(5,2) NOT NULL
@@ -39,12 +58,10 @@ CREATE TABLE `components` (
 -- Dumping data for table `components`
 --
 
-INSERT INTO `components` (`component_id`, `course_id`, `section_id`, `component_name`, `max_mark`) VALUES
-(2, 1, 1, 'Assignment', 10.00),
-(3, 1, 1, 'exercise', 20.00),
-(4, 1, 2, 'quiz', 5.00),
-(5, 2, 6, 'quiz', 5.00),
-(7, 1, 2, 'test', 40.00);
+INSERT INTO `components` (`component_id`, `section_id`, `component_name`, `max_mark`) VALUES
+(1, 1, 'Assignment', 40.00),
+(2, 1, 'Quiz', 20.00),
+(3, 1, 'Midterm', 30.00);
 
 -- --------------------------------------------------------
 
@@ -91,8 +108,7 @@ INSERT INTO `enrollment` (`enrollment_id`, `student_id`, `section_id`) VALUES
 (1, 1, 1),
 (2, 2, 1),
 (3, 26, 1),
-(4, 26, 2),
-(5, 16, 2);
+(4, 3, 1);
 
 -- --------------------------------------------------------
 
@@ -111,7 +127,8 @@ CREATE TABLE `faculty` (
 --
 
 INSERT INTO `faculty` (`faculty_id`, `faculty_abbreviation`, `faculty_name`) VALUES
-(1, 'FC', 'Faculty of Computing');
+(1, 'FC', 'Faculty of Science'),
+(2, 'ENG', 'Faculty of Engineering');
 
 -- --------------------------------------------------------
 
@@ -122,19 +139,19 @@ INSERT INTO `faculty` (`faculty_id`, `faculty_abbreviation`, `faculty_name`) VAL
 CREATE TABLE `final_exam` (
   `exam_id` int(11) NOT NULL,
   `student_id` int(11) NOT NULL,
-  `course_id` int(11) NOT NULL,
   `section_id` int(11) NOT NULL,
-  `mark` decimal(5,2) DEFAULT NULL
+  `mark` decimal(5,2) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `final_exam`
 --
 
-INSERT INTO `final_exam` (`exam_id`, `student_id`, `course_id`, `section_id`, `mark`) VALUES
-(1, 1, 1, 1, 35.00),
-(2, 26, 1, 2, 33.00),
-(3, 16, 1, 2, 6.00);
+INSERT INTO `final_exam` (`exam_id`, `student_id`, `section_id`, `mark`) VALUES
+(2, 1, 1, 30.00),
+(3, 2, 1, 25.00),
+(4, 3, 1, 26.00),
+(5, 26, 1, 27.00);
 
 -- --------------------------------------------------------
 
@@ -157,7 +174,8 @@ CREATE TABLE `lecturers` (
 INSERT INTO `lecturers` (`lecturer_id`, `user_id`, `title`, `staff_no`, `department`) VALUES
 (1, 9, 'Dr.', 'S001', 'Software Engineering'),
 (2, 10, 'Prof. Madya Dr.', 'S002', 'Software Engineering'),
-(3, 11, 'Assoc. Prof.', 'S003', 'Computer Science');
+(3, 11, 'Assoc. Prof.', 'S003', 'Computer Science'),
+(4, 102, 'Dr.', 'lecturer102', 'Physics');
 
 -- --------------------------------------------------------
 
@@ -169,7 +187,7 @@ CREATE TABLE `marks` (
   `mark_id` int(11) NOT NULL,
   `student_id` int(11) NOT NULL,
   `component_id` int(11) NOT NULL,
-  `mark` decimal(5,2) DEFAULT NULL
+  `mark` decimal(5,2) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -177,16 +195,40 @@ CREATE TABLE `marks` (
 --
 
 INSERT INTO `marks` (`mark_id`, `student_id`, `component_id`, `mark`) VALUES
-(4, 1, 2, 9.00),
-(5, 2, 2, 0.00),
-(6, 26, 2, 0.00),
-(7, 26, 4, 4.00),
-(8, 16, 4, 5.00),
-(9, 26, 7, 40.00),
-(10, 16, 7, 0.00),
-(11, 1, 3, 6.00),
-(12, 2, 3, 0.00),
-(13, 26, 3, 0.00);
+(1, 1, 1, 18.50),
+(2, 1, 2, 15.00),
+(3, 1, 3, 25.00),
+(4, 2, 1, 15.00),
+(5, 2, 2, 12.00),
+(6, 2, 3, 20.00),
+(7, 3, 1, 17.00),
+(8, 3, 2, 14.00),
+(9, 3, 3, 22.00),
+(10, 26, 1, 18.00);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `remark_requests`
+--
+
+CREATE TABLE `remark_requests` (
+  `request_id` int(11) NOT NULL,
+  `student_id` int(11) NOT NULL,
+  `section_id` int(11) NOT NULL,
+  `component_id` int(11) DEFAULT NULL,
+  `justification` text NOT NULL,
+  `status` varchar(20) DEFAULT 'Pending',
+  `created_at` datetime DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `remark_requests`
+--
+
+INSERT INTO `remark_requests` (`request_id`, `student_id`, `section_id`, `component_id`, `justification`, `status`, `created_at`) VALUES
+(3, 1, 1, 1, 'help', 'Pending', '2025-06-22 20:47:58'),
+(4, 1, 1, 2, 'nooo', 'Pending', '2025-07-06 03:52:57');
 
 -- --------------------------------------------------------
 
@@ -204,8 +246,8 @@ CREATE TABLE `roles` (
 --
 
 INSERT INTO `roles` (`role_id`, `role_name`) VALUES
-(3, 'Academic Advisor'),
 (1, 'Admin'),
+(3, 'Advisor'),
 (2, 'Lecturer'),
 (4, 'Student');
 
@@ -296,7 +338,8 @@ INSERT INTO `students` (`student_id`, `user_id`, `matric_no`, `program`, `gpa`, 
 (32, 42, 'A22EC0129', 'Bachelor of Computer Science (Software Engineering)', NULL, NULL, NULL),
 (33, 43, 'A22EC0130', 'Bachelor of Computer Science (Software Engineering)', NULL, NULL, NULL),
 (34, 44, 'A22EC0131', 'Bachelor of Computer Science (Software Engineering)', NULL, NULL, NULL),
-(35, 45, 'A22EC0132', 'Bachelor of Computer Science (Software Engineering)', NULL, NULL, NULL);
+(35, 45, 'A22EC0132', 'Bachelor of Computer Science (Software Engineering)', NULL, NULL, NULL),
+(37, 104, 'student104', 'BSc Computer Science', NULL, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -320,7 +363,7 @@ CREATE TABLE `users` (
 
 INSERT INTO `users` (`user_id`, `login_id`, `name`, `email`, `password`, `faculty_id`, `created_at`) VALUES
 (8, 'A22EC0062', 'KUAN JI TONG', 'kuantong@graduate.utm.my', '$2y$10$bRBH15uzemCr6avnYzzckeCV5zVDehhu.ASy4WiSxKnXTn6LS75ke', 1, '2025-06-13 02:44:58'),
-(9, 'S001', 'Ahmad Faizal Bin Ismail', 'faizal.ismail@utm.my', '$2y$10$/bvBymyPej6Xnibk7UZPdOeL/1f09M4g9/rZeXG0xFeO2qh1o/he6', 1, '2025-06-13 11:59:48'),
+(9, 'S001', 'Ahmad Faizal Bin Ismail', 'faizal.ismail@utm.my', '$2y$10$hyy9npwhDXTPRmx6Vb4tle5HiF2gscFmU3x5tHlLn9zjnz3cuaoCa', 1, '2025-06-13 11:59:48'),
 (10, 'S002', 'Noraini Bt. Yusof', 'noraini.yusof@utm.my', '$2y$10$WFX5gdDUEvTokX77aHoN/uCar3AavOYhpNC/aFnkji1EBqOzq2urm', 1, '2025-06-13 12:00:23'),
 (11, 'S003', 'Muhammad Hafiz Bin Zainal', 'mhafiz.zainal@utm.my', '$2y$10$YdbUm7a3GoXulwHanBv9d.oj2wR6D7/9i7mYBLL/sxoS8RiZ7yk/O', 1, '2025-06-13 12:01:14'),
 (12, 'A22EC0099', 'Oh Kai Xuan', 'ohxuan@graduate.utm.my', '$2y$10$eVy2LNkmGWJ9VCcbeoOe6ekxQVjbxw6EmZvFl60s3GFrxVo0LCShy', 1, '2025-06-13 20:34:44'),
@@ -356,7 +399,12 @@ INSERT INTO `users` (`user_id`, `login_id`, `name`, `email`, `password`, `facult
 (42, 'A22EC0129', 'Azhar Bin Rahim', 'azhar@graduate.utm.my', '$2y$10$Gz9LKwFuN9.kRaW.FyZhqura1LwJRYAsoxY2XAzq1LXFVFZzsjZNC', 1, '2025-06-13 21:34:44'),
 (43, 'A22EC0130', 'Tay Jin Xuan', 'jinxuan@graduate.utm.my', '$2y$10$JdagnXcZwzTcfZVIBaC6nu2.GtDHUYtzf94ef042ajoFVBTFrIoV.', 1, '2025-06-13 21:36:44'),
 (44, 'A22EC0131', 'Nadiah Binti Zahid', 'nadiah@graduate.utm.my', '$2y$10$r74wUdWpNke7QQU7z1IzKubszWxHo4xMh4moMRq/h7AbQ1iDxrep6', 1, '2025-06-13 21:38:44'),
-(45, 'A22EC0132', 'Yap Qi Ming', 'qiming@graduate.utm.my', '$2y$10$wL4pX7w3rnRBp.nuInQYg.TTD1UqtrDdyw8o5oTd.ja1WeoPZ/Otm', 1, '2025-06-13 21:40:44');
+(45, 'A22EC0132', 'Yap Qi Ming', 'qiming@graduate.utm.my', '$2y$10$wL4pX7w3rnRBp.nuInQYg.TTD1UqtrDdyw8o5oTd.ja1WeoPZ/Otm', 1, '2025-06-13 21:40:44'),
+(46, 'A22EC0002', 'Bob Student', 'bob@student.edu', 'hashedpassword', 1, '2025-06-20 22:30:13'),
+(102, 'lecturer10', 'Dr. John Smith', 'lecturer102@example.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 1, '2025-06-25 06:22:50'),
+(103, 'advisor103', 'Prof. Sarah Johnson', 'advisor103@example.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 1, '2025-06-25 06:22:50'),
+(104, 'student104', 'Alice Brown', 'student104@example.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 1, '2025-06-25 06:22:50'),
+(106, 'A001', 'Admin 1', 'admin1@gmail.com', '$2y$10$urX/Tb47achpP8pWIcNWhOgV8ujOfkdNe4U0mIGYq8ZQZry21y8Nu', 1, '2025-07-07 04:19:51');
 
 -- --------------------------------------------------------
 
@@ -374,10 +422,14 @@ CREATE TABLE `user_roles` (
 --
 
 INSERT INTO `user_roles` (`user_id`, `role_id`) VALUES
-(8, 4),
+(106, 1),
 (9, 2),
 (10, 2),
 (11, 2),
+(102, 2),
+(9, 3),
+(103, 3),
+(8, 4),
 (12, 4),
 (13, 4),
 (14, 4),
@@ -411,18 +463,25 @@ INSERT INTO `user_roles` (`user_id`, `role_id`) VALUES
 (42, 4),
 (43, 4),
 (44, 4),
-(45, 4);
+(45, 4),
+(104, 4);
 
 --
 -- Indexes for dumped tables
 --
 
 --
+-- Indexes for table `advisor_advisee`
+--
+ALTER TABLE `advisor_advisee`
+  ADD PRIMARY KEY (`advisor_id`,`student_id`),
+  ADD KEY `student_id` (`student_id`);
+
+--
 -- Indexes for table `components`
 --
 ALTER TABLE `components`
   ADD PRIMARY KEY (`component_id`),
-  ADD KEY `course_id` (`course_id`),
   ADD KEY `section_id` (`section_id`);
 
 --
@@ -455,7 +514,6 @@ ALTER TABLE `faculty`
 ALTER TABLE `final_exam`
   ADD PRIMARY KEY (`exam_id`),
   ADD KEY `student_id` (`student_id`),
-  ADD KEY `course_id` (`course_id`),
   ADD KEY `section_id` (`section_id`);
 
 --
@@ -471,6 +529,15 @@ ALTER TABLE `lecturers`
 ALTER TABLE `marks`
   ADD PRIMARY KEY (`mark_id`),
   ADD KEY `student_id` (`student_id`),
+  ADD KEY `component_id` (`component_id`);
+
+--
+-- Indexes for table `remark_requests`
+--
+ALTER TABLE `remark_requests`
+  ADD PRIMARY KEY (`request_id`),
+  ADD KEY `student_id` (`student_id`),
+  ADD KEY `section_id` (`section_id`),
   ADD KEY `component_id` (`component_id`);
 
 --
@@ -519,7 +586,7 @@ ALTER TABLE `user_roles`
 -- AUTO_INCREMENT for table `components`
 --
 ALTER TABLE `components`
-  MODIFY `component_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+  MODIFY `component_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `courses`
@@ -531,31 +598,37 @@ ALTER TABLE `courses`
 -- AUTO_INCREMENT for table `enrollment`
 --
 ALTER TABLE `enrollment`
-  MODIFY `enrollment_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `enrollment_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `faculty`
 --
 ALTER TABLE `faculty`
-  MODIFY `faculty_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `faculty_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `final_exam`
 --
 ALTER TABLE `final_exam`
-  MODIFY `exam_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `exam_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT for table `lecturers`
 --
 ALTER TABLE `lecturers`
-  MODIFY `lecturer_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `lecturer_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT for table `marks`
 --
 ALTER TABLE `marks`
-  MODIFY `mark_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
+  MODIFY `mark_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+
+--
+-- AUTO_INCREMENT for table `remark_requests`
+--
+ALTER TABLE `remark_requests`
+  MODIFY `request_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `roles`
@@ -573,23 +646,29 @@ ALTER TABLE `sections`
 -- AUTO_INCREMENT for table `students`
 --
 ALTER TABLE `students`
-  MODIFY `student_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=36;
+  MODIFY `student_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=40;
 
 --
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `user_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=46;
+  MODIFY `user_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=107;
 
 --
 -- Constraints for dumped tables
 --
 
 --
+-- Constraints for table `advisor_advisee`
+--
+ALTER TABLE `advisor_advisee`
+  ADD CONSTRAINT `advisor_advisee_ibfk_1` FOREIGN KEY (`advisor_id`) REFERENCES `lecturers` (`lecturer_id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `advisor_advisee_ibfk_2` FOREIGN KEY (`student_id`) REFERENCES `students` (`student_id`) ON DELETE CASCADE;
+
+--
 -- Constraints for table `components`
 --
 ALTER TABLE `components`
-  ADD CONSTRAINT `components_ibfk_1` FOREIGN KEY (`course_id`) REFERENCES `courses` (`course_id`),
   ADD CONSTRAINT `components_ibfk_2` FOREIGN KEY (`section_id`) REFERENCES `sections` (`section_id`);
 
 --
@@ -610,7 +689,6 @@ ALTER TABLE `enrollment`
 --
 ALTER TABLE `final_exam`
   ADD CONSTRAINT `final_exam_ibfk_1` FOREIGN KEY (`student_id`) REFERENCES `students` (`student_id`),
-  ADD CONSTRAINT `final_exam_ibfk_2` FOREIGN KEY (`course_id`) REFERENCES `courses` (`course_id`),
   ADD CONSTRAINT `final_exam_ibfk_3` FOREIGN KEY (`section_id`) REFERENCES `sections` (`section_id`);
 
 --
@@ -625,6 +703,14 @@ ALTER TABLE `lecturers`
 ALTER TABLE `marks`
   ADD CONSTRAINT `marks_ibfk_1` FOREIGN KEY (`student_id`) REFERENCES `students` (`student_id`),
   ADD CONSTRAINT `marks_ibfk_2` FOREIGN KEY (`component_id`) REFERENCES `components` (`component_id`);
+
+--
+-- Constraints for table `remark_requests`
+--
+ALTER TABLE `remark_requests`
+  ADD CONSTRAINT `remark_requests_ibfk_1` FOREIGN KEY (`student_id`) REFERENCES `students` (`student_id`),
+  ADD CONSTRAINT `remark_requests_ibfk_3` FOREIGN KEY (`section_id`) REFERENCES `sections` (`section_id`),
+  ADD CONSTRAINT `remark_requests_ibfk_4` FOREIGN KEY (`component_id`) REFERENCES `components` (`component_id`);
 
 --
 -- Constraints for table `sections`
