@@ -15,18 +15,12 @@
       <select v-model="selectedCourseId" @change="onCourseChange" required>
         <option disabled value="">-- Select Course --</option>
         <option v-for="course in uniqueCourses" :key="course.course_id" :value="course.course_id">
-          {{ course.course_name }}
+          {{ course.course_name }}<span v-if="course.course_code"> ({{ course.course_code }})</span>
         </option>
       </select>
     </div>
-    <div class="form-group" v-if="filteredSections.length">
-      <label for="section">Section:</label>
-      <select v-model="selectedSectionId" @change="fetchRank" required>
-        <option disabled value="">-- Select Section --</option>
-        <option v-for="section in filteredSections" :key="section.section_id" :value="section.section_id">
-          Section {{ section.section_number }}
-        </option>
-      </select>
+    <div v-if="selectedCourseId && selectedSectionId" style="margin-bottom: 12px;">
+      <strong>Section:</strong> {{ getSectionNumber(selectedSectionId) }}
     </div>
     <div v-if="rankInfo && selectedAdviseeId">
       <h2 class="highlight">{{ getAdviseeName(selectedAdviseeId) }}'s Rank: {{ rankInfo.rank }} / {{ rankInfo.totalStudents }}</h2>
@@ -101,8 +95,15 @@ export default {
       await this.fetchStudentEnrollments();
     },
     async onCourseChange() {
-      this.selectedSectionId = '';
-      this.rankInfo = null;
+      // Auto-select the first section for the selected course
+      const sections = this.studentEnrollments.filter(e => e.course_id == this.selectedCourseId);
+      if (sections.length) {
+        this.selectedSectionId = sections[0].section_id;
+        await this.fetchRank();
+      } else {
+        this.selectedSectionId = '';
+        this.rankInfo = null;
+      }
     },
     async fetchRank() {
       if (!this.selectedAdviseeId || !this.selectedCourseId || !this.selectedSectionId) return;
@@ -121,6 +122,10 @@ export default {
     getAdviseeName(student_id) {
       const found = this.advisees.find(a => a.student_id == student_id);
       return found ? found.student_name : `Student`;
+    },
+    getSectionNumber(sectionId) {
+      const section = this.studentEnrollments.find(e => e.section_id == sectionId);
+      return section ? section.section_number : '';
     }
   },
   async mounted() {

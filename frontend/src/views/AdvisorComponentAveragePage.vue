@@ -15,18 +15,12 @@
       <select v-model="selectedCourseId" @change="onCourseChange" required>
         <option disabled value="">-- Select Course --</option>
         <option v-for="course in uniqueCourses" :key="course.course_id" :value="course.course_id">
-          {{ course.course_name }}
+          {{ course.course_name }} ({{ course.course_code }})
         </option>
       </select>
     </div>
-    <div class="form-group" v-if="filteredSections.length">
-      <label for="section">Section:</label>
-      <select v-model="selectedSectionId" @change="fetchAveragesAndMarks" required>
-        <option disabled value="">-- Select Section --</option>
-        <option v-for="section in filteredSections" :key="section.section_id" :value="section.section_id">
-          Section {{ section.section_number }}
-        </option>
-      </select>
+    <div v-if="selectedSection">
+      <strong>Section: {{ selectedSection.section_number }}</strong>
     </div>
     <table v-if="averages.length">
       <thead>
@@ -75,6 +69,9 @@ export default {
     },
     filteredSections() {
       return this.studentEnrollments.filter(e => e.course_id == this.selectedCourseId);
+    },
+    selectedSection() {
+      return this.filteredSections.length ? this.filteredSections[0] : null;
     }
   },
   methods: {
@@ -118,12 +115,23 @@ export default {
       await this.fetchStudentEnrollments();
     },
     async onCourseChange() {
-      this.selectedSectionId = '';
       this.averages = [];
       this.adviseeMarks = [];
+      if (this.filteredSections.length) {
+        this.selectedSectionId = this.filteredSections[0].section_id;
+        console.log('Auto-selected section:', this.selectedSectionId, this.filteredSections[0]);
+        await this.fetchAveragesAndMarks();
+      } else {
+        this.selectedSectionId = '';
+      }
     },
     async fetchAveragesAndMarks() {
       if (!this.selectedAdviseeId || !this.selectedCourseId || !this.selectedSectionId) return;
+      console.log('Fetching averages and marks for', {
+        adviseeId: this.selectedAdviseeId,
+        courseId: this.selectedCourseId,
+        sectionId: this.selectedSectionId
+      });
       await this.fetchAverages();
       await this.fetchAdviseeMarks();
     },
@@ -148,7 +156,7 @@ export default {
         const res = await fetch(url);
         if (!res.ok) throw new Error('Failed to fetch advisee marks');
         const data = await res.json();
-           this.adviseeMarks = Array.isArray(data.marks)
+        this.adviseeMarks = Array.isArray(data.marks)
           ? data.marks.map(mark => ({
               mark_id: mark.markId,
               component_id: mark.componentId,

@@ -15,20 +15,28 @@
       <select v-model="selectedCourseId" @change="onCourseChange" required>
         <option disabled value="">-- Select Course --</option>
         <option v-for="course in uniqueCourses" :key="course.course_id" :value="course.course_id">
-          {{ course.course_name }}
-        </option>
-      </select>
-    </div>
-    <div class="form-group" v-if="filteredSections.length">
-      <label for="section">Section:</label>
-      <select v-model="selectedSectionId" @change="fetchMarks" required>
-        <option disabled value="">-- Select Section --</option>
-        <option v-for="section in filteredSections" :key="section.section_id" :value="section.section_id">
-          Section {{ section.section_number }}
+          {{ course.course_name }}<span v-if="course.course_code"> ({{ course.course_code }})</span>
         </option>
       </select>
     </div>
     <div v-if="marks.length">
+      <div v-if="selectedComponent === 'finalExam' && components.length" style="margin-bottom: 8px;">
+        <strong>Final Exam Max Mark:</strong> {{ getFinalExamMax() }}
+      </div>
+      <div class="form-group" v-if="components.length">
+        <label for="component">Component:</label>
+        <select class="form-select" v-model="selectedComponent">
+          <option disabled value="">-- Select Component --</option>
+          <option value="total">Total Mark</option>
+          <option v-for="c in components" :key="c.componentName" :value="c.componentName">{{ c.componentName }}</option>
+          <option value="finalExam">Final Exam</option>
+        </select>
+      </div>
+      <div style="margin-bottom: 12px;">
+        <span v-if="selectedCourseId && selectedSectionId">
+          <strong>Section:</strong> {{ getSectionNumber(selectedSectionId) }}
+        </span>
+      </div>
       <div style="margin-bottom: 32px;">
         <Bar :data="barChartData" :options="barChartOptions" />
       </div>
@@ -36,9 +44,9 @@
         <thead>
           <tr>
             <th>Student</th>
-            <th>Coursework (70%)</th>
-            <th>Final Exam (30%)</th>
-            <th>Total Mark</th>
+            <th v-if="selectedComponent === 'total'">Total Mark</th>
+            <th v-else-if="selectedComponent === 'finalExam'">Final Exam</th>
+            <th v-else>{{ selectedComponent }}</th>
           </tr>
         </thead>
         <tbody>
@@ -51,9 +59,9 @@
                 {{ item.student_name }}
               </span>
             </td>
-            <td>{{ item.coursework_mark }}</td>
-            <td>{{ item.final_exam_mark }}</td>
-            <td>{{ item.total_mark }}</td>
+            <td v-if="selectedComponent === 'total'">{{ item.total_mark }}</td>
+            <td v-else-if="selectedComponent === 'finalExam'">{{ item.final_exam_mark }}</td>
+            <td v-else>{{ getComponentMark(item, selectedComponent) }}</td>
           </tr>
         </tbody>
       </table>
@@ -78,6 +86,8 @@ export default {
       selectedCourseId: '',
       selectedSectionId: '',
       marks: [],
+      components: [],
+      selectedComponent: 'total',
       errorMessage: ''
     };
   },
@@ -93,17 +103,29 @@ export default {
     },
     barChartData() {
       if (!this.marks.length) return { labels: [], datasets: [] };
+      let label = 'Total Mark';
+      let data = [];
+      if (this.selectedComponent === 'total') {
+        data = this.marks.map(item => Number(item.total_mark));
+        label = 'Total Mark';
+      } else if (this.selectedComponent === 'finalExam') {
+        data = this.marks.map(item => Number(item.final_exam_mark));
+        label = 'Final Exam';
+      } else {
+        data = this.marks.map(item => Number(this.getComponentMark(item, this.selectedComponent)));
+        label = this.selectedComponent;
+      }
       return {
         labels: this.marks.map(item =>
           item.is_advisee ? (item.student_name + ' (Advisee)') : item.student_name
         ),
         datasets: [
           {
-            label: 'Total Mark',
+            label,
             backgroundColor: this.marks.map(item =>
               item.is_advisee ? '#ffc107' : '#0d6efd'
             ),
-            data: this.marks.map(item => Number(item.total_mark))
+            data
           }
         ]
       };
@@ -116,7 +138,10 @@ export default {
           title: { display: true, text: 'Comparison: Total Marks' }
         },
         scales: {
-          y: { beginAtZero: true, max: 100 }
+          y: {
+            beginAtZero: true,
+            max: this.getChartMax()
+          }
         }
       };
     }
@@ -162,8 +187,15 @@ export default {
       await this.fetchStudentEnrollments();
     },
     async onCourseChange() {
-      this.selectedSectionId = '';
-      this.marks = [];
+      // Auto-select the first section for the selected course
+      const sections = this.studentEnrollments.filter(e => e.course_id == this.selectedCourseId);
+      if (sections.length) {
+        this.selectedSectionId = sections[0].section_id;
+        await this.fetchMarks();
+      } else {
+        this.selectedSectionId = '';
+        this.marks = [];
+      }
     },
     async fetchMarks() {
       if (!this.selectedAdviseeId || !this.selectedCourseId || !this.selectedSectionId) return;
@@ -183,17 +215,59 @@ export default {
           coursework_mark: item.coursework_mark,
           final_exam_mark: item.final_exam_mark,
           total_mark: item.total_mark,
-          is_advisee: item.is_advisee
+          is_advisee: item.is_advisee,
+          marks: item.marks || {},
         }));
+        // Fetch components for the selected section
+        await this.fetchComponents();
       } catch (err) {
         this.errorMessage = 'Failed to load marks (network error).';
-        
       }
+    },
+    async fetchComponents() {
+      // Fetch components for the selected section
+      if (!this.selectedSectionId) {
+        this.components = [];
+        return;
+      }
+      try {
+        const res = await fetch(`http://localhost:3000/components?section_id=${this.selectedSectionId}`);
+        if (!res.ok) {
+          this.components = [];
+          return;
+        }
+        this.components = await res.json();
+      } catch (err) {
+        this.components = [];
+      }
+    },
+    getComponentMark(item, componentName) {
+      // item.marks is an object: {componentName: mark}
+      return item.marks && item.marks[componentName] !== undefined ? item.marks[componentName] : 0;
     },
     calculateTotal(coursework, finalExam) {
       const cw = Number(coursework) || 0;
       const fe = Number(finalExam) || 0;
       return (cw + fe).toFixed(2);
+    },
+    getSectionNumber(sectionId) {
+      const section = this.studentEnrollments.find(e => e.section_id == sectionId);
+      return section ? section.section_number : '';
+    },
+    getChartMax() {
+      if (this.selectedComponent === 'total') return 100;
+      if (this.selectedComponent === 'finalExam') return this.getFinalExamMax();
+      // For component, find maxMark from components
+      const comp = this.components.find(c => c.componentName === this.selectedComponent);
+      return comp ? parseFloat(comp.maxMark) : 100;
+    },
+    getFinalExamMax() {
+      // Try to find the max mark for the final exam component
+      const comp = this.components.find(c => c.componentName === 'Final Exam');
+      if (comp && comp.maxMark) return parseFloat(comp.maxMark);
+      // Fallback: use the largest maxMark in components
+      const max = Math.max(...this.components.map(c => parseFloat(c.maxMark) || 0));
+      return max > 0 ? max : 100;
     }
   },
   async mounted() {
