@@ -1,5 +1,6 @@
 <template>
   <div class="chart-container">
+    <h4>Performance Trend - {{ studentName }}</h4>
     <Line :data="chartData" :options="chartOptions" />
   </div>
 </template>

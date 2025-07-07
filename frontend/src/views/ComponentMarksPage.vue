@@ -1,47 +1,55 @@
 <template>
-  <div class="component-marks-page">
-    <div class="page-header">
+  <div class="container mt-4 component-marks-page">
+    <div class="text-center mb-4">
       <h2>Continuous Assessment Components</h2>
-      <div v-if="components.length" style="margin-top: 10px;">
+      <div v-if="components.length" class="mt-2">
         <strong>Total Component Marks:</strong>
-{{ totalComponentMark }} / 
-<span v-if="maxComponentMark">{{ maxComponentMark }}</span>
-<span v-else class="text-danger">Not Available</span>
-
+        {{ totalComponentMark }} /
+        <span v-if="maxComponentMark">{{ maxComponentMark }}</span>
+        <span v-else class="text-danger">Not Available</span>
       </div>
     </div>
 
-    <select v-model="selectedCourseId" class="input-field" v-if="courses.length">
-      <option disabled value="">-- Select Course --</option>
-      <option v-for="course in courses" :key="course.course_id" :value="course.course_id">
-        {{ course.course_name }}
-      </option>
-    </select>
-
-    <select v-model="selectedSectionId" class="input-field" v-if="sections.length">
-      <option disabled value="">-- Select Section --</option>
-      <option v-for="section in sections" :key="section.section_id" :value="section.section_id">
-        Section {{ section.section_number }}
-      </option>
-    </select>
-
-    <!-- Component Creation Section -->
-    <div class="component-form">
-      <input v-model="newComponent.component_name" placeholder="Component Name" class="input-field" />
-      <input type="number" v-model="newComponent.max_mark" placeholder="Max Mark" class="input-field" />
-      <button @click="addComponent" class="btn add-btn">➕ Add Component</button>
+    <div class="mb-3">
+      <select v-model="selectedSectionId" class="form-select" @change="fetchComponents" v-if="courses.length">
+        <option disabled value="">-- Select Course --</option>
+        <option v-for="course in courses" :key="course.courseId" :value="course.sectionId">
+          {{ course.courseCode }}-{{ course.sectionNumber }} {{ course.courseName }}
+        </option>
+      </select>
     </div>
 
-    <div v-if="editMode" class="component-form edit-form">
-    <input v-model="editComponentData.component_name" class="input-field" />
-    <input v-model="editComponentData.max_mark" type="number" class="input-field" />
-    <button @click="updateComponent" class="btn add-btn">✅ Update</button>
-    <button @click="cancelEdit" class="btn">❌ Cancel</button>
-  </div>
+    <!-- Component Creation -->
+    <div class="row g-2 mb-3 align-items-end">
+      <div class="col-md-5">
+        <input v-model="newComponent.componentName" placeholder="Component Name" class="form-control" />
+      </div>
+      <div class="col-md-4">
+        <input type="number" v-model="newComponent.maxMark" placeholder="Max Mark" class="form-control" />
+      </div>
+      <div class="col-md-3">
+        <button @click="addComponent" class="btn btn-success w-100">➕ Add Component</button>
+      </div>
+    </div>
 
-    <div class="marks-table-container" v-if="components.length">
-      <table class="marks-table">
-        <thead>
+    <!-- Edit Mode -->
+    <div v-if="editMode" class="row g-2 mb-3 align-items-end">
+      <div class="col-md-5">
+        <input v-model="editComponentData.componentName" class="form-control" />
+      </div>
+      <div class="col-md-4">
+        <input v-model="editComponentData.maxMark" type="number" class="form-control" />
+      </div>
+      <div class="col-md-3 d-flex gap-2">
+        <button @click="updateComponent" class="btn btn-primary w-50">✅ Update</button>
+        <button @click="cancelEdit" class="btn btn-secondary w-50">❌ Cancel</button>
+      </div>
+    </div>
+
+    <!-- Table -->
+    <div v-if="components.length" class="table-responsive">
+      <table class="table table-bordered text-center align-middle">
+        <thead class="table-light">
           <tr>
             <th>Component</th>
             <th>Max Mark</th>
@@ -49,19 +57,18 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="component in components" :key="component.component_id">
-            <td>{{ component.component_name }}</td>
-            <td>{{ component.max_mark }}</td>
-            <td>
+          <tr v-for="component in components" :key="component.componentId">
+            <td>{{ component.componentName }}</td>
+            <td>{{ component.maxMark }}</td>
+            <td class="d-flex flex-wrap justify-content-center gap-2">
               <router-link
-                :to="{ name: 'ComponentMarkPage', params: { componentId: component.component_id } }"
-                class="btn btn-primary"
+                :to="{ name: 'ComponentMarkPage', params: { componentId: component.componentId } }"
+                class="btn btn-outline-primary btn-sm"
               >
                 ➡ Enter Marks
               </router-link>
-
-              <button @click="editComponent(component)" class="btn btn-warning">✏ Edit</button>
-              <button @click="deleteComponent(component.component_id)" class="btn btn-danger">🗑 Delete</button>
+              <button @click="editComponent(component)" class="btn btn-outline-warning btn-sm">✏ Edit</button>
+              <button @click="deleteComponent(component.componentId)" class="btn btn-outline-danger btn-sm">🗑 Delete</button>
             </td>
           </tr>
         </tbody>
@@ -70,128 +77,88 @@
   </div>
 </template>
 
-
 <script>
 export default {
   data() {
+    const user = JSON.parse(sessionStorage.getItem('user'));
+
     return {
-      userID: null,
-      selectedCourseId: '',
-      selectedSectionId: '',
+      lecturerId: user.lecturerId,
+      selectedSectionId: null,
       courses: [],
-      sections: [],
-      students: [], 
       newComponent: {
-        component_name: '',
-        max_mark: ''
+        componentName: '',
+        maxMark: ''
       },
       selectedCourse: null,
       components: [],
-      marks: [],
       editMode: false,
       editComponentData: {
-        component_id: null,
-        component_name: '',
-        max_mark: ''
+        componentId: null,
+        componentName: '',
+        maxMark: ''
       }
     };
   },
 
   computed: {
-  
-  maxComponentMark() {
-  const cm = this.selectedCourse?.max_cm;
-  return cm !== null && cm !== undefined ? cm : null;
-},
-  totalComponentMark() {
-    return this.components.reduce((sum, c) => {
-      const mark = parseFloat(c.max_mark);
-      return sum + (isNaN(mark) ? 0 : mark);
-    }, 0);
-  }
-},
-
-  methods: {
-    async fetchSections() {
-      if (!this.selectedCourseId) return;
-
-      const res = await fetch(`http://localhost:3000/sections?course_id=${this.selectedCourseId}`);
-      const data = await res.json();
-      this.sections = data;
+    maxComponentMark() {
+      const cm = this.selectedCourse?.max_cm;
+      return cm !== null && cm !== undefined ? cm : null;
     },
-    async fetchCourses() {
-      console.log("Courses:", this.courses);
-
-  try {
-    const res = await fetch(`http://localhost:3000/courses`);
-    const data = await res.json();
-    this.courses = data;
-
-    // Set selectedCourse if already selected
-    if (this.selectedCourseId) {
-      this.selectedCourse = this.courses.find(c => c.course_id === this.selectedCourseId);
-    }
-
-  } catch (err) {
-    console.error("Failed to fetch courses:", err);
-    alert("Failed to load courses. Check your backend.");
-  }
-},
-
-    async fetchComponents() {
-      if (!this.selectedCourseId || !this.selectedSectionId) return;
-
+      totalComponentMark() {
+        return this.components.reduce((sum, c) => {
+          const mark = parseFloat(c.max_mark);
+          return sum + (isNaN(mark) ? 0 : mark);
+        }, 0);
+      }
+  },
+  async created(){
+    await this.fetchAllLecturerCourses();
+  },
+  methods: {
+    async fetchAllLecturerCourses(){
       try {
-        const [componentsRes, studentsRes, marksRes] = await Promise.all([
-          fetch(`http://localhost:3000/components?course_id=${this.selectedCourseId}&section_id=${this.selectedSectionId}`),
-          fetch(`http://localhost:3000/students?course_id=${this.selectedCourseId}&section_id=${this.selectedSectionId}`),
-          fetch(`http://localhost:3000/marks?course_id=${this.selectedCourseId}&section_id=${this.selectedSectionId}`)
-        ]);
-
-        const components = await componentsRes.json();
-        const students = await studentsRes.json();
-        const marks = await marksRes.json();
-
-        if (!Array.isArray(students)) {
-          alert("Error loading students. Check if section is selected.");
+        if (!this.lecturerId) {
+          console.error('No lecturer ID available');
           return;
         }
+        
+        const url = `http://localhost:3000/lecturer-course/${this.lecturerId}`;
 
-        this.students = students;
+        const response = await fetch(url);
+        if (!response.ok) throw new Error('Failed to fetch courses');
 
-        this.components = components.map(component => {
-          const marksPerStudent = students.map(student => {
-            const match = marks.find(
-              m => m.student_id === student.student_id && m.component_id === component.component_id
-            );
-
-            return {
-              student_id: student.student_id,
-              student_name: student.student_name,
-              mark: match ? match.mark : ''
-            };
-          });
-
-          return {
-            ...component,
-            marks: marksPerStudent
-          };
-        });
+        const data = await response.json();
+        this.courses = data; 
+        if (this.courses.length && !this.selectedSectionId) {
+          this.selectedSectionId = this.courses[0].sectionId;
+          await this.fetchComponents();
+        }
       } catch (error) {
-        console.error("Fetch components error:", error);
-        alert("Failed to fetch data. Make sure server is running.");
+        console.error('Error fetching courses:', error);
       }
     },
+    async fetchComponents(){
+      try {
+        const url = `http://localhost:3000/components?section_id=${this.selectedSectionId}`;
 
+        const response = await fetch(url);
+        if (!response.ok) throw new Error('Failed to fetch components');
 
+        const data = await response.json();
+        this.components = data; 
+      } catch (error) {
+        console.error('Error fetching components:', error);
+      }
+    },
     async addComponent() {
-      if (!this.selectedCourseId || !this.selectedSectionId) return;
+      if (!this.selectedSectionId) return;
 
       const payload = {
-        course_id: this.selectedCourseId,
-        section_id: this.selectedSectionId,  
-        component_name: this.newComponent.component_name,
-        max_mark: this.newComponent.max_mark
+        sectionId: this.selectedSectionId,  
+        componentName: this.newComponent.componentName,
+        maxMark: this.newComponent.maxMark
       };
 
       try {
@@ -205,8 +172,8 @@ export default {
         alert(data.message || 'Component saved');
 
         // Clear form
-        this.newComponent.component_name = '';
-        this.newComponent.max_mark = '';
+        this.newComponent.componentName = '';
+        this.newComponent.maxMark = '';
 
         // Refresh component list
         await this.fetchComponents();
@@ -216,8 +183,6 @@ export default {
         console.error(error);
       }
     },
-
-
     async saveMark(componentId, studentId, mark) {
       const payload = {
         component_id: componentId,
@@ -234,108 +199,47 @@ export default {
       const data = await res.json();
       alert(data.message || 'Mark saved');
     },
-    async fetchMarks() {
-      if (!this.selectedCourseId) return;
+    editComponent(component) {
+      this.editMode = true;
+      this.editComponentData = { ...component };
+    },
+    cancelEdit() {
+      this.editMode = false;
+      this.editComponentData = { component_id: null, component_name: '', max_mark: '' };
+    },
+    async updateComponent() {
+      try {
+        const res = await fetch(`http://localhost:3000/components/${this.editComponentData.componentId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(this.editComponentData)
+        });
+        const data = await res.json();
+        alert(data.message || 'Component updated');
+        this.cancelEdit();
+        this.fetchComponents();
+      } catch (err) {
+        console.error(err);
+        alert("Failed to update component");
+      }
+    },
 
-      const res = await fetch(`http://localhost:3000/marks?course_id=${this.selectedCourseId}`);
-      const data = await res.json();
-      this.marks = data;
+    async deleteComponent(componentId) {
+      if (!confirm('Are you sure you want to delete this component?')) return;
 
-      // Map marks to components
-      this.components.forEach(component => {
-        const markRecord = this.marks.find(m => m.component_id === component.component_id);
-        if (markRecord) {
-          component.student_id = markRecord.student_id;
-          component.mark = markRecord.mark;
-        }
-      });
-    },editComponent(component) {
-  this.editMode = true;
-  this.editComponentData = { ...component };
-},
-
-cancelEdit() {
-  this.editMode = false;
-  this.editComponentData = { component_id: null, component_name: '', max_mark: '' };
-},
-
-async updateComponent() {
-  try {
-    const res = await fetch(`http://localhost:3000/components/${this.editComponentData.component_id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(this.editComponentData)
-    });
-    const data = await res.json();
-    alert(data.message || 'Component updated');
-    this.cancelEdit();
-    this.fetchComponents();
-  } catch (err) {
-    console.error(err);
-    alert("Failed to update component");
-  }
-},
-
-async deleteComponent(componentId) {
-  if (!confirm('Are you sure you want to delete this component?')) return;
-
-  try {
-    const res = await fetch(`http://localhost:3000/components/${componentId}`, {
-      method: 'DELETE'
-    });
-    const data = await res.json();
-    alert(data.message || 'Component deleted');
-    this.fetchComponents();
-  } catch (err) {
-    console.error(err);
-    alert("Failed to delete component");
-  }
-}
-
-
-  },
-   watch: {
-  selectedCourseId(newVal) {
-    if (newVal) {
-      localStorage.setItem('selectedCourseId', newVal);
-      this.selectedCourse = this.courses.find(c => c.course_id === newVal) || null;
-      this.fetchComponents();
-      this.fetchSections();
-      this.components = [];
-    } else {
-      localStorage.removeItem('selectedCourseId');
-      this.selectedCourse = null;
-      this.sections = [];
-      this.components = [];
+      try {
+        const res = await fetch(`http://localhost:3000/components/${componentId}`, {
+          method: 'DELETE'
+        });
+        const data = await res.json();
+        alert(data.message || 'Component deleted');
+        this.fetchComponents();
+      } catch (err) {
+        console.error(err);
+        alert("Failed to delete component");
+      }
     }
   },
-  selectedSectionId(newVal) {
-    if (newVal) {
-      localStorage.setItem('selectedSectionId', newVal); // ⬅ Save
-      this.fetchComponents();
-    } else {
-      localStorage.removeItem('selectedSectionId');
-    }
-  }
-},
-  mounted() {
-    // Check authentication
-    const user = JSON.parse(sessionStorage.getItem('user'));
-    if (!user || !user.user_id) {
-      this.$router.push('/login?message=Please login to access component marks');
-      return;
-    }
-    
-    this.userID = user.user_id;
-    console.log('Authenticated user ID for component marks:', this.userID);
-    
-    this.fetchCourses().then(() => {
-      const savedCourseId = localStorage.getItem('selectedCourseId');
-      const savedSectionId = localStorage.getItem('selectedSectionId');
-      if (savedCourseId) this.selectedCourseId = savedCourseId;
-      if (savedSectionId) this.selectedSectionId = savedSectionId;
-    });
-  }
 };
 </script>
 

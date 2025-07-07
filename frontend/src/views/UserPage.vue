@@ -38,7 +38,9 @@
       <tr v-for="(user, index) in users" :key="user.userId" class="text-center text-muted">
         <td class="p-2">{{ index + 1 }}</td>
         <td class="p-2">{{ user.loginId }}</td>
-        <td class="p-2">{{ user.name }}</td>
+        <td class="p-2">
+          {{ user.title ? user.title + ' ' + user.name : user.name }}
+        </td>
         <td class="p-2">{{ user.email }}</td>
         <td class="p-2">{{ user.facultyAbbreviation }}</td>
         <td class="p-2">

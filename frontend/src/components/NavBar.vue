@@ -1,5 +1,5 @@
 <template>
-  <nav>
+  <nav style="position: fixed; width:100%">
     <ul class="navbar-ul">
         <li class="nav-items">
             <i class="bi bi-list" @click="$emit('toggle')"></i>
@@ -9,7 +9,7 @@
             <img src="../assets/logo CMMS.png" alt="Logo" class="logo" />
             </router-link>
         </li>
-        <li class="nav-items dropdown" @click="toggleDropdown" tabindex="0">
+        <li class="nav-items dropdown" @click="toggleDropdown"  tabindex="0">
             <a href="#" class="d-flex align-items-center link-dark text-decoration-none dropdown-toggle">
                 <img
                     v-if="!imageUrl"
@@ -57,9 +57,7 @@ export default {
       userSession: null,
     };
   },
-  mounted() {
-    console.log('NavBar component mounted');
-    // Get user data from sessionStorage
+  created() {
     const userData = sessionStorage.getItem('user');
     if (userData) {
       this.userSession = JSON.parse(userData);

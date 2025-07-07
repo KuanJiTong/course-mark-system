@@ -13,10 +13,8 @@ import SectionPage from '../views/SectionPage';
 import UserPage from '../views/UserPage';
 import LecturerCoursePage from '../views/LecturerCoursePage'
 import ViewMarkBreakdownPage from '../views/ViewMarkBreakdownPage'
-// import ComponentMarkPage from '@/views/ComponentMarkPage.vue';
+import ComponentMarkPage from '../views/ComponentMarkPage.vue';
 import StudentDashboardPage from '../views/StudentDashboardPage.vue'
-import StudentDashboardLayout from '../components/StudentDashboardLayout.vue'
-import AdvisorDashboardLayout from '../components/AdvisorDashboardLayout.vue'
 
 
 const routes = [
@@ -35,13 +33,13 @@ const routes = [
       { path: '/lecturer-course-management', name: 'LecturerCoursePage', component: LecturerCoursePage, meta: { roles: ['Lecturer'] } },
       { path: '/lecturer-course-management/students/:sectionId', name: 'StudentEnrollment', component: StudentEnrollmentPage, meta: { roles: ['Lecturer'] } },
       { path: '/view-mark-breakdown', name: 'ViewMarkBreakdownPage', component: ViewMarkBreakdownPage, meta: { roles: ['Lecturer', 'Student', 'Advisor'] } },
-
+      { path: '/component/:componentId', name: 'ComponentMarkPage', component: ComponentMarkPage, meta: { roles: ['Lecturer'] }}
     ]
   },
 
   {
     path: '/',
-    component: StudentDashboardLayout,
+    component: DefaultLayout,
     children: [
       { path: '/student-dashboard', name: 'StudentDashboard', component: StudentDashboardPage, meta: { roles: ['Student'] } },
       { path: '/student-marks', name: 'StudentMarks', component: () => import('../views/StudentMarksPage.vue'), meta: { roles: ['Student'] } },
@@ -49,14 +47,12 @@ const routes = [
       { path: '/student-rank', name: 'StudentRank', component: () => import('../views/StudentRankPage.vue'), meta: { roles: ['Student'] } },
       { path: '/student-component-averages', name: 'StudentComponentAverages', component: () => import('../views/StudentComponentAveragePage.vue'), meta: { roles: ['Student'] } },
       { path: '/student-remark', name: 'StudentRemark', component: () => import('../views/StudentRemarkPage.vue'), meta: { roles: ['Student'] } },
-      
     ]
   },
   {
     path: '/',
-    component: AdvisorDashboardLayout,
+    component: DefaultLayout,
     children: [
-      { path: '/advisor-dashboard', name: 'AdvisorDashboard', component: { template: '<div style="padding:2rem"><h2>Advisor Dashboard</h2><p>Welcome to the advisor dashboard.</p></div>' }, meta: { roles: ['Advisor'] } },
       { path: '/advisor-advisees', name: 'AdvisorAdvisees', component: () => import('../views/AdvisorAdviseesPage.vue'), meta: { roles: ['Advisor'] } },
       { path: '/advisor-advisee-marks', name: 'AdvisorAdviseeMarks', component: () => import('../views/AdvisorAdviseeMarksPage.vue'), meta: { roles: ['Advisor'] } },
       { path: '/advisor-compare', name: 'AdvisorCompare', component: () => import('../views/AdvisorComparePage.vue'), meta: { roles: ['Advisor'] } },
@@ -87,6 +83,8 @@ router.beforeEach((to, from, next) => {
   const jwt = sessionStorage.getItem('jwt');
   const user = sessionStorage.getItem('user');
 
+  console.log(user);
+
   if (publicPage) {
     return next();
   }
@@ -108,18 +106,7 @@ router.beforeEach((to, from, next) => {
   }, []);
 
   if (allowedRoles.length > 0 && !userRoles.some(role => allowedRoles.includes(role))) {
-    // Redirect to correct dashboard based on user role
-    if (userRoles.includes('student')) {
-      return next({ path: '/student-dashboard' });
-    } else if (userRoles.includes('advisor')) {
-      return next({ path: '/advisor-dashboard' });
-    } else if (userRoles.includes('lecturer')) {
-      return next({ path: '/lecturer-course-management' });
-    } else if (userRoles.includes('admin')) {
-      return next({ path: '/user-management' });
-    } else {
-      return next({ path: '/' });
-    }
+    return next({ path: '/' });
   }
   next();
 });

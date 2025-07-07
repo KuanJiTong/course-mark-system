@@ -5,17 +5,15 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 
 $app->get('/components', function ($request, $response, $args) {
     $params = $request->getQueryParams();
-    $courseId = $params['course_id'] ?? null;
     $sectionId = $params['section_id'] ?? null;
 
-    // Optional: Validate inputs
-    if (!$courseId || !$sectionId) {
-        return $response->withStatus(400)->write("Missing course_id or section_id");
+    if (!$sectionId) {
+        return $response->withStatus(400)->write("Missing section_id");
     }
 
     $pdo = getPDO();
-    $stmt = $pdo->prepare("SELECT * FROM components WHERE course_id = ? AND section_id = ?");
-    $stmt->execute([$courseId, $sectionId]);
+    $stmt = $pdo->prepare("SELECT component_id AS componentId, component_name AS componentName, max_mark AS maxMark FROM components WHERE section_id = ?");
+    $stmt->execute([$sectionId]);
     $components = $stmt->fetchAll();
 
     $response->getBody()->write(json_encode($components));
@@ -25,15 +23,17 @@ $app->get('/components', function ($request, $response, $args) {
 $app->post('/components', function (Request $request, Response $response) {
     $pdo = getPDO();
     $data = $request->getParsedBody();
+    $sectionId = $data['sectionId'];
+    $componentName = $data['componentName'];
+    $maxMark = $data['maxMark'];
 
-    if (!isset($data['course_id'], $data['section_id'], $data['component_name'], $data['max_mark'])){
+    if (!isset($sectionId, $componentName, $maxMark)){
         $response->getBody()->write(json_encode(['error' => 'Missing fields']));
         return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
     }
 
-    $stmt = $pdo->prepare("INSERT INTO components (course_id, section_id, component_name, max_mark) VALUES (?, ?, ?, ?)");
-    $stmt->execute([$data['course_id'], $data['section_id'], $data['component_name'], $data['max_mark']]);
-
+    $stmt = $pdo->prepare("INSERT INTO components (section_id, component_name, max_mark) VALUES (?, ?, ?)");
+    $stmt->execute([$sectionId, $componentName, $maxMark]);
 
     $response->getBody()->write(json_encode(['message' => 'Component added']));
     return $response->withHeader('Content-Type', 'application/json');
@@ -43,19 +43,19 @@ $app->post('/components', function (Request $request, Response $response) {
 $app->get('/marks', function (Request $request, Response $response) {
     $pdo = getPDO();
     $params = $request->getQueryParams();
-
-    if (!isset($params['course_id']) || !isset($params['section_id'])) {
-        $response->getBody()->write(json_encode(['error' => 'Missing course_id or section_id']));
+    $sectionId = $params['section_id'];
+    if (!isset($sectionId)) {
+        $response->getBody()->write(json_encode(['error' => 'Missing section_id']));
         return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
     }
 
     $stmt = $pdo->prepare("
-        SELECT m.mark_id, m.student_id, m.component_id, m.mark, c.component_name, c.max_mark
+        SELECT m.mark_id AS markId, m.student_id AS studentId, m.mark
         FROM marks m
         JOIN components c ON m.component_id = c.component_id
-        WHERE c.course_id = ? AND c.section_id = ?
+        WHERE c.section_id = ?
     ");
-    $stmt->execute([$params['course_id'], $params['section_id']]);
+    $stmt->execute([$sectionId]);
     $marks = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     $response->getBody()->write(json_encode($marks));
@@ -67,16 +67,19 @@ $app->get('/marks', function (Request $request, Response $response) {
 $app->post('/marks', function (Request $request, Response $response) {
     $pdo = getPDO();
     $data = $request->getParsedBody();
+    $studentId = $data['studentId'];
+    $componentId = $data['componentId'];
+    $mark = $data['mark'];
 
     try {
-        if (!isset($data['student_id'], $data['component_id'], $data['mark'])) {
+        if (!isset($studentId,$componentId,$mark)) {
             $response->getBody()->write(json_encode(['error' => 'Missing fields']));
             return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
         }
 
         // Check if record exists
         $stmt = $pdo->prepare("SELECT mark_id FROM marks WHERE student_id = ? AND component_id = ?");
-        $stmt->execute([$data['student_id'], $data['component_id']]);
+        $stmt->execute([$studentId,$componentId]);
         $existing = $stmt->fetch();
 
         if ($existing) {
@@ -84,7 +87,7 @@ $app->post('/marks', function (Request $request, Response $response) {
             $stmt->execute([$data['mark'], $existing['mark_id']]);
         } else {
             $stmt = $pdo->prepare("INSERT INTO marks (student_id, component_id, mark) VALUES (?, ?, ?)");
-            $stmt->execute([$data['student_id'], $data['component_id'], $data['mark']]);
+            $stmt->execute([$studentId,$componentId,$mark]);
         }
 
         $response->getBody()->write(json_encode(['message' => 'Mark saved']));
@@ -99,25 +102,13 @@ $app->post('/marks', function (Request $request, Response $response) {
     }
 });
 
-
-
-
-$app->get('/fetchCourses', function ($request, $response, $args) {
-    $pdo = getPDO();
-    $stmt = $pdo->query("SELECT * FROM courses");
-    $courses = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-    $response->getBody()->write(json_encode($courses));
-    return $response->withHeader('Content-Type', 'application/json');
-});
-
-
 $app->get('/students', function (Request $request, Response $response) {
     $pdo = getPDO();
     $params = $request->getQueryParams();
+    $sectionId = $params['section_id'];
 
-    if (!isset($params['course_id']) || !isset($params['section_id'])) {
-        $response->getBody()->write(json_encode(['error' => 'Missing course_id or section_id']));
+    if (!isset($sectionId)) {
+        $response->getBody()->write(json_encode(['error' => 'Missing section_id']));
         return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
     }
 
@@ -127,9 +118,9 @@ $app->get('/students', function (Request $request, Response $response) {
         JOIN users u ON s.user_id = u.user_id
         JOIN enrollment e ON s.student_id = e.student_id
         JOIN sections sec ON e.section_id = sec.section_id
-        WHERE sec.course_id = ? AND sec.section_id = ?
+        WHERE sec.section_id = ?
     ");
-    $stmt->execute([$params['course_id'], $params['section_id']]);
+    $stmt->execute([$sectionId]);
     $students = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     $response->getBody()->write(json_encode($students));
@@ -156,7 +147,20 @@ $app->get('/sections', function (Request $request, Response $response) {
 
 $app->get('/components/{id}', function (Request $request, Response $response, $args) {
     $pdo = getPDO();
-    $stmt = $pdo->prepare("SELECT * FROM components WHERE component_id = ?");
+    $stmt = $pdo->prepare("SELECT 
+        c.component_id AS componentId,
+        c.component_name AS componentName,
+        c.max_mark AS maxMark,
+        s.section_id AS sectionId,
+        s.section_number AS sectionNumber,
+        cr.course_id AS courseId,
+        cr.course_code AS courseCode,
+        cr.course_name AS courseName
+        FROM components c
+        JOIN sections s ON c.section_id = s.section_id
+        JOIN courses cr ON s.course_id = cr.course_id
+        WHERE c.section_id = ?
+        ");
     $stmt->execute([$args['id']]);
     $component = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -173,14 +177,16 @@ $app->put('/components/{id}', function (Request $request, Response $response, $a
     $pdo = getPDO();
     $data = $request->getParsedBody();
     $componentId = $args['id'];
+    $componentName = $data['componentName'];
+    $maxMark = $data['maxMark'];
 
-    if (!isset($data['component_name'], $data['max_mark'])) {
+    if (!isset($componentName, $maxMark)) {
         $response->getBody()->write(json_encode(['error' => 'Missing fields']));
         return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
     }
 
     $stmt = $pdo->prepare("UPDATE components SET component_name = ?, max_mark = ? WHERE component_id = ?");
-    $stmt->execute([$data['component_name'], $data['max_mark'], $componentId]);
+    $stmt->execute([$componentName, $maxMark, $componentId]);
 
     $response->getBody()->write(json_encode(['message' => 'Component updated']));
     return $response->withHeader('Content-Type', 'application/json');

@@ -1,6 +1,6 @@
 <template>
   <div class="pie-chart-container">
-    <h3>{{ studentName }} - Mark Distribution</h3>
+    <h4>Mark Distribution - {{ studentName }}</h4>
     <Pie :data="chartData" :options="chartOptions" />
   </div>
 </template>
@@ -22,8 +22,8 @@ export default {
   components: { Pie },
   props: {
     studentName: String,
-    components: Array,   // e.g., ['quiz', 'assignment', 'Final Exam']
-    marks: Object        // e.g., { quiz: 8, assignment: 10, 'Final Exam': 20 }
+    components: Array,   
+    marks: Object        
   },
   computed: {
     chartData() {
@@ -31,7 +31,7 @@ export default {
         labels: this.components,
         datasets: [
           {
-            label: 'Mark Distribution',
+            label: `Marks for ${this.studentName}`,
             data: this.components.map(comp => this.marks[comp] ?? 0),
             backgroundColor: [
               '#36A2EB', '#FFCE56', '#FF6384', '#4BC0C0', '#9966FF'
@@ -49,7 +49,7 @@ export default {
           },
           title: {
             display: true,
-            text: 'Student Mark Breakdown (Pie)'
+            text: 'Student Mark Breakdown'
           }
         }
       }

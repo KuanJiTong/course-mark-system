@@ -3,20 +3,20 @@
     <h1>Compare with Coursemates</h1>
     <div class="form-group">
       <label for="course">Course:</label>
-      <select v-model="selectedCourseId" @change="fetchSections" required>
+      <select class="form-select" v-model="selectedSectionId" @change="fetchMarks" required>
         <option disabled value="">-- Select Course --</option>
-        <option v-for="course in courses" :key="course.course_id" :value="course.course_id">
-          {{ course.course_name }}
+        <option v-for="course in courses" :key="course.sectionId" :value="course.sectionId">
+          {{ course.courseCode }}-{{ course.sectionNumber }} {{ course.courseName }}
         </option>
       </select>
     </div>
-    <div class="form-group" v-if="sections.length">
-      <label for="section">Section:</label>
-      <select v-model="selectedSectionId" @change="fetchMarks" required>
-        <option disabled value="">-- Select Section --</option>
-        <option v-for="section in sections" :key="section.section_id" :value="section.section_id">
-          Section {{ section.section_number }}
-        </option>
+    <div class="form-group" v-if="components.length">
+      <label for="component">Component:</label>
+      <select class="form-select" v-model="selectedComponent">
+        <option disabled value="">-- Select Component --</option>
+        <option value="total">Total Mark</option>
+        <option v-for="c in components" :key="c.componentId" :value="c.componentName">{{ c.componentName }}</option>
+        <option value="finalExam">Final Exam</option>
       </select>
     </div>
     <div v-if="marks.length" style="margin-bottom: 32px;">
@@ -26,20 +26,20 @@
       <thead>
         <tr>
           <th>Student</th>
-          <th>Coursework (70%)</th>
-          <th>Final Exam (30%)</th>
-          <th>Total Mark</th>
+          <th v-if="selectedComponent === 'total'">Total Mark</th>
+          <th v-else-if="selectedComponent === 'finalExam'">Final Exam</th>
+          <th v-else>{{ selectedComponent }}</th>
         </tr>
       </thead>
       <tbody>
-        <tr v-for="item in marks" :key="item.student_id" :class="{ 'highlight': item.student_id == currentStudentId }">
+        <tr v-for="(item,index) in marks" :key="item.studentId" :class="{ 'highlight': item.studentId == studentId }">
           <td>
-            <span v-if="item.student_id == currentStudentId">You</span>
-            <span v-else>Classmate</span>
+            <span v-if="item.studentId == studentId"><b>You</b></span>
+            <span v-else>Student {{ getStudentIndex(index) }}</span>
           </td>
-          <td>{{ calculateCoursework(item.marks) }}</td>
-          <td>{{ item.final_exam_mark }}</td>
-          <td>{{ item.total }}</td>
+          <td v-if="selectedComponent === 'total'">{{ item.total }}</td>
+          <td v-else-if="selectedComponent === 'finalExam'">{{ item.finalExamMark }}</td>
+          <td v-else>{{ item.marks?.[selectedComponent] || 0 }}</td>
         </tr>
       </tbody>
     </table>
@@ -55,30 +55,60 @@ ChartJS.register(Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale)
 export default {
   components: { Bar },
   data() {
+    const user = JSON.parse(sessionStorage.getItem('user'));
+
     return {
-      studentID: null,
+      studentId: user.studentId,
       courses: [],
-      sections: [],
       marks: [],
-      selectedCourseId: '',
-      selectedSectionId: '',
+      maxFm: 0,
+      components: [],
+      selectedSectionId: null,
       comparisonData: [],
+      selectedComponent: 'total',
       errorMessage: ''
     };
   },
   computed: {
-    currentStudentId() {
-      return this.studentID;
-    },
     barChartData() {
       if (!this.marks.length) return { labels: [], datasets: [] };
+
+      let count = 1;
+      const labels = [];
+      const data = [];
+
+      this.marks.forEach(item => {
+        const label = item.studentId === this.studentId ? 'You' : `Student ${count++}`;
+        labels.push(label);
+
+        let value = 0;
+        if (this.selectedComponent === 'total') {
+          value = Number(item.total);
+        } else if (this.selectedComponent === 'finalExam') {
+          value = Number(item.finalExamMark);
+        } else {
+          value = Number(item.marks?.[this.selectedComponent] || 0);
+        }
+
+        data.push(value);
+      });
+
+      const backgroundColor = this.marks.map(item =>
+        item.studentId === this.studentId ? '#ffc107' : '#0d6efd'
+      );
+
       return {
-        labels: this.marks.map(item => item.student_id == this.currentStudentId ? 'You' : 'Classmate'),
+        labels,
         datasets: [
           {
-            label: 'Total Mark',
-            backgroundColor: this.marks.map(item => item.student_id == this.currentStudentId ? '#ffc107' : '#0d6efd'),
-            data: this.marks.map(item => Number(item.total))
+            label:
+              this.selectedComponent === 'total'
+                ? 'Total Mark'
+                : this.selectedComponent === 'finalExam'
+                ? 'Final Exam'
+                : this.selectedComponent,
+            backgroundColor,
+            data
           }
         ]
       };
@@ -88,67 +118,78 @@ export default {
         responsive: true,
         plugins: {
           legend: { display: false },
-          title: { display: true, text: 'Anonymous Comparison: Total Marks' }
+          title: {
+            display: true,
+            text:
+              this.selectedComponent === 'total'
+                ? 'Anonymous Comparison: Total Marks'
+                : this.selectedComponent === 'finalExam'
+                  ? 'Anonymous Comparison: Final Exam'
+                  : `Anonymous Comparison: ${this.selectedComponent}`
+          }
         },
         scales: {
-          y: { beginAtZero: true, max: 100 }
+          y: {
+            beginAtZero: true,
+            max: this.selectedComponent === 'total'
+              ? 100
+              : this.getComponentMax(this.selectedComponent)
+              }
         }
       };
     }
   },
+  async created(){
+    await this.fetchCourses();
+  },
   methods: {
-    // Get student_id from user_id
-    async getStudentIdFromUserId() {
-      const userData = sessionStorage.getItem('user');
-      if (userData) {
-        const user = JSON.parse(userData);
-        const userId = user.user_id;
-        try {
-          const res = await fetch(`http://localhost:3000/student-id?user_id=${userId}`);
-          if (!res.ok) throw new Error('Failed to fetch student_id');
-          const data = await res.json();
-          this.studentID = data.student_id;
-          return true;
-        } catch (err) {
-          this.errorMessage = 'Failed to get student ID.';
-          return false;
+    getComponentMax(name) {
+      if (name === 'finalExam') return parseInt(this.maxFm) || 0;
+
+      const comp = this.components.find(c => c.componentName === name);
+      return comp ? parseInt(comp.maxMark) : 0;
+    },
+    getStudentIndex(index) {
+      let count = 0;
+      for (let i = 0; i <= index; i++) {
+        if (this.marks[i].studentId !== this.studentId) {
+          count++;
         }
       }
-      return false;
+      return count;
     },
     async fetchCourses() {
       try {
-        const res = await fetch('http://localhost:3000/courses');
+        const res = await fetch(`http://localhost:3000/enrolled-courses?student_id=${this.studentId}`);
         if (!res.ok) {
-          
           this.errorMessage = 'Server error loading courses';
           return;
         }
         this.courses = await res.json();
+        // Auto-select first course if available
+        if (this.courses.length && !this.selectedSectionId) {
+          this.selectedSectionId = this.courses[0].sectionId;
+          await this.fetchMarks();
+        }
       } catch (err) {
         this.errorMessage = 'Failed to load courses.';
-      }
-    },
-    async fetchSections() {
-      try {
-        this.sections = [];
-        const res = await fetch(`http://localhost:3000/sections?course_id=${this.selectedCourseId}`);
-        this.sections = await res.json();
-      } catch {
-        this.errorMessage = 'Failed to load sections.';
       }
     },
     async fetchMarks() {
       try {
         this.marks = [];
-        const url = `http://localhost:3000/all_marks?course_id=${this.selectedCourseId}&section_id=${this.selectedSectionId}`;
+        const url = `http://localhost:3000/all_marks?section_id=${this.selectedSectionId}`;
         const res = await fetch(url);
         if (!res.ok) {
           this.errorMessage = 'Failed to load marks (server error).';
           return;
         }
         const result = await res.json();
-        this.marks = result.data || [];
+        this.marks = (result.data || []).sort((a, b) => {
+          return a.studentId === this.studentId ? -1 : b.studentId === this.studentId ? 1 : 0;
+        });
+        this.components = result.components || [];
+        this.maxFm = result.maxFm || 0;
       } catch (err) {
         this.errorMessage = 'Failed to load marks (network error).';
       }
@@ -158,16 +199,6 @@ export default {
       return Object.values(marksObj || {}).reduce((sum, val) => sum + Number(val), 0);
     }
   },
-  mounted() {
-    this.getStudentIdFromUserId().then(success => {
-      if (success) {
-        this.fetchCourses();
-      } else {
-        this.errorMessage = 'Authentication required. Please login.';
-        this.$router.push('/login');
-      }
-    });
-  }
 };
 </script>
 

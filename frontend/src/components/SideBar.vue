@@ -9,9 +9,9 @@
     
     <hr>
       
-    <div>
+    <div style=" overflow-y: scroll;">
       <SideBarTab 
-        v-for="(item,index) in navItems"
+        v-for="(item,index) in filteredNavItems"
         :key="index"
         :item="item"
         :isActive="item.name === activeTab"
@@ -27,70 +27,74 @@ export default {
   components: {
     SideBarTab,
   },
-  props: {
-    activeTab: String,
-     userRole: {
-      type: String,
-      required: true
-    },
-     allowedRoles: {
-      type: Array,
-      default: () => ['admin', 'lecturer', 'student']
-    }
-  },
   data() {
     const navItems = [
       { name: "Home", link: "/", icon: "bi bi-house-door-fill", access: "all" },
 
       // Admin
-      // { name: "Dashboard", link: "/admin-dashboard", icon: "bi bi-speedometer2", access: "admin" },
       { name: "Course", link: "/course-management", icon: "bi bi-book-fill", access: "admin" },
       { name: "User", link: "/user-management", icon: "bi bi-person-fill", access: "admin" },
 
       // Lecturer
-      // { name: "Dashboard", link: "/lecturer-dashboard", icon: "bi bi-speedometer2", access: "lecturer" },
       { name: "My Courses", link: "/lecturer-course-management", icon: "bi bi-journal-bookmark-fill", access: "lecturer" },
-      { name: "Manage Students", link: "/lecturer-course-management/students/1", icon: "bi bi-people-fill", access: "lecturer" },
       { name: "Component Marks", link: "/manage-component-marks", icon: "bi bi-clipboard-data", access: "lecturer" },
       { name: "Final Exam Entry", link: "/add-final-exam-marks", icon: "bi bi-pencil-square", access: "lecturer" },
-      { name: "Mark Breakdown", link: "/mark-breakdown", icon: "bi bi-graph-up", access: "lecturer" },
       { name: "Performance Trend", link: "/performance-trend", icon: "bi bi-bar-chart-line", access: "lecturer" },
       { name: "View Mark Breakdown", link: "/view-mark-breakdown", icon: "bi bi-list-columns-reverse", access: "lecturer" },
-      { name: "Component Mark Detail", link: "/component-marks/1", icon: "bi bi-clipboard-check", access: "lecturer" },
-      // // Student
-      // { name: "Dashboard", link: "/student-dashboard", icon: "bi bi-speedometer2", access: "student" },
-      // { name: "My Marks", link: "/student-marks", icon: "bi bi-clipboard-data", access: "student" },
-      // { name: "Progress & Breakdown", link: "/student-progress", icon: "bi bi-bar-chart-line", access: "student" },
-      // { name: "Compare with Coursemates", link: "/student-compare", icon: "bi bi-people-fill", access: "student" },
-      // { name: "Class Rank & Percentile", link: "/student-rank", icon: "bi bi-trophy", access: "student" },
-      // { name: "What-If Simulator", link: "/student-whatif", icon: "bi bi-sliders", access: "student" },
-      // { name: "Submit Remark Request", link: "/student-remark", icon: "bi bi-chat-dots", access: "student" },
 
+      // Student
+      { name: "My Marks", link: "/student-marks", icon: "bi bi-clipboard-data", access: "student" },
+      { name: "Progress & Breakdown", link: "/student-progress", icon: "bi bi-bar-chart-line", access: "student" },
+      { name: "Compare with Coursemates", link: "/student-compare", icon: "bi bi-people-fill", access: "student" },
+      { name: "Class Rank & Percentile", link: "/student-rank", icon: "bi bi-trophy", access: "student" },
+      { name: "What-If Simulator", link: "/student-whatif", icon: "bi bi-sliders", access: "student" },
+      { name: "Submit Remark Request", link: "/student-remark", icon: "bi bi-chat-dots", access: "student" },
+
+      //AA
+      { name: "My Advisees", link: "/advisor-advisees", icon: "bi bi-people-fill", access: "advisor" },
+      { name: "Advisee Marks", link: "/advisor-advisee-marks", icon: "bi bi-journal-check", access: "advisor" },
+      { name: "Compare Advisees", link: "/advisor-compare", icon: "bi bi-bar-chart-line", access: "advisor" },
+      { name: "Advisee Ranking", link: "/advisor-rank", icon: "bi bi-trophy", access: "advisor" },
+      { name: "Component Averages", link: "/advisor-component-averages", icon: "bi bi-graph-up", access: "advisor" },
+      { name: "Student Remarks", link: "/advisor-student-remarks", icon: "bi bi-chat-square-text", access: "advisor" },
+      { name: "Overall Performance", link: "/advisor/advisee-overall-performance", icon: "bi bi-speedometer2", access: "advisor" }
     ];
+
+    // Get user info from sessionStorage
+    const user = JSON.parse(sessionStorage.getItem('user'));
+    const userRoles = user?.roles?.map(r => r.toLowerCase()) || [];
 
     return {
       navItems,
-      user: null,
-      imageUrl: null,
+      user,
+      userRoles
     };
   },
   computed: {
     filteredNavItems() {
       return this.navItems.filter(item => {
+        if (!item.access) return false;
+
         if (item.access === 'all') return true;
-        if (Array.isArray(item.access)) {
-          return item.access.includes(this.userRole);
+
+        if (typeof item.access === 'string') {
+          return this.userRoles.includes(item.access.toLowerCase());
         }
-        return item.access === this.userRole;
+
+        if (Array.isArray(item.access)) {
+          const accessRoles = item.access.map(r => r.toLowerCase());
+          return this.userRoles.some(role => accessRoles.includes(role));
+        }
+
+        return false;
       });
     },
+
     hasSidebarAccess() {
-      return this.allowedRoles.includes(this.userRole);
+      const allowedRoles = ['admin', 'lecturer', 'student'];
+      return this.userRoles.some(role => allowedRoles.includes(role));
     }
-  },
-  methods: {
-    
-  },
+  }
 };
 // (Lecturer)
 // Manage Students
