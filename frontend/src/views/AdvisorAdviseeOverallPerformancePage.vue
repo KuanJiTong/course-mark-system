@@ -34,7 +34,7 @@
         <div class="summary-row">
           <span><strong>Final Exam Mark:</strong> {{ getFinalExamMark(enrollment.section_id) }}</span>
           <span><strong>Total Mark:</strong> {{ getTotalMark(enrollment.section_id) }}</span>
-          <span v-if="getRankInfo(enrollment.section_id)"><strong>Rank:</strong> {{ getRankInfo(enrollment.section_id).rank }} / {{ getRankInfo(enrollment.section_id).total_students }}</span>
+          <span v-if="getRankInfo(enrollment.section_id)"><strong>Rank:</strong> {{ getRankInfo(enrollment.section_id).rank }} / {{ getRankInfo(enrollment.section_id).totalStudents }}</span>
           <span v-if="getRankInfo(enrollment.section_id)"><strong>Percentile:</strong> {{ getRankInfo(enrollment.section_id).percentile }}%</span>
         </div>
       </div>
@@ -67,8 +67,8 @@ export default {
       const userData = sessionStorage.getItem('user');
       if (userData) {
         const user = JSON.parse(userData);
-        this.userID = user.user_id;
-        console.log('Authenticated advisor ID for overall performance:', this.userID);
+        this.userID = user.lecturerId; // Use lecturerId as advisor_id
+        console.log('Authenticated advisor (lecturer) ID for overall performance:', this.userID);
         return true;
       }
       return false;
@@ -78,6 +78,7 @@ export default {
         const res = await fetch(`http://localhost:3000/advisor/advisees?advisor_id=${this.userID}`);
         if (!res.ok) throw new Error('Failed to fetch advisees');
         this.advisees = await res.json();
+        console.log('Fetched advisees:', this.advisees);
       } catch (error) {
         console.error('Error fetching advisees:', error);
         this.errorMessage = 'Failed to load advisees.';
@@ -107,13 +108,24 @@ export default {
             const marksRes = await fetch(`http://localhost:3000/student/marks?student_id=${this.selectedAdviseeId}&course_id=${enrollment.course_id}&section_id=${enrollment.section_id}`);
             if (marksRes.ok) {
               const marksData = await marksRes.json();
-              this.marks[enrollment.section_id] = marksData.marks || [];
-              this.finalExamMarks[enrollment.section_id] = marksData.final_exam_mark ?? '-';
-              this.totalMarks[enrollment.section_id] = marksData.total_mark ?? '-';
+              // Map camelCase keys to snake_case for marks
+              this.marks[enrollment.section_id] = Array.isArray(marksData.marks)
+                ? marksData.marks.map(mark => ({
+                    mark_id: mark.markId,
+                    component_id: mark.componentId,
+                    mark: mark.mark,
+                    component_name: mark.componentName,
+                    max_mark: mark.maxMark
+                  }))
+                : [];
+              this.finalExamMarks[enrollment.section_id] =
+                marksData.final_exam_mark ?? marksData.finalExam?.mark ?? '-';
+              this.totalMarks[enrollment.section_id] =
+                marksData.total_mark ?? marksData.totalMark ?? '-';
             }
             
             // Class averages
-            const avgRes = await fetch(`http://localhost:3000/class/component-averages?course_id=${enrollment.course_id}&section_id=${enrollment.section_id}`);
+             const avgRes = await fetch(`http://localhost:3000/advisor/component-averages?section_id=${enrollment.section_id}`);
             if (avgRes.ok) {
               this.classAverages[enrollment.section_id] = await avgRes.json();
             }

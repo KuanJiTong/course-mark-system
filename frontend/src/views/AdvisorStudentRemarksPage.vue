@@ -1,30 +1,13 @@
 <template>
   <div class="advisor-student-remarks">
     <h1>Student Feedback / Remark Requests</h1>
-    <div class="form-group">
-      <label for="course">Course:</label>
-      <select v-model="selectedCourseId" @change="fetchSections">
-        <option value="">-- All Courses --</option>
-        <option v-for="course in courses" :key="course.course_id" :value="course.course_id">
-          {{ course.course_name }}
-        </option>
-      </select>
-    </div>
-    <div class="form-group" v-if="sections.length">
-      <label for="section">Section:</label>
-      <select v-model="selectedSectionId" @change="fetchRemarks">
-        <option value="">-- All Sections --</option>
-        <option v-for="section in sections" :key="section.section_id" :value="section.section_id">
-          Section {{ section.section_number }}
-        </option>
-      </select>
-    </div>
     <table v-if="remarks.length">
       <thead>
         <tr>
           <th>Date</th>
           <th>Advisee</th>
-          <th>Course</th>
+          <th>Course Code</th>
+          <th>Course Name</th>
           <th>Section</th>
           <th>Component</th>
           <th>Justification</th>
@@ -35,8 +18,9 @@
         <tr v-for="remark in remarks" :key="remark.request_id">
           <td>{{ new Date(remark.created_at).toLocaleString() }}</td>
           <td>{{ getAdviseeName(remark.student_id) }}</td>
-          <td>{{ remark.course_id }}</td>
-          <td>{{ remark.section_id }}</td>
+          <td>{{ remark.course_code }}</td>
+          <td>{{ remark.course_name }}</td>
+          <td>{{ remark.section_number }}</td>
           <td>{{ remark.component_name || '-' }}</td>
           <td>{{ remark.justification }}</td>
           <td>{{ remark.status }}</td>
@@ -52,12 +36,8 @@ export default {
   data() {
     return {
       userID: null, // Will be set from sessionStorage
-      courses: [],
-      sections: [],
       remarks: [],
       advisees: [],
-      selectedCourseId: '',
-      selectedSectionId: '',
       loaded: false,
     };
   },
@@ -67,41 +47,18 @@ export default {
       const userData = sessionStorage.getItem('user');
       if (userData) {
         const user = JSON.parse(userData);
-        this.userID = user.user_id;
-        console.log('Authenticated advisor ID for student remarks:', this.userID);
+        this.userID = user.lecturerId; // Use lecturerId as advisor_id
+        console.log('Authenticated advisor (lecturer) ID for student remarks:', this.userID);
         return true;
       }
       return false;
-    },
-    async fetchCourses() {
-      try {
-        const res = await fetch('http://localhost:3000/courses');
-        if (!res.ok) throw new Error('Failed to fetch courses');
-        this.courses = await res.json();
-      } catch (error) {
-        console.error('Error fetching courses:', error);
-      }
-    },
-    async fetchSections() {
-      if (!this.selectedCourseId) {
-        this.sections = [];
-        this.fetchRemarks();
-        return;
-      }
-      try {
-        const res = await fetch(`http://localhost:3000/sections?course_id=${this.selectedCourseId}`);
-        if (!res.ok) throw new Error('Failed to fetch sections');
-        this.sections = await res.json();
-        this.fetchRemarks();
-      } catch (error) {
-        console.error('Error fetching sections:', error);
-      }
     },
     async fetchAdvisees() {
       try {
         const res = await fetch(`http://localhost:3000/advisor/advisees?advisor_id=${this.userID}`);
         if (!res.ok) throw new Error('Failed to fetch advisees');
         this.advisees = await res.json();
+        console.log('Fetched advisees:', this.advisees);
       } catch (error) {
         console.error('Error fetching advisees:', error);
       }
@@ -117,13 +74,18 @@ export default {
           const res = await fetch(url);
           if (!res.ok) continue;
           const data = await res.json();
-          // Optionally filter by course/section
-          const filtered = data.filter(r =>
-            (!this.selectedCourseId || r.course_id == this.selectedCourseId) &&
-            (!this.selectedSectionId || r.section_id == this.selectedSectionId)
-          );
-          for (const remark of filtered) {
-            allRemarks.push({ ...remark, student_id: advisee.student_id });
+          for (const remark of data) {
+            allRemarks.push({
+              created_at: remark.createdAt,
+              request_id: remark.requestId,
+              justification: remark.justification,
+              status: remark.status,
+              component_name: remark.componentName,
+              section_number: remark.sectionNumber,
+              course_code: remark.courseCode,
+              course_name: remark.courseName,
+              student_id: advisee.student_id
+            });
           }
         }
         this.remarks = allRemarks.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
@@ -140,7 +102,6 @@ export default {
   },
   async mounted() {
     if (this.getAuthenticatedUser()) {
-      await this.fetchCourses();
       await this.fetchAdvisees();
       await this.fetchRemarks();
     } else {

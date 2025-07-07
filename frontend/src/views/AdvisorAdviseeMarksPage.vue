@@ -18,9 +18,9 @@
         </thead>
         <tbody>
           <tr v-for="mark in marks[enrollment.section_id]" :key="mark.component_id">
-            <td>{{ mark.component_name }}</td>
+            <td>{{ mark.componentName }}</td>
             <td>{{ mark.mark }}</td>
-            <td>{{ mark.max_mark }}</td>
+            <td>{{ mark.maxMark }}</td>
           </tr>
         </tbody>
       </table>
@@ -38,7 +38,7 @@ export default {
   },
   data() {
     return {
-      advisorID: null, // Will be set from sessionStorage
+      advisorID: null, // For reference, not used in API calls
       enrollments: [],
       marks: {},
       loaded: false,
@@ -53,13 +53,12 @@ export default {
     }
   },
   methods: {
-    // Get authenticated user data
     getAuthenticatedUser() {
       const userData = sessionStorage.getItem('user');
       if (userData) {
         const user = JSON.parse(userData);
-        this.advisorID = user.user_id;
-        console.log('Authenticated advisor ID for advisee marks:', this.advisorID);
+        this.advisorID = user.lecturerId; // Use lecturerId for clarity
+        console.log('Authenticated advisor (lecturer) ID for advisee marks:', this.advisorID);
         return true;
       }
       return false;
@@ -68,12 +67,9 @@ export default {
       try {
         const res = await fetch(`http://localhost:3000/student/enrollments?student_id=${this.resolvedStudentId}`);
         if (!res.ok) throw new Error('Failed to fetch enrollments');
-        
         const enrollments = await res.json();
         this.enrollments = enrollments;
         this.loaded = true;
-        
-        // Fetch marks for each enrollment
         enrollments.forEach(enrollment => {
           this.fetchMarks(enrollment);
         });
@@ -86,7 +82,6 @@ export default {
       try {
         const res = await fetch(`http://localhost:3000/student/marks?student_id=${this.resolvedStudentId}&course_id=${enrollment.course_id}&section_id=${enrollment.section_id}`);
         if (!res.ok) throw new Error('Failed to fetch marks');
-        
         const data = await res.json();
         this.marks[enrollment.section_id] = Array.isArray(data.marks) ? data.marks : [];
       } catch (error) {
@@ -95,7 +90,6 @@ export default {
       }
     },
     downloadCSV() {
-      // Download CSV for each course/section the advisee is enrolled in
       this.enrollments.forEach(enrollment => {
         const url = `http://localhost:3000/all_marks_csv?course_id=${enrollment.course_id}&section_id=${enrollment.section_id}`;
         window.open(url, '_blank');

@@ -59,69 +59,94 @@ $app->get('/student/enrollments', function ($request, $response) {
 
 // GET: Section marks with student names and advisee flag
 $app->get('/advisor/section-marks', function ($request, $response) {
-    $pdo = getPDO();
-    $params = $request->getQueryParams();
-    $advisor_id = $params['advisor_id'] ?? null;
-    $course_id = $params['course_id'] ?? null;
-    $section_id = $params['section_id'] ?? null;
+    try {
+        $pdo = getPDO();
+        $params = $request->getQueryParams();
+        $advisor_id = $params['advisor_id'] ?? null;
+        $course_id = $params['course_id'] ?? null;
+        $section_id = $params['section_id'] ?? null;
 
-    if (!$advisor_id || !$course_id || !$section_id) {
-        $response->getBody()->write(json_encode(['error' => 'Missing advisor_id, course_id, or section_id']));
-        return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
+        if (!$advisor_id || !$course_id || !$section_id) {
+            $response->getBody()->write(json_encode(['error' => 'Missing advisor_id, course_id, or section_id']));
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
+        }
+
+        // Get all advisee student_ids for this advisor
+        $stmt = $pdo->prepare("SELECT student_id FROM advisor_advisee WHERE advisor_id = ?");
+        $stmt->execute([$advisor_id]);
+        $advisee_ids = array_column($stmt->fetchAll(PDO::FETCH_ASSOC), 'student_id');
+
+        // Get all students enrolled in the section, with their marks (even if none)
+        $stmt = $pdo->prepare("
+            SELECT
+                s.student_id,
+                u.name AS student_name,
+                COALESCE(SUM(m.mark), 0) AS coursework_mark,
+                COALESCE(f.mark, 0) AS final_exam_mark,
+                COALESCE(SUM(m.mark), 0) + COALESCE(f.mark, 0) AS total_mark
+            FROM enrollment e
+            JOIN students s ON e.student_id = s.student_id
+            JOIN users u ON s.user_id = u.user_id
+            JOIN sections sec ON e.section_id = sec.section_id
+            LEFT JOIN marks m ON s.student_id = m.student_id
+                AND m.component_id IN (
+                    SELECT component_id
+                    FROM components
+                    WHERE course_id = ? AND section_id = ? AND component_name != 'Final Exam'
+                )
+            LEFT JOIN final_exam f ON s.student_id = f.student_id
+                AND f.section_id = ?
+            WHERE e.section_id = ? AND sec.course_id = ?
+            GROUP BY s.student_id, u.name, f.mark
+            ORDER BY s.student_id
+        ");
+        $stmt->execute([
+            $course_id, $section_id,
+            $section_id,
+            $section_id, $course_id
+        ]);
+        $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Add is_advisee flag
+        foreach ($results as &$row) {
+            $row['is_advisee'] = in_array($row['student_id'], $advisee_ids);
+        }
+
+        $response->getBody()->write(json_encode($results));
+        return $response->withHeader('Content-Type', 'application/json');
+    } catch (Exception $e) {
+        $response->getBody()->write(json_encode(['error' => $e->getMessage()]));
+        return $response->withHeader('Content-Type', 'application/json')->withStatus(500);
     }
+}); 
 
-    // Get all advisee student_ids for this advisor
-    $stmt = $pdo->prepare("SELECT student_id FROM advisor_advisee WHERE advisor_id = ?");
-    $stmt->execute([$advisor_id]);
-    $advisee_ids = array_column($stmt->fetchAll(PDO::FETCH_ASSOC), 'student_id');
-
-    // Get all students in the section with their marks
-    $stmt = $pdo->prepare("
-        SELECT
-            s.student_id,
-            u.name AS student_name,
-            COALESCE(SUM(m.mark), 0) AS coursework_mark,
-            COALESCE(f.mark, 0) AS final_exam_mark,
-            COALESCE(SUM(m.mark), 0) + COALESCE(f.mark, 0) AS total_mark
-        FROM students s
-        JOIN users u ON s.user_id = u.user_id
-        LEFT JOIN marks m ON s.student_id = m.student_id
-            AND m.component_id IN (
-                SELECT component_id
-                FROM components
-                WHERE course_id = ? AND section_id = ? AND component_name != 'Final Exam'
-            )
-        LEFT JOIN final_exam f ON s.student_id = f.student_id
-            AND f.course_id = ? AND f.section_id = ?
-        WHERE s.student_id IN (
-            SELECT DISTINCT student_id
-            FROM marks
-            WHERE component_id IN (
-                SELECT component_id
-                FROM components
-                WHERE course_id = ? AND section_id = ?
-            )
-            UNION
-            SELECT student_id
-            FROM final_exam
-            WHERE course_id = ? AND section_id = ?
-        )
-        GROUP BY s.student_id, u.name, f.mark
-        ORDER BY s.student_id
-    ");
-    $stmt->execute([
-        $course_id, $section_id,
-        $course_id, $section_id,
-        $course_id, $section_id,
-        $course_id, $section_id
-    ]);
-    $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-    // Add is_advisee flag
-    foreach ($results as &$row) {
-        $row['is_advisee'] = in_array($row['student_id'], $advisee_ids);
+// GET: Class average per component for a section (advisor view, with error debug)
+$app->get('/advisor/component-averages', function ($request, $response) {
+    try {
+        $pdo = getPDO();
+        $params = $request->getQueryParams();
+        if (!isset($params['section_id'])) {
+            $response->getBody()->write(json_encode(['error' => 'Missing section_id']));
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
+        }
+        $stmt = $pdo->prepare("
+            SELECT
+                c.component_id,
+                c.component_name,
+                c.max_mark,
+                AVG(m.mark) AS average_mark
+            FROM components c
+            LEFT JOIN marks m ON c.component_id = m.component_id
+            WHERE c.section_id = ?
+            GROUP BY c.component_id, c.component_name, c.max_mark
+            ORDER BY c.component_id
+        ");
+        $stmt->execute([$params['section_id']]);
+        $averages = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $response->getBody()->write(json_encode($averages));
+        return $response->withHeader('Content-Type', 'application/json');
+    } catch (Exception $e) {
+        $response->getBody()->write(json_encode(['error' => $e->getMessage()]));
+        return $response->withHeader('Content-Type', 'application/json')->withStatus(500);
     }
-
-    $response->getBody()->write(json_encode($results));
-    return $response->withHeader('Content-Type', 'application/json');
 }); 

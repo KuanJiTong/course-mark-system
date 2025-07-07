@@ -38,23 +38,25 @@ export default {
   data() {
     return {
       userID: null,
+      advisorID: null,
       advisees: [],
       loaded: false,
       selectedAdvisee: null,
     };
   },
-  computed: {
-    advisorIdVar() {
-      return this.userID;
-    }
-  },
+  // computed: {
+  //   advisorIdVar() {
+  //     return this.userID;
+  //   }
+  // },
   methods: {
     getAuthenticatedUser() {
       const userData = sessionStorage.getItem('user');
       if (userData) {
         const user = JSON.parse(userData);
         this.userID = user.user_id;
-        console.log('Authenticated advisor ID:', this.userID);
+        this.advisorID = user.lecturerId;
+        console.log('Authenticated user ID:', this.userID, 'Advisor (lecturer) ID:', this.advisorID);
         return true;
       }
       return false;
@@ -70,7 +72,7 @@ export default {
     },
     async fetchAdvisees() {
       try {
-        const res = await fetch(`http://localhost:3000/advisor/advisees?advisor_id=${this.userID}`);
+        const res = await fetch(`http://localhost:3000/advisor/advisees?advisor_id=${this.advisorID}`);
         if (!res.ok) {
           throw new Error('Failed to fetch advisees');
         }

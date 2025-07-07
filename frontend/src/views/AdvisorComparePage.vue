@@ -42,9 +42,9 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="item in marks" :key="item.student_id" :class="{ 'highlight': item.student_id == selectedAdviseeId }">
+          <tr v-for="item in marks" :key="item.student_id" :class="{ 'highlight': item.is_advisee }">
             <td>
-              <span v-if="item.student_id == selectedAdviseeId">
+              <span v-if="item.is_advisee">
                 {{ item.student_name }} (Advisee)
               </span>
               <span v-else>
@@ -53,7 +53,7 @@
             </td>
             <td>{{ item.coursework_mark }}</td>
             <td>{{ item.final_exam_mark }}</td>
-            <td>{{ calculateTotal(item.coursework_mark, item.final_exam_mark) }}</td>
+            <td>{{ item.total_mark }}</td>
           </tr>
         </tbody>
       </table>
@@ -95,15 +95,15 @@ export default {
       if (!this.marks.length) return { labels: [], datasets: [] };
       return {
         labels: this.marks.map(item =>
-          item.student_id == this.selectedAdviseeId ? (item.student_name + ' (Advisee)') : item.student_name
+          item.is_advisee ? (item.student_name + ' (Advisee)') : item.student_name
         ),
         datasets: [
           {
             label: 'Total Mark',
             backgroundColor: this.marks.map(item =>
-              item.student_id == this.selectedAdviseeId ? '#ffc107' : '#0d6efd'
+              item.is_advisee ? '#ffc107' : '#0d6efd'
             ),
-            data: this.marks.map(item => Number(this.calculateTotal(item.coursework_mark, item.final_exam_mark)))
+            data: this.marks.map(item => Number(item.total_mark))
           }
         ]
       };
@@ -127,8 +127,8 @@ export default {
       const userData = sessionStorage.getItem('user');
       if (userData) {
         const user = JSON.parse(userData);
-        this.userID = user.user_id;
-        console.log('Authenticated advisor ID for comparison:', this.userID);
+        this.userID = user.lecturerId; // Use lecturerId as advisor_id
+        console.log('Authenticated advisor (lecturer) ID for comparison:', this.userID);
         return true;
       }
       return false;
@@ -138,6 +138,7 @@ export default {
         const res = await fetch(`http://localhost:3000/advisor/advisees?advisor_id=${this.userID}`);
         if (!res.ok) throw new Error('Failed to fetch advisees');
         this.advisees = await res.json();
+        console.log('Fetched advisees:', this.advisees);
       } catch (error) {
         console.error('Error fetching advisees:', error);
         this.errorMessage = 'Failed to load advisees.';
@@ -174,9 +175,19 @@ export default {
           this.errorMessage = 'Failed to load marks (server error).';
           return;
         }
-        this.marks = await res.json();
+        const data = await res.json();
+        // Map backend keys to frontend keys for consistency
+        this.marks = (data || []).map(item => ({
+          student_id: item.student_id,
+          student_name: item.student_name,
+          coursework_mark: item.coursework_mark,
+          final_exam_mark: item.final_exam_mark,
+          total_mark: item.total_mark,
+          is_advisee: item.is_advisee
+        }));
       } catch (err) {
         this.errorMessage = 'Failed to load marks (network error).';
+        
       }
     },
     calculateTotal(coursework, finalExam) {

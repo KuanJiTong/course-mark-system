@@ -82,8 +82,8 @@ export default {
       const userData = sessionStorage.getItem('user');
       if (userData) {
         const user = JSON.parse(userData);
-        this.userID = user.user_id;
-        console.log('Authenticated advisor ID for component averages:', this.userID);
+        this.userID = user.lecturerId;
+        console.log('Authenticated advisor (lecturer) ID for component averages:', this.userID);
         return true;
       }
       return false;
@@ -93,6 +93,7 @@ export default {
         const res = await fetch(`http://localhost:3000/advisor/advisees?advisor_id=${this.userID}`);
         if (!res.ok) throw new Error('Failed to fetch advisees');
         this.advisees = await res.json();
+        console.log('Fetched advisees:', this.advisees);
       } catch (error) {
         console.error('Error fetching advisees:', error);
         this.errorMessage = 'Failed to load advisees.';
@@ -129,7 +130,7 @@ export default {
     async fetchAverages() {
       try {
         this.averages = [];
-        const url = `http://localhost:3000/class/component-averages?course_id=${this.selectedCourseId}&section_id=${this.selectedSectionId}`;
+        const url = `http://localhost:3000/advisor/component-averages?section_id=${this.selectedSectionId}`;
         const res = await fetch(url);
         if (!res.ok) {
           this.errorMessage = 'Failed to load averages (server error).';
@@ -147,14 +148,22 @@ export default {
         const res = await fetch(url);
         if (!res.ok) throw new Error('Failed to fetch advisee marks');
         const data = await res.json();
-        this.adviseeMarks = Array.isArray(data.marks) ? data.marks : [];
+           this.adviseeMarks = Array.isArray(data.marks)
+          ? data.marks.map(mark => ({
+              mark_id: mark.markId,
+              component_id: mark.componentId,
+              mark: mark.mark,
+              component_name: mark.componentName,
+              max_mark: mark.maxMark
+            }))
+          : [];
       } catch (error) {
         console.error('Error fetching advisee marks:', error);
         this.adviseeMarks = [];
       }
     },
     getAdviseeMark(component_id) {
-      const found = this.adviseeMarks.find(m => m.component_id == component_id);
+      const found = this.adviseeMarks.find(m => String(m.component_id) === String(component_id));
       return found ? found.mark : '-';
     },
     compareToAverage(comp) {

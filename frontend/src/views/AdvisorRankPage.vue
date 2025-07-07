@@ -29,7 +29,7 @@
       </select>
     </div>
     <div v-if="rankInfo && selectedAdviseeId">
-      <h2 class="highlight">{{ getAdviseeName(selectedAdviseeId) }}'s Rank: {{ rankInfo.rank }} / {{ rankInfo.total_students }}</h2>
+      <h2 class="highlight">{{ getAdviseeName(selectedAdviseeId) }}'s Rank: {{ rankInfo.rank }} / {{ rankInfo.totalStudents }}</h2>
       <h2 class="highlight">Percentile: {{ rankInfo.percentile }}%</h2>
     </div>
     <div v-if="errorMessage" class="error-message">{{ errorMessage }}</div>
@@ -66,8 +66,8 @@ export default {
       const userData = sessionStorage.getItem('user');
       if (userData) {
         const user = JSON.parse(userData);
-        this.userID = user.user_id;
-        console.log('Authenticated advisor ID for ranking:', this.userID);
+        this.userID = user.lecturerId;
+        console.log('Authenticated advisor (lecturer) ID for ranking:', this.userID);
         return true;
       }
       return false;
@@ -77,6 +77,7 @@ export default {
         const res = await fetch(`http://localhost:3000/advisor/advisees?advisor_id=${this.userID}`);
         if (!res.ok) throw new Error('Failed to fetch advisees');
         this.advisees = await res.json();
+        console.log('Fetched advisees:', this.advisees);
       } catch (error) {
         console.error('Error fetching advisees:', error);
         this.errorMessage = 'Failed to load advisees.';
