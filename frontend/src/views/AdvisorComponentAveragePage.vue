@@ -3,7 +3,7 @@
     <h1>Class Average per Component (Advisor View)</h1>
     <div class="form-group">
       <label for="advisee">Advisee:</label>
-      <select v-model="selectedAdviseeId" @change="onAdviseeChange" required>
+      <select v-model="selectedAdviseeId" @change="onAdviseeChange" required class="form-select">
         <option disabled value="">-- Select Advisee --</option>
         <option v-for="advisee in advisees" :key="advisee.student_id" :value="advisee.student_id">
           {{ advisee.student_name }} ({{ advisee.matric_no }})
@@ -12,7 +12,7 @@
     </div>
  <div class="form-group" v-if="studentEnrollments.length">
       <label for="course">Course:</label>
-      <select v-model="selectedCourseId" @change="onCourseChange" required>
+      <select v-model="selectedCourseId" @change="onCourseChange" required class="form-select">
         <option disabled value="">-- Select Course --</option>
         <option v-for="course in uniqueCourses" :key="course.course_id" :value="course.course_id">
           {{ course.course_code }}-{{ course.section_number  }} {{ course.course_name }}

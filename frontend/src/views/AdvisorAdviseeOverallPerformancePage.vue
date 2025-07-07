@@ -3,7 +3,7 @@
     <h1>Advisee's Overall Course Performance</h1>
     <div class="form-group">
       <label for="advisee">Advisee:</label>
-      <select v-model="selectedAdviseeId" @change="fetchAllData" required>
+      <select v-model="selectedAdviseeId" @change="fetchAllData" required class="form-select">
         <option disabled value="">-- Select Advisee --</option>
         <option v-for="advisee in advisees" :key="advisee.student_id" :value="advisee.student_id">
           {{ advisee.student_name }} ({{ advisee.matric_no }})
@@ -12,7 +12,7 @@
     </div>
     <div v-if="enrollments.length">
       <div v-for="enrollment in enrollments" :key="enrollment.section_id" class="course-section-summary">
-        <h2>{{ enrollment.course_name }} (Section {{ enrollment.section_number }})</h2>
+        <h2>{{ enrollment.course_code }}-{{ enrollment.section_number }} {{ enrollment.course_name }}</h2>
         <table>
           <thead>
             <tr>
@@ -48,15 +48,15 @@
 export default {
   data() {
     return {
-      userID: null, // Will be set from sessionStorage
+      userID: null, 
       advisees: [],
       selectedAdviseeId: '',
       enrollments: [],
-      marks: {}, // section_id -> array of marks
-      classAverages: {}, // section_id -> array of averages
-      finalExamMarks: {}, // section_id -> mark
-      totalMarks: {}, // section_id -> total
-      rankInfo: {}, // section_id -> {rank, total_students, percentile}
+      marks: {}, 
+      classAverages: {}, 
+      finalExamMarks: {}, 
+      totalMarks: {},
+      rankInfo: {}, 
       loaded: false,
       errorMessage: ''
     };
@@ -118,6 +118,7 @@ export default {
                     max_mark: mark.maxMark
                   }))
                 : [];
+              // Handle both camelCase and snake_case for final exam and total mark
               this.finalExamMarks[enrollment.section_id] =
                 marksData.final_exam_mark ?? marksData.finalExam?.mark ?? '-';
               this.totalMarks[enrollment.section_id] =
@@ -125,7 +126,7 @@ export default {
             }
             
             // Class averages
-             const avgRes = await fetch(`http://localhost:3000/advisor/component-averages?section_id=${enrollment.section_id}`);
+            const avgRes = await fetch(`http://localhost:3000/advisor/component-averages?section_id=${enrollment.section_id}`);
             if (avgRes.ok) {
               this.classAverages[enrollment.section_id] = await avgRes.json();
             }

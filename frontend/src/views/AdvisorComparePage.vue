@@ -3,7 +3,7 @@
     <h1>Compare Advisees with Coursemates</h1>
     <div class="form-group">
       <label for="advisee">Advisee:</label>
-      <select v-model="selectedAdviseeId" @change="onAdviseeChange" required>
+      <select v-model="selectedAdviseeId" @change="onAdviseeChange" required class="form-select">
         <option disabled value="">-- Select Advisee --</option>
         <option v-for="advisee in advisees" :key="advisee.student_id" :value="advisee.student_id">
           {{ advisee.student_name }} ({{ advisee.matric_no }})
@@ -12,10 +12,10 @@
     </div>
     <div class="form-group" v-if="studentEnrollments.length">
       <label for="course">Course:</label>
-      <select v-model="selectedCourseId" @change="onCourseChange" required>
+      <select v-model="selectedCourseId" @change="onCourseChange" required class="form-select">
         <option disabled value="">-- Select Course --</option>
         <option v-for="course in uniqueCourses" :key="course.course_id" :value="course.course_id">
-          {{ course.course_code }}-{{ course.section_number  }} {{ course.course_name }}
+          {{ course.course_code }}-{{ (filteredSections.find(s => s.course_id === course.course_id)?.section_number || '') }} {{ course.course_name }}
         </option>
       </select>
     </div>
@@ -46,7 +46,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="item in marks" :key="item.student_id" :class="{ 'highlight': item.is_advisee }">
+          <tr v-for="item in marks" :key="item.student_id" :class="{ 'highlight': item.is_advisee, 'at-risk': atRiskStudentIds.includes(item.student_id) && selectedComponent === 'total' }">
             <td>
               <span v-if="item.is_advisee">
                 {{ item.student_name }} (Advisee)
@@ -97,6 +97,18 @@ export default {
     filteredSections() {
       return this.studentEnrollments.filter(e => e.course_id == this.selectedCourseId);
     },
+    atRiskStudentIds() {
+      // Only for total mark view
+      if (this.selectedComponent !== 'total' || !this.marks.length) return [];
+      // Calculate bottom 20%
+      const sorted = [...this.marks].sort((a, b) => a.total_mark - b.total_mark);
+      const cutoff = Math.ceil(this.marks.length * 0.2);
+      const bottom20 = sorted.slice(0, cutoff).map(s => s.student_id);
+      // GPA < 2.0 (assuming total_mark out of 100, GPA = total_mark/25)
+      const lowGPA = this.marks.filter(s => (s.total_mark / 25) < 2.0).map(s => s.student_id);
+      // Union of both
+      return Array.from(new Set([...bottom20, ...lowGPA]));
+    },
     barChartData() {
       if (!this.marks.length) return { labels: [], datasets: [] };
       let label = 'Total Mark';
@@ -131,14 +143,14 @@ export default {
         responsive: true,
         plugins: {
           legend: { display: false },
-          title: { 
-                  display: true,
+          title: {
+            display: true,
             text:
               this.selectedComponent === 'total'
-                ? 'Comparison: Total Marks'
+                ? 'Anonymous Comparison: Total Marks'
                 : this.selectedComponent === 'finalExam'
-                  ? 'Comparison: Final Exam'
-                  : `Comparison: ${this.selectedComponent}`
+                  ? 'Anonymous Comparison: Final Exam'
+                  : `Anonymous Comparison: ${this.selectedComponent}`
           }
         },
         scales: {
@@ -321,6 +333,11 @@ th {
 }
 .highlight {
   background-color: #fff3cd !important;
+  font-weight: bold;
+}
+.at-risk {
+  background-color: #ffd6d6 !important;
+  color: #b30000;
   font-weight: bold;
 }
 </style> 
