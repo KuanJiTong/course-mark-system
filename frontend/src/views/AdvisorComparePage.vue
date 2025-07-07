@@ -15,7 +15,7 @@
       <select v-model="selectedCourseId" @change="onCourseChange" required class="form-select">
         <option disabled value="">-- Select Course --</option>
         <option v-for="course in uniqueCourses" :key="course.course_id" :value="course.course_id">
-          {{ course.course_code }}-{{ (filteredSections.find(s => s.course_id === course.course_id)?.section_number || '') }} {{ course.course_name }}
+          {{ course.course_code }}-{{ course.section_number }} {{ course.course_name }}
         </option>
       </select>
     </div>
