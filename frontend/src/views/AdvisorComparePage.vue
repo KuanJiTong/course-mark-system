@@ -15,7 +15,7 @@
       <select v-model="selectedCourseId" @change="onCourseChange" required>
         <option disabled value="">-- Select Course --</option>
         <option v-for="course in uniqueCourses" :key="course.course_id" :value="course.course_id">
-          {{ course.course_name }}<span v-if="course.course_code"> ({{ course.course_code }})</span>
+          {{ course.course_code }}-{{ course.section_number  }} {{ course.course_name }}
         </option>
       </select>
     </div>
@@ -32,11 +32,7 @@
           <option value="finalExam">Final Exam</option>
         </select>
       </div>
-      <div style="margin-bottom: 12px;">
-        <span v-if="selectedCourseId && selectedSectionId">
-          <strong>Section:</strong> {{ getSectionNumber(selectedSectionId) }}
-        </span>
-      </div>
+
       <div style="margin-bottom: 32px;">
         <Bar :data="barChartData" :options="barChartOptions" />
       </div>
@@ -135,7 +131,15 @@ export default {
         responsive: true,
         plugins: {
           legend: { display: false },
-          title: { display: true, text: 'Comparison: Total Marks' }
+          title: { 
+                  display: true,
+            text:
+              this.selectedComponent === 'total'
+                ? 'Comparison: Total Marks'
+                : this.selectedComponent === 'finalExam'
+                  ? 'Comparison: Final Exam'
+                  : `Comparison: ${this.selectedComponent}`
+          }
         },
         scales: {
           y: {
@@ -249,10 +253,6 @@ export default {
       const cw = Number(coursework) || 0;
       const fe = Number(finalExam) || 0;
       return (cw + fe).toFixed(2);
-    },
-    getSectionNumber(sectionId) {
-      const section = this.studentEnrollments.find(e => e.section_id == sectionId);
-      return section ? section.section_number : '';
     },
     getChartMax() {
       if (this.selectedComponent === 'total') return 100;

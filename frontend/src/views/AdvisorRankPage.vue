@@ -15,12 +15,9 @@
       <select v-model="selectedCourseId" @change="onCourseChange" required>
         <option disabled value="">-- Select Course --</option>
         <option v-for="course in uniqueCourses" :key="course.course_id" :value="course.course_id">
-          {{ course.course_name }}<span v-if="course.course_code"> ({{ course.course_code }})</span>
+          {{ course.course_code }}-{{ course.section_number }} {{ course.course_name }}
         </option>
       </select>
-    </div>
-    <div v-if="selectedCourseId && selectedSectionId" style="margin-bottom: 12px;">
-      <strong>Section:</strong> {{ getSectionNumber(selectedSectionId) }}
     </div>
     <div v-if="rankInfo && selectedAdviseeId">
       <h2 class="highlight">{{ getAdviseeName(selectedAdviseeId) }}'s Rank: {{ rankInfo.rank }} / {{ rankInfo.totalStudents }}</h2>
@@ -123,10 +120,6 @@ export default {
       const found = this.advisees.find(a => a.student_id == student_id);
       return found ? found.student_name : `Student`;
     },
-    getSectionNumber(sectionId) {
-      const section = this.studentEnrollments.find(e => e.section_id == sectionId);
-      return section ? section.section_number : '';
-    }
   },
   async mounted() {
     if (this.getAuthenticatedUser()) {

@@ -10,17 +10,14 @@
         </option>
       </select>
     </div>
-    <div class="form-group" v-if="studentEnrollments.length">
+ <div class="form-group" v-if="studentEnrollments.length">
       <label for="course">Course:</label>
       <select v-model="selectedCourseId" @change="onCourseChange" required>
         <option disabled value="">-- Select Course --</option>
         <option v-for="course in uniqueCourses" :key="course.course_id" :value="course.course_id">
-          {{ course.course_name }} ({{ course.course_code }})
+          {{ course.course_code }}-{{ course.section_number  }} {{ course.course_name }}
         </option>
       </select>
-    </div>
-    <div v-if="selectedSection">
-      <strong>Section: {{ selectedSection.section_number }}</strong>
     </div>
     <table v-if="averages.length">
       <thead>
