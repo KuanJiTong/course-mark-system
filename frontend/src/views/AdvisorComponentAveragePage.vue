@@ -3,28 +3,19 @@
     <h1>Class Average per Component (Advisor View)</h1>
     <div class="form-group">
       <label for="advisee">Advisee:</label>
-      <select v-model="selectedAdviseeId" @change="onAdviseeChange" required>
+      <select v-model="selectedAdviseeId" @change="onAdviseeChange" required class="form-select">
         <option disabled value="">-- Select Advisee --</option>
         <option v-for="advisee in advisees" :key="advisee.student_id" :value="advisee.student_id">
           {{ advisee.student_name }} ({{ advisee.matric_no }})
         </option>
       </select>
     </div>
-    <div class="form-group" v-if="studentEnrollments.length">
+ <div class="form-group" v-if="studentEnrollments.length">
       <label for="course">Course:</label>
-      <select v-model="selectedCourseId" @change="onCourseChange" required>
+      <select v-model="selectedCourseId" @change="onCourseChange" required class="form-select">
         <option disabled value="">-- Select Course --</option>
         <option v-for="course in uniqueCourses" :key="course.course_id" :value="course.course_id">
-          {{ course.course_name }}
-        </option>
-      </select>
-    </div>
-    <div class="form-group" v-if="filteredSections.length">
-      <label for="section">Section:</label>
-      <select v-model="selectedSectionId" @change="fetchAveragesAndMarks" required>
-        <option disabled value="">-- Select Section --</option>
-        <option v-for="section in filteredSections" :key="section.section_id" :value="section.section_id">
-          Section {{ section.section_number }}
+          {{ course.course_code }}-{{ course.section_number  }} {{ course.course_name }}
         </option>
       </select>
     </div>
@@ -75,6 +66,9 @@ export default {
     },
     filteredSections() {
       return this.studentEnrollments.filter(e => e.course_id == this.selectedCourseId);
+    },
+    selectedSection() {
+      return this.filteredSections.length ? this.filteredSections[0] : null;
     }
   },
   methods: {
@@ -82,8 +76,8 @@ export default {
       const userData = sessionStorage.getItem('user');
       if (userData) {
         const user = JSON.parse(userData);
-        this.userID = user.user_id;
-        console.log('Authenticated advisor ID for component averages:', this.userID);
+        this.userID = user.lecturerId;
+        console.log('Authenticated advisor (lecturer) ID for component averages:', this.userID);
         return true;
       }
       return false;
@@ -93,6 +87,7 @@ export default {
         const res = await fetch(`http://localhost:3000/advisor/advisees?advisor_id=${this.userID}`);
         if (!res.ok) throw new Error('Failed to fetch advisees');
         this.advisees = await res.json();
+        console.log('Fetched advisees:', this.advisees);
       } catch (error) {
         console.error('Error fetching advisees:', error);
         this.errorMessage = 'Failed to load advisees.';
@@ -117,19 +112,30 @@ export default {
       await this.fetchStudentEnrollments();
     },
     async onCourseChange() {
-      this.selectedSectionId = '';
       this.averages = [];
       this.adviseeMarks = [];
+      if (this.filteredSections.length) {
+        this.selectedSectionId = this.filteredSections[0].section_id;
+        console.log('Auto-selected section:', this.selectedSectionId, this.filteredSections[0]);
+        await this.fetchAveragesAndMarks();
+      } else {
+        this.selectedSectionId = '';
+      }
     },
     async fetchAveragesAndMarks() {
       if (!this.selectedAdviseeId || !this.selectedCourseId || !this.selectedSectionId) return;
+      console.log('Fetching averages and marks for', {
+        adviseeId: this.selectedAdviseeId,
+        courseId: this.selectedCourseId,
+        sectionId: this.selectedSectionId
+      });
       await this.fetchAverages();
       await this.fetchAdviseeMarks();
     },
     async fetchAverages() {
       try {
         this.averages = [];
-        const url = `http://localhost:3000/class/component-averages?course_id=${this.selectedCourseId}&section_id=${this.selectedSectionId}`;
+        const url = `http://localhost:3000/advisor/component-averages?section_id=${this.selectedSectionId}`;
         const res = await fetch(url);
         if (!res.ok) {
           this.errorMessage = 'Failed to load averages (server error).';
@@ -147,14 +153,22 @@ export default {
         const res = await fetch(url);
         if (!res.ok) throw new Error('Failed to fetch advisee marks');
         const data = await res.json();
-        this.adviseeMarks = Array.isArray(data.marks) ? data.marks : [];
+        this.adviseeMarks = Array.isArray(data.marks)
+          ? data.marks.map(mark => ({
+              mark_id: mark.markId,
+              component_id: mark.componentId,
+              mark: mark.mark,
+              component_name: mark.componentName,
+              max_mark: mark.maxMark
+            }))
+          : [];
       } catch (error) {
         console.error('Error fetching advisee marks:', error);
         this.adviseeMarks = [];
       }
     },
     getAdviseeMark(component_id) {
-      const found = this.adviseeMarks.find(m => m.component_id == component_id);
+      const found = this.adviseeMarks.find(m => String(m.component_id) === String(component_id));
       return found ? found.mark : '-';
     },
     compareToAverage(comp) {

@@ -52,7 +52,7 @@ export default {
 
       //AA
       { name: "My Advisees", link: "/advisor-advisees", icon: "bi bi-people-fill", access: "advisor" },
-      { name: "Advisee Marks", link: "/advisor-advisee-marks", icon: "bi bi-journal-check", access: "advisor" },
+      // { name: "Advisee Marks", link: "/advisor-advisee-marks", icon: "bi bi-journal-check", access: "advisor" },
       { name: "Compare Advisees", link: "/advisor-compare", icon: "bi bi-bar-chart-line", access: "advisor" },
       { name: "Advisee Ranking", link: "/advisor-rank", icon: "bi bi-trophy", access: "advisor" },
       { name: "Component Averages", link: "/advisor-component-averages", icon: "bi bi-graph-up", access: "advisor" },

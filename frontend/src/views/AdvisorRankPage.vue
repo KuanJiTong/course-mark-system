@@ -3,7 +3,7 @@
     <h1>View Advisee Ranking/Position</h1>
     <div class="form-group">
       <label for="advisee">Advisee:</label>
-      <select v-model="selectedAdviseeId" @change="onAdviseeChange" required>
+      <select v-model="selectedAdviseeId" @change="onAdviseeChange" required class="form-select">
         <option disabled value="">-- Select Advisee --</option>
         <option v-for="advisee in advisees" :key="advisee.student_id" :value="advisee.student_id">
           {{ advisee.student_name }} ({{ advisee.matric_no }})
@@ -12,24 +12,15 @@
     </div>
     <div class="form-group" v-if="studentEnrollments.length">
       <label for="course">Course:</label>
-      <select v-model="selectedCourseId" @change="onCourseChange" required>
+      <select v-model="selectedCourseId" @change="onCourseChange" required class="form-select">
         <option disabled value="">-- Select Course --</option>
         <option v-for="course in uniqueCourses" :key="course.course_id" :value="course.course_id">
-          {{ course.course_name }}
-        </option>
-      </select>
-    </div>
-    <div class="form-group" v-if="filteredSections.length">
-      <label for="section">Section:</label>
-      <select v-model="selectedSectionId" @change="fetchRank" required>
-        <option disabled value="">-- Select Section --</option>
-        <option v-for="section in filteredSections" :key="section.section_id" :value="section.section_id">
-          Section {{ section.section_number }}
+          {{ course.course_code }}-{{ course.section_number }} {{ course.course_name }}
         </option>
       </select>
     </div>
     <div v-if="rankInfo && selectedAdviseeId">
-      <h2 class="highlight">{{ getAdviseeName(selectedAdviseeId) }}'s Rank: {{ rankInfo.rank }} / {{ rankInfo.total_students }}</h2>
+      <h2 class="highlight">{{ getAdviseeName(selectedAdviseeId) }}'s Rank: {{ rankInfo.rank }} / {{ rankInfo.totalStudents }}</h2>
       <h2 class="highlight">Percentile: {{ rankInfo.percentile }}%</h2>
     </div>
     <div v-if="errorMessage" class="error-message">{{ errorMessage }}</div>
@@ -66,8 +57,8 @@ export default {
       const userData = sessionStorage.getItem('user');
       if (userData) {
         const user = JSON.parse(userData);
-        this.userID = user.user_id;
-        console.log('Authenticated advisor ID for ranking:', this.userID);
+        this.userID = user.lecturerId;
+        console.log('Authenticated advisor (lecturer) ID for ranking:', this.userID);
         return true;
       }
       return false;
@@ -77,6 +68,7 @@ export default {
         const res = await fetch(`http://localhost:3000/advisor/advisees?advisor_id=${this.userID}`);
         if (!res.ok) throw new Error('Failed to fetch advisees');
         this.advisees = await res.json();
+        console.log('Fetched advisees:', this.advisees);
       } catch (error) {
         console.error('Error fetching advisees:', error);
         this.errorMessage = 'Failed to load advisees.';
@@ -100,8 +92,15 @@ export default {
       await this.fetchStudentEnrollments();
     },
     async onCourseChange() {
-      this.selectedSectionId = '';
-      this.rankInfo = null;
+      // Auto-select the first section for the selected course
+      const sections = this.studentEnrollments.filter(e => e.course_id == this.selectedCourseId);
+      if (sections.length) {
+        this.selectedSectionId = sections[0].section_id;
+        await this.fetchRank();
+      } else {
+        this.selectedSectionId = '';
+        this.rankInfo = null;
+      }
     },
     async fetchRank() {
       if (!this.selectedAdviseeId || !this.selectedCourseId || !this.selectedSectionId) return;
@@ -120,7 +119,7 @@ export default {
     getAdviseeName(student_id) {
       const found = this.advisees.find(a => a.student_id == student_id);
       return found ? found.student_name : `Student`;
-    }
+    },
   },
   async mounted() {
     if (this.getAuthenticatedUser()) {
