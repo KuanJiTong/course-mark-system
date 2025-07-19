@@ -4,7 +4,7 @@
     <form @submit.prevent="submitRequest" class="p-4 border rounded bg-light">
       <div class="mb-3">
         <label for="course" class="form-label">Course:</label>
-        <select class="form-select" v-model="sectionId" @change="fetchComponents" required>
+        <select class="form-select" v-model="sectionId" @change="fetchComponents">
           <option disabled value="">-- Select Course --</option>
           <option v-for="course in courses" :key="course.sectionId" :value="course.sectionId">
             {{ course.courseCode }}-{{ course.sectionNumber }} {{ course.courseName }}
@@ -27,7 +27,6 @@
         <label for="justification" class="form-label">Justification:</label>
         <textarea
           v-model="justification"
-          required
           class="form-control"
           rows="3"
           placeholder="Explain why you are requesting a remark...">
@@ -114,6 +113,16 @@ export default {
       }
     },
     async submitRequest() {
+      this.errorMessage = '';
+      this.successMessage = '';
+      if (!this.sectionId) {
+        this.errorMessage = 'Please select a course.';
+        return;
+      }
+      if (!this.justification || this.justification.trim().length < 10) {
+        this.errorMessage = 'Justification must be at least 10 characters.';
+        return;
+      }
       try {
         const payload = {
           studentId: this.studentId,
