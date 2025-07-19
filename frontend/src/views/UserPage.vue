@@ -15,6 +15,25 @@
     </div>
   </div>
 
+  <!-- Role Filter Buttons -->
+  <div class="d-flex gap-2 flex-wrap mb-2">
+    <button class="btn btn-outline-info" :class="{ active: selectedRole === '' }" @click="filterByRole('')">
+      All
+    </button>
+    <button class="btn btn-outline-info" :class="{ active: selectedRole === 'Admin' }" @click="filterByRole('Admin')">
+      Admin
+    </button>
+    <button class="btn btn-outline-info" :class="{ active: selectedRole === 'Lecturer' }" @click="filterByRole('Lecturer')">
+      Lecturer
+    </button>
+    <button class="btn btn-outline-info" :class="{ active: selectedRole === 'Advisor' }" @click="filterByRole('Advisor')">
+      Academic Advisor
+    </button>
+    <button class="btn btn-outline-info" :class="{ active: selectedRole === 'Student' }" @click="filterByRole('Student')">
+      Student
+    </button>
+  </div>
+
   <div class="table-responsive shadow-sm rounded">
   <table class="table table-bordered table-striped">
     <thead class="table-light">
@@ -35,13 +54,13 @@
       <tr v-else-if="users.length === 0" class="text-center text-muted">
         <td colspan="7">No users added yet.</td>
       </tr>
-      <tr v-for="(user, index) in users" :key="user.userId" class="text-center text-muted">
+      <tr v-for="(user, index) in filteredUsers" :key="user.userId" class="text-center text-muted">
         <td class="p-2">{{ index + 1 }}</td>
-        <td class="p-2">{{ user.loginId }}</td>
-        <td class="p-2">
+        <td class="p-2 text-start">{{ user.loginId }}</td>
+        <td class="p-2 text-start">
           {{ user.title ? user.title + ' ' + user.name : user.name }}
         </td>
-        <td class="p-2">{{ user.email }}</td>
+        <td class="p-2 text-start">{{ user.email }}</td>
         <td class="p-2">{{ user.facultyAbbreviation }}</td>
         <td class="p-2">
           <ul style="list-style: none; padding-left: 0; margin: 0;">
@@ -96,13 +115,26 @@ export default {
       selectedLoginId: null,
       selectedUser: {},
       users: [],
-      searchQuery: ''
+      searchQuery: '',
+      selectedRole: '', 
     };
+  },
+  computed: {
+    filteredUsers() {
+      if (!this.selectedRole) return this.users;
+
+      return this.users.filter(user =>
+        user.roleNames && user.roleNames.includes(this.selectedRole)
+      );
+    }
   },
   async created(){
     await this.fetchAllUsers();
   },
   methods: {
+    filterByRole(role) {
+      this.selectedRole = role;
+    },
     async fetchAllUsers(){
       try {
         const url = `http://localhost:3000/users`;
@@ -271,6 +303,12 @@ export default {
   display: flex;
   justify-content: center;
   gap: 3px; 
+}
+
+button.active {
+  background-color: #0dcaf0
+;
+  color: white;
 }
 
 .bi{
