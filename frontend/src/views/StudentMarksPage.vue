@@ -1,6 +1,6 @@
 <template>
-  <div class="student-marks">
-    <h1>My Marks</h1>
+  <div>
+    <h2 class="mt-4 mb-4">My Marks</h2>
     <div class="form-group">
       <label for="course">Course:</label>
       <select class="form-select" v-model="selectedSectionId" @change="fetchMarks" required>
@@ -103,11 +103,6 @@ export default {
 </script>
 
 <style scoped>
-.student-marks {
-  max-width: 700px;
-  margin: auto;
-  padding: 20px;
-}
 h1 {
   font-size: 24px;
   margin-bottom: 20px;

@@ -6,26 +6,74 @@
         <img src="../assets/logo CMMS.png" alt="Logo" class="logo" />
       </router-link>
     </div>
-    
-    <hr>
-      
-    <div style=" overflow-y: scroll;">
-      <SideBarTab 
-        v-for="(item,index) in filteredNavItems"
-        :key="index"
+
+    <hr />
+
+  <div :style="(userRoles.includes('lecturer') && userRoles.includes('advisor')) ? { overflowY: 'scroll' } : {}">
+      <!-- Common Items -->
+      <SideBarTab
+        v-for="(item, index) in commonItems"
+        :key="'common-' + index"
         :item="item"
         :isActive="item.name === activeTab"
       />
+
+      <!-- Lecturer Section -->
+      <div v-if="isLecturer">
+        <hr v-if="isAdvisor"/>
+        <h5 class="text-muted px-3" v-if="isAdvisor">Lecturer</h5>
+        <SideBarTab
+          v-for="(item, index) in lecturerItems"
+          :key="'lecturer-' + index"
+          :item="item"
+          :isActive="item.name === activeTab"
+        />
+      </div>
+
+      <!-- Advisor Section -->
+      <div v-if="isAdvisor">
+        <hr v-if="isLecturer"/>
+        <h5 class="text-muted px-3" v-if="isLecturer">Academic Advisor</h5>
+        <SideBarTab
+          v-for="(item, index) in advisorItems"
+          :key="'advisor-' + index"
+          :item="item"
+          :isActive="item.name === activeTab"
+        />
+      </div>
+
+      <!-- Student Section -->
+      <div v-if="isStudent">
+        <SideBarTab
+          v-for="(item, index) in studentItems"
+          :key="'student-' + index"
+          :item="item"
+          :isActive="item.name === activeTab"
+        />
+      </div>
+
+      <!-- Admin Section -->
+      <div v-if="isAdmin">
+        <SideBarTab
+          v-for="(item, index) in adminItems"
+          :key="'admin-' + index"
+          :item="item"
+          :isActive="item.name === activeTab"
+        />
+      </div>
     </div>
   </div>
 </template>
-  
+
 <script>
 import SideBarTab from "./SideBarTab.vue";
 
 export default {
   components: {
     SideBarTab,
+  },
+  props: {
+    activeTab: String
   },
   data() {
     const navItems = [
@@ -39,7 +87,6 @@ export default {
       { name: "My Courses", link: "/lecturer-course-management", icon: "bi bi-journal-bookmark-fill", access: "lecturer" },
       { name: "Component Marks", link: "/manage-component-marks", icon: "bi bi-clipboard-data", access: "lecturer" },
       { name: "Final Exam Entry", link: "/add-final-exam-marks", icon: "bi bi-pencil-square", access: "lecturer" },
-      { name: "Performance Trend", link: "/performance-trend", icon: "bi bi-bar-chart-line", access: "lecturer" },
       { name: "View Mark Breakdown", link: "/view-mark-breakdown", icon: "bi bi-list-columns-reverse", access: "lecturer" },
       { name: "Remark Request", link: "/remark-requests", icon: "bi bi-chat-dots", access: "lecturer" },
 
@@ -50,7 +97,7 @@ export default {
       { name: "Component average", link: "/student-component-averages", icon: "bi bi-graph-up-arrow", access: "student" },
       { name: "Submit Remark Request", link: "/student-remark", icon: "bi bi-chat-dots", access: "student" },
 
-      //AA
+      // Advisor
       { name: "My Advisees", link: "/advisor-advisees", icon: "bi bi-people-fill", access: "advisor" },
       { name: "Compare Advisees", link: "/advisor-compare", icon: "bi bi-bar-chart-line", access: "advisor" },
       { name: "Advisee Ranking", link: "/advisor-rank", icon: "bi bi-trophy", access: "advisor" },
@@ -59,74 +106,48 @@ export default {
       { name: "Overall Performance", link: "/advisor/advisee-overall-performance", icon: "bi bi-speedometer2", access: "advisor" }
     ];
 
-    // Get user info from sessionStorage
-    const user = JSON.parse(sessionStorage.getItem('user'));
+    const user = JSON.parse(sessionStorage.getItem("user"));
     const userRoles = user?.roles?.map(r => r.toLowerCase()) || [];
 
     return {
       navItems,
       user,
-      userRoles
+      userRoles,
     };
   },
   computed: {
-    filteredNavItems() {
-      return this.navItems.filter(item => {
-        if (!item.access) return false;
-
-        if (item.access === 'all') return true;
-
-        if (typeof item.access === 'string') {
-          return this.userRoles.includes(item.access.toLowerCase());
-        }
-
-        if (Array.isArray(item.access)) {
-          const accessRoles = item.access.map(r => r.toLowerCase());
-          return this.userRoles.some(role => accessRoles.includes(role));
-        }
-
-        return false;
-      });
+    isLecturer() {
+      return this.userRoles.includes("lecturer");
+    },
+    isAdvisor() {
+      return this.userRoles.includes("advisor");
+    },
+    isAdmin() {
+      return this.userRoles.includes("admin");
+    },
+    isStudent() {
+      return this.userRoles.includes("student");
     },
 
-    hasSidebarAccess() {
-      const allowedRoles = ['admin', 'lecturer', 'student'];
-      return this.userRoles.some(role => allowedRoles.includes(role));
+    commonItems() {
+      return this.navItems.filter(item => item.access === "all");
+    },
+    lecturerItems() {
+      return this.navItems.filter(item => item.access === "lecturer" && this.isLecturer);
+    },
+    advisorItems() {
+      return this.navItems.filter(item => item.access === "advisor" && this.isAdvisor);
+    },
+    adminItems() {
+      return this.navItems.filter(item => item.access === "admin" && this.isAdmin);
+    },
+    studentItems() {
+      return this.navItems.filter(item => item.access === "student" && this.isStudent);
     }
   }
 };
-// (Lecturer)
-// Manage Students
-// Manage Assessments
-// Final Exam Entry
-// Mark Summary
-// Student Analytics
-// Export Results
-// Notify Students
-// View Remark Requests
-
-// (Student)
-// Dashboard
-// My Marks
-// Progress & Breakdown
-// Compare with Coursemates
-// Class Rank & Percentile
-// What-If Simulator
-// Submit Remark Request
-
-// (AA)
-// My Advisees
-// View Student Marks
-// At-Risk Students
-// Consultation Notes
-// Export Reports
-
-// (Admin)
-// Manage Users
-// Assign Lecturers
-// System Logs
-// Reset Passwords
 </script>
+
 
 <style scoped>
 .bi-x-lg{

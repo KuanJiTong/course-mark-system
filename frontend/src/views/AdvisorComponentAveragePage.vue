@@ -1,6 +1,6 @@
 <template>
-  <div class="advisor-component-averages">
-    <h1>Class Average per Component (Advisor View)</h1>
+  <div>
+    <h2 class="mt-4 mb-4">Class Average per Component (Advisor View)</h2>
     <div class="form-group">
       <label for="advisee">Advisee:</label>
       <select v-model="selectedAdviseeId" @change="onAdviseeChange" required class="form-select">
@@ -192,11 +192,6 @@ export default {
 </script>
 
 <style scoped>
-.advisor-component-averages {
-  max-width: 700px;
-  margin: auto;
-  padding: 20px;
-}
 h1 {
   font-size: 24px;
   margin-bottom: 20px;

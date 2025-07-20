@@ -1,6 +1,6 @@
 <template>
-  <div class="advisor-overall-performance">
-    <h1>Advisee's Overall Course Performance</h1>
+  <div>
+    <h2 class="mt-4 mb-4">Advisee's Overall Course Performance</h2>
     <div class="form-group">
       <label for="advisee">Advisee:</label>
       <select v-model="selectedAdviseeId" @change="fetchAllData" required class="form-select">
@@ -179,11 +179,6 @@ export default {
 </script>
 
 <style scoped>
-.advisor-overall-performance {
-  max-width: 900px;
-  margin: auto;
-  padding: 20px;
-}
 h1 {
   font-size: 24px;
   margin-bottom: 20px;

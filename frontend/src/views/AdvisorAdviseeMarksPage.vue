@@ -4,7 +4,7 @@
       <router-link to="/advisor-advisees" class="btn btn-outline-secondary">&larr; Return to Advisee List</router-link>
       <button v-if="enrollments.length" class="btn btn-primary" @click="downloadCSV">Download CSV Report</button>
     </div>
-    <h2>Full Mark Breakdown for {{ resolvedStudentName }}</h2>
+    <h2 h2 class="mt-4 mb-4">Full Mark Breakdown for {{ resolvedStudentName }}</h2>
     <div v-if="enrollments.length === 0 && loaded">No enrollments found.</div>
     <div v-for="enrollment in enrollments" :key="enrollment.section_id" class="course-section">
       <h3>{{ enrollment.course_name }} (Section {{ enrollment.section_number }})</h3>

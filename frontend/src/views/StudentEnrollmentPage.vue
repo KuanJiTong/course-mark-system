@@ -188,6 +188,7 @@ export default {
     }
   },
   async created(){
+    this.$emit('update-active-tab', 'My Courses');
     if (this.getAuthenticatedUser()) {
       this.sectionId = this.$route.params.sectionId;
       await this.fetchAllStudents();

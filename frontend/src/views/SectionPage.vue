@@ -147,6 +147,7 @@ export default {
     };
   },
   async created() {
+    this.$emit('update-active-tab', 'Course');
     const user = JSON.parse(sessionStorage.getItem('user'));
     if (!user || !user.user_id) {
       this.$router.push('/login?message=Please login to access section management');

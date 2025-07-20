@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jul 07, 2025 at 09:18 AM
+-- Generation Time: Jul 20, 2025 at 11:47 AM
 -- Server version: 11.5.2-MariaDB
 -- PHP Version: 8.0.30
 
@@ -59,7 +59,7 @@ CREATE TABLE `components` (
 --
 
 INSERT INTO `components` (`component_id`, `section_id`, `component_name`, `max_mark`) VALUES
-(1, 1, 'Assignment', 40.00),
+(1, 1, 'Assignment', 10.00),
 (2, 1, 'Quiz', 20.00),
 (3, 1, 'Midterm', 30.00);
 
@@ -195,16 +195,16 @@ CREATE TABLE `marks` (
 --
 
 INSERT INTO `marks` (`mark_id`, `student_id`, `component_id`, `mark`) VALUES
-(1, 1, 1, 18.50),
+(1, 1, 1, 10.00),
 (2, 1, 2, 15.00),
 (3, 1, 3, 25.00),
-(4, 2, 1, 15.00),
+(4, 2, 1, 9.00),
 (5, 2, 2, 12.00),
 (6, 2, 3, 20.00),
-(7, 3, 1, 17.00),
+(7, 3, 1, 7.00),
 (8, 3, 2, 14.00),
 (9, 3, 3, 22.00),
-(10, 26, 1, 18.00);
+(10, 26, 1, 8.00);
 
 -- --------------------------------------------------------
 
@@ -227,8 +227,8 @@ CREATE TABLE `remark_requests` (
 --
 
 INSERT INTO `remark_requests` (`request_id`, `student_id`, `section_id`, `component_id`, `justification`, `status`, `created_at`) VALUES
-(3, 1, 1, 1, 'help', 'Pending', '2025-06-22 20:47:58'),
-(4, 1, 1, 2, 'nooo', 'Pending', '2025-07-06 03:52:57');
+(3, 1, 1, 1, 'help', 'Rejected', '2025-06-22 20:47:58'),
+(4, 1, 1, 2, 'nooo', 'Approved', '2025-07-06 03:52:57');
 
 -- --------------------------------------------------------
 
@@ -402,9 +402,8 @@ INSERT INTO `users` (`user_id`, `login_id`, `name`, `email`, `password`, `facult
 (45, 'A22EC0132', 'Yap Qi Ming', 'qiming@graduate.utm.my', '$2y$10$wL4pX7w3rnRBp.nuInQYg.TTD1UqtrDdyw8o5oTd.ja1WeoPZ/Otm', 1, '2025-06-13 21:40:44'),
 (46, 'A22EC0002', 'Bob Student', 'bob@student.edu', 'hashedpassword', 1, '2025-06-20 22:30:13'),
 (102, 'lecturer10', 'Dr. John Smith', 'lecturer102@example.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 1, '2025-06-25 06:22:50'),
-(103, 'advisor103', 'Prof. Sarah Johnson', 'advisor103@example.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 1, '2025-06-25 06:22:50'),
 (104, 'student104', 'Alice Brown', 'student104@example.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 1, '2025-06-25 06:22:50'),
-(106, 'A001', 'Admin 1', 'admin1@gmail.com', '$2y$10$urX/Tb47achpP8pWIcNWhOgV8ujOfkdNe4U0mIGYq8ZQZry21y8Nu', 1, '2025-07-07 04:19:51');
+(106, 'A001', 'Admin 1', 'admin1@gmail.com', '$2y$10$SK/j5XAxk7ZDsu8hKPDD5usc4kQQE0XZxkiRCByRGed5V3NQ6Cowy', 1, '2025-07-07 04:19:51');
 
 -- --------------------------------------------------------
 
@@ -428,7 +427,6 @@ INSERT INTO `user_roles` (`user_id`, `role_id`) VALUES
 (11, 2),
 (102, 2),
 (9, 3),
-(103, 3),
 (8, 4),
 (12, 4),
 (13, 4),
