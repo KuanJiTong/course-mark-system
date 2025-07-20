@@ -1,19 +1,16 @@
 <template>
-  <h2 class="mb-4">Student Remark Requests</h2>
+  <h2 class="mt-4 mb-4">Student Remark Requests</h2>
 
   <div class="table-responsive shadow-sm rounded">
     <table class="table table-bordered table-striped">
       <thead class="table-light">
         <tr>
           <th class="p-2 text-left">#</th>
-          <th class="p-2 text-left">Request ID</th>
           <th class="p-2 text-left">Student Name</th>
           <th class="p-2 text-left">Student ID</th>
           <th class="p-2 text-left">Course Code</th>
           <th class="p-2 text-left">Section</th>
           <th class="p-2 text-left">Component Name</th>
-          <th class="p-2 text-left">Original Mark</th>
-          <th class="p-2 text-left">Requested Mark</th>
           <th class="p-2 text-left">Justification</th>
           <th class="p-2 text-left">Status</th>
           <th class="p-2 text-center">Actions</th>
@@ -25,14 +22,11 @@
         </tr>
         <tr v-for="(request, index) in remarkRequests" :key="request.request_id">
           <td class="p-2">{{ index + 1 }}</td>
-          <td class="p-2">{{ request.request_id }}</td>
           <td class="p-2">{{ request.student_name }}</td>
           <td class="p-2">{{ request.matric_no }}</td>
           <td class="p-2">{{ request.course_code }}</td>
           <td class="p-2">{{ request.section_number }}</td>
           <td class="p-2">{{ request.component_name }}</td>
-          <td class="p-2">{{ request.original_mark }}</td>
-          <td class="p-2">{{ request.requested_mark }}</td>
           <td class="p-2">{{ request.justification }}</td>
           <td class="p-2">
             <span :class="getStatusBadgeClass(request.status)">

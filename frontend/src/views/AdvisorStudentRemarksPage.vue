@@ -1,6 +1,6 @@
 <template>
-  <div class="advisor-student-remarks">
-    <h1>Student Feedback / Remark Requests</h1>
+  <div>
+    <h2 class="mt-4 mb-4">Student Feedback / Remark Requests</h2>
     <table v-if="remarks.length">
       <thead>
         <tr>
@@ -113,11 +113,6 @@ export default {
 </script>
 
 <style scoped>
-.advisor-student-remarks {
-  max-width: 900px;
-  margin: auto;
-  padding: 20px;
-}
 h1 {
   font-size: 24px;
   margin-bottom: 20px;

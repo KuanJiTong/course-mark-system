@@ -1,6 +1,6 @@
 <template>
-  <div class="student-remark">
-    <h1>Submit Remark Request</h1>
+  <div>
+    <h2 class="mt-4 mb-4">Submit Remark Request</h2>
     <form @submit.prevent="submitRequest" class="p-4 border rounded bg-light">
       <div class="mb-3">
         <label for="course" class="form-label">Course:</label>
@@ -164,11 +164,6 @@ export default {
 </script>
 
 <style scoped>
-.student-remark {
-  max-width: 700px;
-  margin: auto;
-  padding: 20px;
-}
 form {
   margin-bottom: 2rem;
 }

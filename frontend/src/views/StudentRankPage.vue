@@ -1,6 +1,6 @@
 <template>
-  <div class="student-rank">
-    <h1>My Class Rank & Percentile</h1>
+  <div>
+    <h2 class="mt-4 mb-4">My Class Rank & Percentile</h2>
     <div class="form-group">
       <label for="course">Course:</label>
       <select class="form-select" v-model="selectedSectionId" @change="fetchRank" required>
@@ -69,11 +69,6 @@ export default {
 </script>
 
 <style scoped>
-.student-rank {
-  max-width: 700px;
-  margin: auto;
-  padding: 20px;
-}
 h1 {
   font-size: 24px;
   margin-bottom: 20px;

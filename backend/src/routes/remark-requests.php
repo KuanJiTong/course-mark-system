@@ -15,11 +15,10 @@ $app->get('/remark-requests/lecturer/{lecturerId}', function (Request $request, 
                 rr.request_id,
                 rr.student_id,
                 u.name AS student_name,
-                s.matric_no,
+                stu.matric_no,
                 c.course_code,
                 sec.section_number,
                 comp.component_name,
-                rr.mark,
                 rr.justification,
                 rr.status
             FROM
@@ -34,10 +33,8 @@ $app->get('/remark-requests/lecturer/{lecturerId}', function (Request $request, 
                 courses c ON sec.course_id = c.course_id
             JOIN
                 components comp ON rr.component_id = comp.component_id
-            JOIN
-                lecturer_sections ls ON sec.section_id = ls.section_id
             WHERE
-                ls.lecturer_id = :lecturerId
+                sec.lecturer_id = :lecturerId
             ORDER BY
                 rr.request_id DESC;
         ";
@@ -110,8 +107,11 @@ $app->patch('/remark-request/{requestId}', function (Request $request, Response 
             // For now, I'll add a placeholder.
             if ($newStatus === 'Approved') {
                 // Fetch details of the approved request to get student_id, component_id, requested_mark
+                // NOTE: Since original_mark and requested_mark are NOT in remark_requests table,
+                // this section might need adjustment if marks are stored elsewhere (e.g., in a 'marks' table).
+                // For now, I'm commenting out fetching requested_mark if it's not in remark_requests.
                 $stmtFetchDetails = $pdo->prepare("
-                    SELECT student_id, component_id, requested_mark
+                    SELECT student_id, component_id -- , requested_mark -- removed requested_mark
                     FROM remark_requests
                     WHERE request_id = :requestId
                 ");
@@ -122,25 +122,38 @@ $app->patch('/remark-request/{requestId}', function (Request $request, Response 
                 if ($requestDetails) {
                     $studentId = $requestDetails['student_id'];
                     $componentId = $requestDetails['component_id'];
-                    $updatedMark = $requestDetails['requested_mark'];
+                    // $updatedMark = $requestDetails['requested_mark']; // This line would cause an error too
 
-                    // Update the student's mark for the specific component
-                    // Assuming 'marks' table has columns like student_id, component_id, mark_obtained
-                    $stmtUpdateMark = $pdo->prepare("
-                        UPDATE marks
-                        SET mark_obtained = :updatedMark
-                        WHERE student_id = :studentId AND component_id = :componentId
-                    ");
-                    $stmtUpdateMark->bindParam(':updatedMark', $updatedMark, PDO::PARAM_STR); // Use STR or INT based on your column type
-                    $stmtUpdateMark->bindParam(':studentId', $studentId, PDO::PARAM_INT);
-                    $stmtUpdateMark->bindParam(':componentId', $componentId, PDO::PARAM_INT);
-                    $stmtUpdateMark->execute();
+                    // IMPORTANT: If 'marks' table exists and contains student_id, component_id, and mark_obtained,
+                    // you will need to get the 'requested_mark' from the frontend request or another source
+                    // if it's meant to update a student's final mark.
+                    // For now, this part needs clarification on where the *new* mark comes from for approval.
+                    // I will leave this as a placeholder, as the main 'GET' issue is resolved.
+                    // If you have a 'marks' table with 'original_mark' and 'requested_mark' you'd join to that.
 
-                    if ($stmtUpdateMark->rowCount() > 0) {
-                        // Mark updated successfully
+                    // Placeholder for mark update - Needs your specific 'marks' table logic
+                    // If you want to update marks here, you'll need the 'requested_mark' value.
+                    // If your 'marks' table only stores the current mark, and 'remark_requests' doesn't have requested_mark,
+                    // then this entire block might need to fetch the *new* mark from the incoming PATCH request data.
+                    if (isset($data['requested_mark'])) { // Check if frontend sends requested_mark for update
+                         $updatedMark = $data['requested_mark'];
+                         $stmtUpdateMark = $pdo->prepare("
+                            UPDATE marks
+                            SET mark_obtained = :updatedMark
+                            WHERE student_id = :studentId AND component_id = :componentId
+                         ");
+                         $stmtUpdateMark->bindParam(':updatedMark', $updatedMark, PDO::PARAM_STR);
+                         $stmtUpdateMark->bindParam(':studentId', $studentId, PDO::PARAM_INT);
+                         $stmtUpdateMark->bindParam(':componentId', $componentId, PDO::PARAM_INT);
+                         $stmtUpdateMark->execute();
+
+                         if ($stmtUpdateMark->rowCount() > 0) {
+                             // Mark updated successfully
+                         } else {
+                             error_log("No mark record found or mark not changed for student_id: {$studentId}, component_id: {$componentId}");
+                         }
                     } else {
-                        // Mark not found or no change
-                        error_log("No mark record found or mark not changed for student_id: {$studentId}, component_id: {$componentId}");
+                        error_log("Requested mark not provided for update for request_id: {$requestId}");
                     }
                 }
             }

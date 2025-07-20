@@ -1,6 +1,6 @@
 <template>
-  <div class="student-compare">
-    <h1>Compare with Coursemates</h1>
+  <div>
+    <h2 class="mt-4 mb-4">Compare with Coursemates</h2>
     <div class="form-group">
       <label for="course">Course:</label>
       <select class="form-select" v-model="selectedSectionId" @change="fetchMarks" required>
@@ -203,11 +203,6 @@ export default {
 </script>
 
 <style scoped>
-.student-compare {
-  max-width: 800px;
-  margin: auto;
-  padding: 20px;
-}
 h1 {
   font-size: 24px;
   margin-bottom: 20px;

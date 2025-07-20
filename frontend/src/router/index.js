@@ -1,12 +1,13 @@
 // src/router/index.js
 import { createRouter, createWebHistory } from 'vue-router'
+import { jwtDecode } from 'jwt-decode';
+
 import DefaultLayout from '../components/DefaultLayout.vue'
 import HomePage from '../views/HomePage.vue'
 import LoginPage from '../views/LoginPage.vue'
 import StudentEnrollmentPage from '../views/StudentEnrollmentPage.vue'
 import ComponentMarksPage from '../views/ComponentMarksPage.vue'
 import AddFinalExamMarksPage from '../views/AddFinalExamMarksPage.vue'
-import ViewFullMarkBreakdownPage from '../views/ViewFullMarkBreakdownPage.vue'
 import AddPerformanceTrendPage from '../views/AddPerformanceTrendPage.vue'
 import CoursePage from '../views/CoursePage';
 import SectionPage from '../views/SectionPage';
@@ -14,7 +15,6 @@ import UserPage from '../views/UserPage';
 import LecturerCoursePage from '../views/LecturerCoursePage'
 import ViewMarkBreakdownPage from '../views/ViewMarkBreakdownPage'
 import ComponentMarkPage from '../views/ComponentMarkPage.vue';
-import StudentDashboardPage from '../views/StudentDashboardPage.vue'
 import LecturerRemarkRequestsPage from '../views/LecturerRemarkRequestsPage.vue';
 
 const routes = [
@@ -25,7 +25,6 @@ const routes = [
       { path: '/', name: 'Home', component: HomePage, meta: { roles: ['Admin', 'Lecturer', 'Advisor', 'Student'] } },
       { path: '/manage-component-marks', name: 'ComponentMarks', component: ComponentMarksPage, meta: { roles: ['Lecturer'] } },
       { path: '/add-final-exam-marks', name: 'AddFinalExamMarks', component: AddFinalExamMarksPage, meta: { roles: ['Lecturer'] } },
-      { path: '/mark-breakdown', name: 'ViewFullMarkBreakdown', component: ViewFullMarkBreakdownPage, meta: { roles: ['Lecturer'] } },
       { path: '/performance-trend', name: 'AddPerformanceTrend', component: AddPerformanceTrendPage, meta: { roles: ['Lecturer'] } },
       { path: '/course-management', name: 'CoursePage', component: CoursePage, meta: { roles: ['Admin'] } },
       { path: '/course-management/section/:courseId', name: 'SectionPage', component: SectionPage, meta: { roles: ['Admin'] } },
@@ -37,12 +36,10 @@ const routes = [
       { path: '/remark-requests', name: 'LecturerRemarkRequests', component: LecturerRemarkRequestsPage, meta: { roles: ['Lecturer'] } },
     ]
   },
-
   {
     path: '/',
     component: DefaultLayout,
     children: [
-      { path: '/student-dashboard', name: 'StudentDashboard', component: StudentDashboardPage, meta: { roles: ['Student'] } },
       { path: '/student-marks', name: 'StudentMarks', component: () => import('../views/StudentMarksPage.vue'), meta: { roles: ['Student'] } },
       { path: '/student-compare', name: 'StudentCompare', component: () => import('../views/StudentComparePage.vue'), meta: { roles: ['Student'] } },
       { path: '/student-rank', name: 'StudentRank', component: () => import('../views/StudentRankPage.vue'), meta: { roles: ['Student'] } },
@@ -65,7 +62,7 @@ const routes = [
   },
   {
     path: '/login',
-    component: LoginPage,  
+    component: LoginPage,
     meta: { public: true }
   }
 ]
@@ -75,48 +72,45 @@ const router = createRouter({
   routes
 })
 
-// router.beforeEach((to, from, next) => {
-//   //const sessionData = sessionStorage.getItem('utmwebfc_session'); 
-
-// Global navigation guard for authentication and role-based access
 router.beforeEach((to, from, next) => {
-  const publicPage = to.matched.some(record => record.meta.public);
-  const jwt = sessionStorage.getItem('jwt');
-  const user = sessionStorage.getItem('user');
+  const isPublic = to.matched.some(record => record.meta.public)
+  const jwt = sessionStorage.getItem('jwt')
+  const user = sessionStorage.getItem('user')
 
-  console.log(user);
+  if (isPublic) return next()
 
-  if (publicPage) {
-    return next();
+  if (!jwt || !user) {
+    sessionStorage.clear()
+    return next('/login')
   }
 
-   if (!jwt || !user) {
-    // If coming from a protected page, show logout message
-    if (from.path !== '/login') {
-      console.log('Session expired or user logged out');
+  try {
+    const decoded = jwtDecode(jwt) // ✅ correct usage
+    const now = Date.now() / 1000
+    if (decoded.exp < now) {
+      console.log('Token expired')
+      sessionStorage.clear()
+      return next('/login')
     }
-    return next({ path: '/login' });
-  }
 
-  const userRoles = JSON.parse(user).roles.map(r => r.toLowerCase());
-  const allowedRoles = to.matched.reduce((roles, record) => {
-    if (record.meta && record.meta.roles) {
-      return roles.concat(record.meta.roles.map(r => r.toLowerCase()));
+    const userRoles = JSON.parse(user).roles.map(r => r.toLowerCase())
+    const allowedRoles = to.matched.reduce((roles, record) => {
+      if (record.meta?.roles) {
+        roles.push(...record.meta.roles.map(r => r.toLowerCase()))
+      }
+      return roles
+    }, [])
+
+    if (allowedRoles.length && !userRoles.some(role => allowedRoles.includes(role))) {
+      return next('/')
     }
-    return roles;
-  }, []);
 
-  if (allowedRoles.length > 0 && !userRoles.some(role => allowedRoles.includes(role))) {
-    return next({ path: '/' });
+    return next()
+  } catch (err) {
+    console.error('Invalid JWT', err)
+    sessionStorage.clear()
+    return next('/login')
   }
-  next();
-});
-
-//   //if (!sessionData && to.path !== '/login') {
-//     next({ path: '/home' });
-//   //} else {
-//   //  next();
-//   //}
-// });
+})
 
 export default router

@@ -1,6 +1,6 @@
 <template>
-  <div class="advisor-rank">
-    <h1>View Advisee Ranking/Position</h1>
+  <div>
+    <h2 class="mt-4 mb-4">View Advisee Ranking/Position</h2>
     <div class="form-group">
       <label for="advisee">Advisee:</label>
       <select v-model="selectedAdviseeId" @change="onAdviseeChange" required class="form-select">
@@ -133,11 +133,6 @@ export default {
 </script>
 
 <style scoped>
-.advisor-rank {
-  max-width: 700px;
-  margin: auto;
-  padding: 20px;
-}
 h1 {
   font-size: 24px;
   margin-bottom: 20px;

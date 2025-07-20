@@ -1,6 +1,6 @@
 <template>
-  <div class="component-averages">
-    <h1>Class Average per Component</h1>
+  <div>
+    <h2 class="mt-4 mb-4">Class Average per Component</h2>
     <div class="form-group">
       <label for="section">Course Section:</label>
       <select class="form-select" v-model="selectedSectionId" @change="fetchAveragesAndMarks" required>
@@ -126,11 +126,6 @@ export default {
 </script>
 
 <style scoped>
-.component-averages {
-  max-width: 700px;
-  margin: auto;
-  padding: 20px;
-}
 h1 {
   font-size: 24px;
   margin-bottom: 20px;

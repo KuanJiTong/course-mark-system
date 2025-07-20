@@ -1,7 +1,7 @@
 <template>
-  <div class="container mt-4 component-marks-page">
+  <div class="container mt-4">
+    <h2 class="mt-4 mb-4">Continuous Assessment Components</h2>
     <div class="text-center mb-4">
-      <h2>Continuous Assessment Components</h2>
       <div v-if="components.length" class="mt-2">
         <strong>Total Component Marks:</strong>
         {{ totalComponentMark }} /
@@ -269,9 +269,6 @@ export default {
 </script>
 
 <style scoped>
-.component-marks-page {
-  padding: 20px;
-}
 .page-header {
   text-align: center;
   margin-bottom: 20px;

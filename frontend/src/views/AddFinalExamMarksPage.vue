@@ -1,7 +1,6 @@
 <template>
   <div class="container mt-4">
-    <h3>Enter Final Exam Marks (Max: {{ maxFinalMark }}%)</h3>
-
+    <h2 class="mt-4 mb-4">Enter Final Exam Marks (Max: {{ maxFinalMark }}%)</h2>
     <!-- Course and Section Selection -->
     <div class="form-group mb-3">
       <label for="course">Course:</label>

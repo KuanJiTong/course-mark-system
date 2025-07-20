@@ -1,7 +1,6 @@
 <template>
-  <div class="mark-breakdown">
-    <h1>View Full Mark Breakdown</h1>
-
+  <div>
+    <h2 class="mt-4 mb-4">View Full Mark Breakdown</h2>
     <div class="form-group">
       <label for="course">Course:</label>
       <select class="form-select" v-model="selectedSectionId" @change="fetchMarks" required>
@@ -39,7 +38,7 @@
             {{ formatMark(student.marks[comp.componentName]) }}
           </td>
           <td>{{ formatMark(student.finalExamMark) }}</td>
-          <td>{{ student.total.toFixed(2) }}</td>
+          <td><b>{{ student.total.toFixed(2) }}</b></td>
         </tr>
       </tbody>
     </table>
@@ -185,11 +184,6 @@ export default {
 </script>
 
 <style scoped>
-.mark-breakdown {
-  max-width: 800px;
-  margin: auto;
-  padding: 20px;
-}
 h1 {
   font-size: 24px;
   margin-bottom: 20px;

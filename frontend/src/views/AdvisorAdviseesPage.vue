@@ -1,6 +1,6 @@
 <template>
   <div>
-    <h2 style="padding: 30px;">My Advisees</h2>
+    <h2 class="mt-4 mb-4">My Advisees</h2>
     <table>
       <thead>
         <tr>

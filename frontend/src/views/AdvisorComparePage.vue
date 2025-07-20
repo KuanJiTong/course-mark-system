@@ -1,6 +1,6 @@
 <template>
-  <div class="advisor-compare">
-    <h1>Compare Advisees with Coursemates</h1>
+  <div>
+    <h2 class="mt-4 mb-4">Compare Advisees with Coursemates</h2>
     <div class="form-group">
       <label for="advisee">Advisee:</label>
       <select v-model="selectedAdviseeId" @change="onAdviseeChange" required class="form-select">
@@ -294,11 +294,6 @@ export default {
 </script>
 
 <style scoped>
-.advisor-compare {
-  max-width: 800px;
-  margin: auto;
-  padding: 20px;
-}
 h1 {
   font-size: 24px;
   margin-bottom: 20px;

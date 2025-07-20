@@ -47,6 +47,7 @@ export default {
     };
   },
   async created() {
+    this.$emit('update-active-tab', 'Component Marks');
     await this.fetchComponentDetails();
     await this.fetchStudentsAndMarks();
   },
