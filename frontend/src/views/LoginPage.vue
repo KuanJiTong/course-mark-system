@@ -116,8 +116,8 @@ h2{
   padding: 1rem;
   border-radius: 20px;
   box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
-  width: 500px;
-  height: 500px;
+  width: 550px;
+  height: 550px;
 }
 
 .login-content {

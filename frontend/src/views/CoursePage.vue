@@ -1,5 +1,6 @@
 <template>
-    <h2 class="mb-4">Course Management</h2>
+  <div>
+    <h2 class="mb-4 mt-2">Course Management</h2>
 
     <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
       <div class="d-flex gap-2 flex-wrap">
@@ -12,18 +13,41 @@
             {{ showForm ? 'Cancel' : 'Add Course' }}
           </button>
 
-          <div v-if="showForm" class="d-flex align-items-center gap-2 mb-3">
-            <input type="text" v-model="newCourse.courseCode" placeholder="Course Code" class="form-control" style="width: 150px;">
-            <input type="text" v-model="newCourse.courseName" placeholder="Course Name" class="form-control" style="width: 250px;">
-            <input type="number" v-model="newCourse.credit" placeholder="Credit" class="form-control" style="width: 100px;">
-            <input type="number" v-model="newCourse.numOfSections" placeholder="Sections" class="form-control" style="width: 100px;">
-            <input type="number" v-model="newCourse.capacity" placeholder="Capacity" class="form-control" style="width: 100px;">
-            <button class="btn btn-primary" @click="addCourse">Submit</button>
+          <div v-if="showForm" class="d-flex flex-column gap-2 mb-3">
+            <div class="d-flex gap-2 flex-wrap align-items-start">
+              <div>
+                <input type="text" v-model.trim="newCourse.courseCode" placeholder="Course Code" class="form-control" style="width: 150px;">
+                <small class="text-danger" v-if="errors.courseCode">{{ errors.courseCode }}</small>
+              </div>
+
+              <div>
+                <input type="text" v-model.trim="newCourse.courseName" placeholder="Course Name" class="form-control" style="width: 250px;">
+                <small class="text-danger" v-if="errors.courseName">{{ errors.courseName }}</small>
+              </div>
+
+              <div>
+                <input type="number" v-model.number="newCourse.credit" placeholder="Credit" class="form-control" style="width: 100px;">
+                <small class="text-danger" v-if="errors.credit">{{ errors.credit }}</small>
+              </div>
+
+              <div>
+                <input type="number" v-model.number="newCourse.numOfSections" placeholder="Sections" class="form-control" style="width: 100px;">
+                <small class="text-danger" v-if="errors.numOfSections">{{ errors.numOfSections }}</small>
+              </div>
+
+              <div>
+                <input type="number" v-model.number="newCourse.capacity" placeholder="Capacity" class="form-control" style="width: 100px;">
+                <small class="text-danger" v-if="errors.capacity">{{ errors.capacity }}</small>
+              </div>
+
+              <button class="btn btn-primary" @click="addCourse">Submit</button>
+            </div>
           </div>
         </div>
+
         <input
           v-model="searchQuery"
-          @input = "searchCourses"
+          @input="searchCourses"
           type="text"
           class="form-control"
           placeholder="Search courses..."
@@ -35,14 +59,14 @@
       <table class="table table-bordered table-striped">
         <thead class="table-light">
           <tr>
-            <th style="width: 50px;">#</th>
-            <th style="width: 150px;">Course Code</th>
-            <th style="width: 100%;">Course Name</th>
-            <th style="width: 50px;">Credit</th>
-            <th style="width: 50px;"># of Sec</th>
-            <th style="width: 50px;">Carry Mark</th>
-            <th style="width: 50px;">Final Mark</th>
-            <th style="width: 200px;">Actions</th>
+            <th>#</th>
+            <th>Course Code</th>
+            <th>Course Name</th>
+            <th>Credit</th>
+            <th># of Sec</th>
+            <th>Carry Mark</th>
+            <th>Final Mark</th>
+            <th>Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -56,11 +80,11 @@
             <td>{{ index + 1 }}</td>
             <td>
               <span v-if="editingCourseId !== course.courseId">{{ course.courseCode }}</span>
-              <input v-else style="width: 150px;" v-model="course.courseCode" type="text" />
+              <input v-else style="width: 150px;" v-model.trim="course.courseCode" type="text" />
             </td>
             <td>
               <span v-if="editingCourseId !== course.courseId">{{ course.courseName }}</span>
-              <input v-else style="width: 100%;" v-model="course.courseName" type="text" />
+              <input v-else style="width: 100%;" v-model.trim="course.courseName" type="text" />
             </td>
             <td>
               <span v-if="editingCourseId !== course.courseId">{{ course.credit }}</span>
@@ -78,14 +102,11 @@
 
             <td class="text-center">
               <div class="icon-row">
-                <!-- When NOT editing -->
                 <template v-if="editingCourseId !== course.courseId">
                   <i class="bi bi-pencil-square text-primary mx-2" data-bs-toggle="tooltip" title="Edit" @click="startEdit(course)"></i>
                   <i class="bi bi-card-list text-secondary mx-2" data-bs-toggle="tooltip" title="View Sections" @click="viewSections(course)"></i>
                   <i class="bi bi-trash-fill text-danger mx-2" data-bs-toggle="tooltip" title="Delete" @click="deleteCourse(course.courseId)"></i>
                 </template>
-
-                <!-- When editing -->
                 <template v-else>
                   <button class="btn btn-sm btn-primary mx-1" @click="updateCourse(course)">Submit</button>
                   <button class="btn btn-sm btn-danger mx-1" @click="cancelEdit(course)">Cancel</button>
@@ -96,6 +117,7 @@
         </tbody>
       </table>
     </div>
+  </div>
 </template>
 
 <script>
@@ -114,13 +136,13 @@ export default {
         capacity: null,
         faculty: null
       },
+      errors: {},
       courses: [],
       showForm: false,
       searchQuery: "",
     };
   },
   async created(){
-    // Check authentication
     const user = JSON.parse(sessionStorage.getItem('user'));
     if (!user || !user.user_id) {
       this.$router.push('/login?message=Please login to access course management');
@@ -128,17 +150,19 @@ export default {
     }
     
     this.userID = user.user_id;
-    console.log('Authenticated user ID for course management:', this.userID);
-    
     await this.fetchAllCourses();
   },
   methods: {
     reset(){
-      this.newCourse.courseCode = '';
-      this.newCourse.courseName = '';
-      this.newCourse.numOfSections = null;
-      this.newCourse.capacity = null;
-      this.newCourse.credit = null;
+      this.newCourse = {
+        courseCode: '',
+        courseName: '',
+        credit: null,
+        numOfSections: null,
+        capacity: null,
+        faculty: null
+      };
+      this.errors = {};
       this.showForm = false;
     },
     toggleForm(){
@@ -146,40 +170,29 @@ export default {
     },
     async fetchAllCourses(){
       try {
-        const facultyId = this.facultyId; 
-        const url = `http://localhost:3000/course?faculty_id=${facultyId}`;
-
+        const url = `http://localhost:3000/course?faculty_id=${this.facultyId}`;
         const response = await fetch(url);
         if (!response.ok) throw new Error('Failed to fetch courses');
-
-        const data = await response.json();
-        this.courses = data; 
+        this.courses = await response.json();
       } catch (error) {
         console.error('Error fetching courses:', error);
       }
     },
     async searchCourses() {
       try {
-        const facultyId = this.facultyId;
-
         const trimmedKeyword = this.searchQuery.trim();
         if (trimmedKeyword === '') {
           await this.fetchAllCourses();
           return;
         }
-
-        const url = `http://localhost:3000/course?faculty_id=${facultyId}&keyword=${encodeURIComponent(trimmedKeyword)}`;
-        
+        const url = `http://localhost:3000/course?faculty_id=${this.facultyId}&keyword=${encodeURIComponent(trimmedKeyword)}`;
         const response = await fetch(url);
         if (!response.ok) throw new Error('Failed to fetch courses');
-
-        const data = await response.json();
-        this.courses = data;
+        this.courses = await response.json();
       } catch (error) {
         console.error('Error searching courses:', error);
       }
     },
-
     startEdit(course) {
       if (this.editingCourseId) {
         const prevCourse = this.courses.find(c => c.courseId === this.editingCourseId);
@@ -199,81 +212,99 @@ export default {
       this.editingCourseId = null;
     },
     viewSections(course) {
-      this.$router.push({ name: 'SectionPage', params: { courseId: course.courseId} });
+      this.$router.push({ name: 'SectionPage', params: { courseId: course.courseId } });
+    },
+    validateForm(course) {
+      const errors = {};
+
+      // Course Code
+      if (!course.courseCode || !course.courseCode.trim()) {
+        errors.courseCode = "Course code is required.";
+      }
+
+      // Course Name
+      if (!course.courseName || !course.courseName.trim()) {
+        errors.courseName = "Course name is required.";
+      }
+
+      // Credit
+      if (course.credit === null || course.credit === "") {
+        errors.credit = "Credit is required.";
+      } else if (isNaN(course.credit) || course.credit < 0) {
+        errors.credit = "Credit must be a non-negative number.";
+      }
+
+      // Number of Sections
+      if (course.numOfSections === null || course.numOfSections === "") {
+        errors.numOfSections = "Number of sections is required.";
+      } else if (isNaN(course.numOfSections) || course.numOfSections < 0) {
+        errors.numOfSections = "Number of sections must be a non-negative number.";
+      }
+
+      // Capacity
+      if (course.capacity === null || course.capacity === "") {
+        errors.capacity = "Capacity is required.";
+      } else if (isNaN(course.capacity) || course.capacity < 0) {
+        errors.capacity = "Capacity must be a non-negative number.";
+      }
+
+      return errors;
+    },
+
+    async addCourse() {
+      this.errors = this.validateForm(this.newCourse);
+      if (Object.keys(this.errors).length > 0) return;
+
+      this.newCourse.faculty = this.facultyId;
+      try {
+        const response = await fetch('http://localhost:3000/course', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(this.newCourse)
+        });
+        if (!response.ok) throw new Error('Failed to add course');
+        alert('Course added successfully.');
+        this.reset();
+        await this.fetchAllCourses();
+      } catch (error) {
+        console.error('Error:', error);
+        alert('Failed to add course.');
+      }
     },
     async updateCourse(course){
       this.editingCourseId = null;
       delete course._backup;
-      delete course.numOfSections; 
+      delete course.numOfSections;
+
       try {
         const response = await fetch(`http://localhost:3000/course/${course.courseId}`, {
           method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(course),
         });
 
         if (!response.ok) {
-          const error = await response.json();
-          console.error('Update failed:', error);
           alert('Failed to update course.');
         } else {
           alert('Course updated successfully.');
-          this.fetchAllCourses();
+          await this.fetchAllCourses();
         }
       } catch (err) {
         console.error('Request error:', err);
         alert('Network error.');
       }
     },
-    async addCourse() {
-      // Prepare the data to be sent
-      this.newCourse.faculty = this.facultyId;
-      const newCourse = this.newCourse;
-
-      // Send POST request
-      await fetch('http://localhost:3000/course', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(newCourse)
-      })
-      .then(async response => {
-        if (!response.ok) {
-          throw new Error('Failed to add course');
-        }
-        return await response.json();
-      })
-      .then(data => {
-        alert('Course added:', data);
-
-        this.reset();
-
-        // Fetch the updated course list
-        this.fetchAllCourses();
-      })
-      .catch(error => {
-        console.error('Error:', error);
-      });
-    },
     async deleteCourse(courseId) {
       if (!confirm('Are you sure you want to delete this course?')) return;
-
       try {
         const response = await fetch(`http://localhost:3000/course/${courseId}`, {
           method: 'DELETE',
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          headers: { 'Content-Type': 'application/json' },
         });
-
         const result = await response.json();
-
         if (response.ok) {
           alert(result.message || 'Course deleted successfully.');
-          this.fetchAllCourses();
+          await this.fetchAllCourses();
         } else {
           alert(result.error || 'Failed to delete course.');
         }
@@ -289,6 +320,10 @@ export default {
 <style scoped>
 .table-responsive {
   background-color: #fff;
+}
+
+.text-danger {
+  font-size: 0.8rem;
 }
 
 .icon-row {

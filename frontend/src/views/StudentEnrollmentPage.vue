@@ -1,4 +1,5 @@
 <template>
+  <button class="mt-4 btn btn-secondary mb-4" @click="goBack">Back</button>
   <h2 class="mb-4">Student Enrollment Management</h2>
 
   <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
@@ -77,6 +78,9 @@ export default {
     };
   },
   methods: {
+    goBack() {
+      this.$router.back();
+    },
     getAuthenticatedUser() {
       const userData = sessionStorage.getItem('user');
       if (userData) {

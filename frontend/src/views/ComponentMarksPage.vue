@@ -20,29 +20,49 @@
     </div>
 
     <!-- Component Creation -->
-    <div class="row g-2 mb-3 align-items-end">
+    <div v-if="!editMode" class="mt-3 mb-3 d-flex flex-row gap-2 align-items-start">
       <div class="col-md-5">
-        <input v-model="newComponent.componentName" placeholder="Component Name" class="form-control" />
+        <input
+          v-model="newComponent.componentName"
+          :class="['form-control', newErrors.name ? 'is-invalid' : '']"
+          placeholder="Component Name"
+        />
+        <div class="invalid-feedback" v-if="newErrors.name">{{ newErrors.name }}</div>
       </div>
       <div class="col-md-4">
-        <input type="number" v-model="newComponent.maxMark" placeholder="Max Mark" class="form-control" />
+        <input
+          type="number"
+          v-model="newComponent.maxMark"
+          :class="['form-control', newErrors.mark ? 'is-invalid' : '']"
+          placeholder="Max Mark"
+        />
+        <div class="invalid-feedback" v-if="newErrors.mark">{{ newErrors.mark }}</div>
       </div>
       <div class="col-md-3">
-        <button @click="addComponent" class="btn btn-success w-100">➕ Add Component</button>
+        <button @click="addComponent" class="btn btn-primary w-80">Add Component</button>
       </div>
     </div>
 
     <!-- Edit Mode -->
-    <div v-if="editMode" class="row g-2 mb-3 align-items-end">
+    <div v-if="editMode" class="mt-3 mb-3 d-flex flex-row gap-2 align-items-start">
       <div class="col-md-5">
-        <input v-model="editComponentData.componentName" class="form-control" />
+        <input
+          v-model="editComponentData.componentName"
+          :class="['form-control', editErrors.name ? 'is-invalid' : '']"
+        />
+        <div class="invalid-feedback" v-if="editErrors.name">{{ editErrors.name }}</div>
       </div>
       <div class="col-md-4">
-        <input v-model="editComponentData.maxMark" type="number" class="form-control" />
+        <input
+          v-model="editComponentData.maxMark"
+          type="number"
+          :class="['form-control', editErrors.mark ? 'is-invalid' : '']"
+        />
+        <div class="invalid-feedback" v-if="editErrors.mark">{{ editErrors.mark }}</div>
       </div>
       <div class="col-md-3 d-flex gap-2">
-        <button @click="updateComponent" class="btn btn-primary w-50">✅ Update</button>
-        <button @click="cancelEdit" class="btn btn-secondary w-50">❌ Cancel</button>
+        <button @click="updateComponent" class="btn btn-success" style="width:40%">Update</button>
+        <button @click="cancelEdit" class="btn btn-danger" style="width:40%">Cancel</button>
       </div>
     </div>
 
@@ -63,12 +83,12 @@
             <td class="d-flex flex-wrap justify-content-center gap-2">
               <router-link
                 :to="{ name: 'ComponentMarkPage', params: { componentId: component.componentId } }"
-                class="btn btn-outline-primary btn-sm"
+                class="btn btn-primary btn-sm"
               >
-                ➡ Enter Marks
+                Enter Marks
               </router-link>
-              <button @click="editComponent(component)" class="btn btn-outline-warning btn-sm">✏ Edit</button>
-              <button @click="deleteComponent(component.componentId)" class="btn btn-outline-danger btn-sm">🗑 Delete</button>
+              <button @click="editComponent(component)" class="btn btn-warning btn-sm">Edit</button>
+              <button @click="deleteComponent(component.componentId)" class="btn btn-danger btn-sm">Delete</button>
             </td>
           </tr>
         </tbody>
@@ -81,56 +101,43 @@
 export default {
   data() {
     const user = JSON.parse(sessionStorage.getItem('user'));
-
     return {
       lecturerId: user.lecturerId,
       selectedSectionId: null,
       courses: [],
-      newComponent: {
-        componentName: '',
-        maxMark: ''
-      },
-      selectedCourse: null,
       components: [],
+      newComponent: { componentName: '', maxMark: '' },
+      newErrors: { name: '', mark: '' },
       editMode: false,
-      editComponentData: {
-        componentId: null,
-        componentName: '',
-        maxMark: ''
-      }
+      editComponentData: { componentId: null, componentName: '', maxMark: '' },
+      editErrors: { name: '', mark: '' }
     };
   },
-
   computed: {
+    selectedCourse() {
+      return this.courses.find(course => course.sectionId === this.selectedSectionId) || null;
+    },
     maxComponentMark() {
-      const cm = this.selectedCourse?.max_cm;
+      const cm = this.selectedCourse?.maxCm;
       return cm !== null && cm !== undefined ? cm : null;
     },
-      totalComponentMark() {
-        return this.components.reduce((sum, c) => {
-          const mark = parseFloat(c.max_mark);
-          return sum + (isNaN(mark) ? 0 : mark);
-        }, 0);
-      }
+    totalComponentMark() {
+      return this.components.reduce((sum, c) => {
+        const mark = parseFloat(c.maxMark);
+        return sum + (isNaN(mark) ? 0 : mark);
+      }, 0);
+    }
   },
-  async created(){
+  async created() {
     await this.fetchAllLecturerCourses();
   },
   methods: {
-    async fetchAllLecturerCourses(){
+    async fetchAllLecturerCourses() {
       try {
-        if (!this.lecturerId) {
-          console.error('No lecturer ID available');
-          return;
-        }
-        
-        const url = `http://localhost:3000/lecturer-course/${this.lecturerId}`;
-
-        const response = await fetch(url);
-        if (!response.ok) throw new Error('Failed to fetch courses');
-
-        const data = await response.json();
-        this.courses = data; 
+        if (!this.lecturerId) return;
+        const res = await fetch(`http://localhost:3000/lecturer-course/${this.lecturerId}`);
+        if (!res.ok) throw new Error('Failed to fetch courses');
+        this.courses = await res.json();
         if (this.courses.length && !this.selectedSectionId) {
           this.selectedSectionId = this.courses[0].sectionId;
           await this.fetchComponents();
@@ -139,110 +146,127 @@ export default {
         console.error('Error fetching courses:', error);
       }
     },
-    async fetchComponents(){
+    async fetchComponents() {
       try {
-        const url = `http://localhost:3000/components?section_id=${this.selectedSectionId}`;
-
-        const response = await fetch(url);
-        if (!response.ok) throw new Error('Failed to fetch components');
-
-        const data = await response.json();
-        this.components = data; 
+        const res = await fetch(`http://localhost:3000/components?section_id=${this.selectedSectionId}`);
+        if (!res.ok) throw new Error('Failed to fetch components');
+        this.components = await res.json();
       } catch (error) {
         console.error('Error fetching components:', error);
       }
     },
     async addComponent() {
-      if (!this.selectedSectionId) return;
+      this.newErrors = { name: '', mark: '' };
+      const name = this.newComponent.componentName.trim();
+      const mark = parseFloat(this.newComponent.maxMark);
 
-      const payload = {
-        sectionId: this.selectedSectionId,  
-        componentName: this.newComponent.componentName,
-        maxMark: this.newComponent.maxMark
-      };
+      let hasError = false;
+      if (!name) {
+        this.newErrors.name = 'Component name is required.';
+        hasError = true;
+      }
+      if (isNaN(mark) || mark <= 0) {
+        this.newErrors.mark = 'Enter a valid positive number.';
+        hasError = true;
+      }
+      const maxAllowed = this.maxComponentMark;
+      if (!hasError && maxAllowed !== null && this.totalComponentMark + mark > maxAllowed) {
+        alert(`Total component marks cannot exceed ${maxAllowed}.`);
+        return;
+      }
+
+      if (hasError) return;
 
       try {
+        const payload = {
+          sectionId: this.selectedSectionId,
+          componentName: name,
+          maxMark: mark
+        };
         const res = await fetch('http://localhost:3000/components', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
-
         const data = await res.json();
-        alert(data.message || 'Component saved');
-
-        // Clear form
+        alert(data.message || 'Component added.');
         this.newComponent.componentName = '';
         this.newComponent.maxMark = '';
-
-        // Refresh component list
         await this.fetchComponents();
-
-      } catch (error) {
-        alert("Failed to add component.");
-        console.error(error);
+      } catch (err) {
+        console.error(err);
+        alert('Failed to add component.');
       }
-    },
-    async saveMark(componentId, studentId, mark) {
-      const payload = {
-        component_id: componentId,
-        student_id: studentId,
-        mark: mark
-      };
-
-      const res = await fetch('http://localhost:3000/marks', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-
-      const data = await res.json();
-      alert(data.message || 'Mark saved');
     },
     editComponent(component) {
       this.editMode = true;
+      this.editErrors = { name: '', mark: '' };
       this.editComponentData = { ...component };
     },
     cancelEdit() {
       this.editMode = false;
-      this.editComponentData = { component_id: null, component_name: '', max_mark: '' };
+      this.editComponentData = { componentId: null, componentName: '', maxMark: '' };
+      this.editErrors = { name: '', mark: '' };
     },
     async updateComponent() {
+      this.editErrors = { name: '', mark: '' };
+      const name = this.editComponentData.componentName.trim();
+      const mark = parseFloat(this.editComponentData.maxMark);
+
+      let hasError = false;
+      if (!name) {
+        this.editErrors.name = 'Component name is required.';
+        hasError = true;
+      }
+
+      if (isNaN(mark) || mark <= 0) {
+        this.editErrors.mark = 'Enter a valid positive number.';
+        hasError = true;
+      }
+
+      const original = this.components.find(c => c.componentId === this.editComponentData.componentId);
+      const totalWithoutOriginal = this.totalComponentMark - parseFloat(original?.maxMark || 0);
+
+      const maxAllowed = this.maxComponentMark;
+      if (!hasError && maxAllowed !== null && totalWithoutOriginal + mark > maxAllowed) {
+        alert(`Total component marks cannot exceed ${maxAllowed}.`);
+        return;
+      }
+
+      if (hasError) return;
+
       try {
         const res = await fetch(`http://localhost:3000/components/${this.editComponentData.componentId}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(this.editComponentData)
+          body: JSON.stringify({ componentName: name, maxMark: mark })
         });
         const data = await res.json();
-        alert(data.message || 'Component updated');
+        alert(data.message || 'Component updated.');
         this.cancelEdit();
-        this.fetchComponents();
+        await this.fetchComponents();
       } catch (err) {
         console.error(err);
-        alert("Failed to update component");
+        alert('Failed to update component.');
       }
     },
-
     async deleteComponent(componentId) {
       if (!confirm('Are you sure you want to delete this component?')) return;
-
       try {
         const res = await fetch(`http://localhost:3000/components/${componentId}`, {
           method: 'DELETE'
         });
         const data = await res.json();
-        alert(data.message || 'Component deleted');
-        this.fetchComponents();
+        alert(data.message || 'Component deleted.');
+        await this.fetchComponents();
       } catch (err) {
         console.error(err);
-        alert("Failed to delete component");
+        alert('Failed to delete component.');
       }
     }
-  },
+  }
 };
 </script>
-
 
 <style scoped>
 .component-marks-page {

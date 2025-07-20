@@ -1,5 +1,6 @@
 <template>
-  <div class="container mt-4">
+  <button class="mt-4 btn btn-secondary mb-4" @click="goBack">Back</button>
+  <div class="container">
     <h3><b>{{ component?.courseCode }}-{{ component?.sectionNumber }} {{ component?.courseName }}</b></h3>
     <h3>Enter Marks for: {{ component?.componentName }} (Max: {{ component?.maxMark }})</h3>
 
@@ -31,11 +32,8 @@
     </table>
 
     <button class="btn btn-success mt-3" @click="submitAllMarks" :disabled="!studentMarks.length">
-      💾 Save All
+      Save All
     </button>
-
-    <div v-if="successMessage" class="success-message mt-2">{{ successMessage }}</div>
-    <div v-if="errorMessage" class="error-message mt-2">{{ errorMessage }}</div>
   </div>
 </template>
 
@@ -45,9 +43,7 @@ export default {
     return {
       componentId: this.$route.params.componentId,
       component: null,
-      studentMarks: [],
-      successMessage: '',
-      errorMessage: ''
+      studentMarks: []
     };
   },
   async created() {
@@ -72,9 +68,7 @@ export default {
         const marks = await marksRes.json();
 
         this.studentMarks = students.map(student => {
-          const existing = marks.find(
-            m => m.studentId === student.studentId
-          );
+          const existing = marks.find(m => m.studentId === student.studentId);
 
           return {
             studentId: student.studentId,
@@ -83,13 +77,13 @@ export default {
             mark: existing ? existing.mark : ''
           };
         });
-
-        this.successMessage = '';
-        this.errorMessage = '';
       } catch (err) {
-        this.errorMessage = 'Failed to load students or marks.';
+        alert('Failed to load students or marks.');
         console.error(err);
       }
+    },
+    goBack() {
+      this.$router.back();
     },
     async submitAllMarks() {
       try {
@@ -108,15 +102,14 @@ export default {
         );
 
         await Promise.all(requests);
-        this.successMessage = 'All marks saved successfully!';
-        this.errorMessage = '';
+        alert('All marks saved successfully.');
         await this.fetchStudentsAndMarks();
       } catch (err) {
-        this.errorMessage = 'Failed to save marks.';
-        this.successMessage = '';
+        alert('Failed to save marks.');
         console.error(err);
       }
     }
   }
 };
 </script>
+

@@ -66,7 +66,6 @@
             <td class="text-center">
               <div class="icon-row">
                 <i class="bi bi-people-fill text-primary mx-2" data-bs-toggle="tooltip" title="View Students" @click="viewStudents(course.sectionId)"></i>
-                <i class="bi bi-card-list text-secondary mx-2" data-bs-toggle="tooltip" title="View Sections" @click="viewSections(course)"></i>
               </div>
             </td>
           </tr>

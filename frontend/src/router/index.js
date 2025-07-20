@@ -15,7 +15,7 @@ import LecturerCoursePage from '../views/LecturerCoursePage'
 import ViewMarkBreakdownPage from '../views/ViewMarkBreakdownPage'
 import ComponentMarkPage from '../views/ComponentMarkPage.vue';
 import StudentDashboardPage from '../views/StudentDashboardPage.vue'
-
+import LecturerRemarkRequestsPage from '../views/LecturerRemarkRequestsPage.vue';
 
 const routes = [
   {
@@ -28,12 +28,13 @@ const routes = [
       { path: '/mark-breakdown', name: 'ViewFullMarkBreakdown', component: ViewFullMarkBreakdownPage, meta: { roles: ['Lecturer'] } },
       { path: '/performance-trend', name: 'AddPerformanceTrend', component: AddPerformanceTrendPage, meta: { roles: ['Lecturer'] } },
       { path: '/course-management', name: 'CoursePage', component: CoursePage, meta: { roles: ['Admin'] } },
-      { path: '/course-management/section/:courseId', name: 'SectionPage', component: SectionPage, meta: { roles: ['Lecturer'] } },
+      { path: '/course-management/section/:courseId', name: 'SectionPage', component: SectionPage, meta: { roles: ['Admin'] } },
       { path: '/user-management', name: 'UserPage', component: UserPage, meta: { roles: ['Admin'] } },
       { path: '/lecturer-course-management', name: 'LecturerCoursePage', component: LecturerCoursePage, meta: { roles: ['Lecturer'] } },
       { path: '/lecturer-course-management/students/:sectionId', name: 'StudentEnrollment', component: StudentEnrollmentPage, meta: { roles: ['Lecturer'] } },
       { path: '/view-mark-breakdown', name: 'ViewMarkBreakdownPage', component: ViewMarkBreakdownPage, meta: { roles: ['Lecturer', 'Student', 'Advisor'] } },
-      { path: '/component/:componentId', name: 'ComponentMarkPage', component: ComponentMarkPage, meta: { roles: ['Lecturer'] }}
+      { path: '/component/:componentId', name: 'ComponentMarkPage', component: ComponentMarkPage, meta: { roles: ['Lecturer'] }},
+      { path: '/remark-requests', name: 'LecturerRemarkRequests', component: LecturerRemarkRequestsPage, meta: { roles: ['Lecturer'] } },
     ]
   },
 
