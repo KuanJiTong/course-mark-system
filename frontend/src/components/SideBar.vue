@@ -44,15 +44,13 @@ export default {
 
       // Student
       { name: "My Marks", link: "/student-marks", icon: "bi bi-clipboard-data", access: "student" },
-      { name: "Progress & Breakdown", link: "/student-progress", icon: "bi bi-bar-chart-line", access: "student" },
       { name: "Compare with Coursemates", link: "/student-compare", icon: "bi bi-people-fill", access: "student" },
       { name: "Class Rank & Percentile", link: "/student-rank", icon: "bi bi-trophy", access: "student" },
-      { name: "What-If Simulator", link: "/student-whatif", icon: "bi bi-sliders", access: "student" },
+      { name: "Component average", link: "/student-component-averages", icon: "bi bi-graph-up-arrow", access: "student" },
       { name: "Submit Remark Request", link: "/student-remark", icon: "bi bi-chat-dots", access: "student" },
 
       //AA
       { name: "My Advisees", link: "/advisor-advisees", icon: "bi bi-people-fill", access: "advisor" },
-      // { name: "Advisee Marks", link: "/advisor-advisee-marks", icon: "bi bi-journal-check", access: "advisor" },
       { name: "Compare Advisees", link: "/advisor-compare", icon: "bi bi-bar-chart-line", access: "advisor" },
       { name: "Advisee Ranking", link: "/advisor-rank", icon: "bi bi-trophy", access: "advisor" },
       { name: "Component Averages", link: "/advisor-component-averages", icon: "bi bi-graph-up", access: "advisor" },

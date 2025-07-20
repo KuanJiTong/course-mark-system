@@ -20,9 +20,9 @@
       </select>
     </div>
     <div v-if="marks.length">
-      <div v-if="selectedComponent === 'finalExam' && components.length" style="margin-bottom: 8px;">
+      <!-- <div v-if="selectedComponent === 'finalExam' && components.length" style="margin-bottom: 8px;">
         <strong>Final Exam Max Mark:</strong> {{ getFinalExamMax() }}
-      </div>
+      </div> -->
       <div class="form-group" v-if="components.length">
         <label for="component">Component:</label>
         <select class="form-select" v-model="selectedComponent">
@@ -147,10 +147,10 @@ export default {
             display: true,
             text:
               this.selectedComponent === 'total'
-                ? 'Anonymous Comparison: Total Marks'
+                ? 'Comparison: Total Marks'
                 : this.selectedComponent === 'finalExam'
-                  ? 'Anonymous Comparison: Final Exam'
-                  : `Anonymous Comparison: ${this.selectedComponent}`
+                  ? 'Comparison: Final Exam'
+                  : `Comparison: ${this.selectedComponent}`
           }
         },
         scales: {

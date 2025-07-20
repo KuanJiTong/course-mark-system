@@ -2,20 +2,11 @@
   <div class="component-averages">
     <h1>Class Average per Component</h1>
     <div class="form-group">
-      <label for="course">Course:</label>
-      <select v-model="selectedCourseId" @change="fetchSections" required>
-        <option disabled value="">-- Select Course --</option>
-        <option v-for="course in courses" :key="course.course_id" :value="course.course_id">
-          {{ course.course_name }}
-        </option>
-      </select>
-    </div>
-    <div class="form-group" v-if="sections.length">
-      <label for="section">Section:</label>
-      <select v-model="selectedSectionId" @change="fetchAverages" required>
+      <label for="section">Course Section:</label>
+      <select class="form-select" v-model="selectedSectionId" @change="fetchAveragesAndMarks" required>
         <option disabled value="">-- Select Section --</option>
-        <option v-for="section in sections" :key="section.section_id" :value="section.section_id">
-          Section {{ section.section_number }}
+        <option v-for="enroll in enrollments" :key="enroll.section_id" :value="enroll.section_id">
+          {{ enroll.course_code }}-{{ enroll.section_number }} {{ enroll.course_name }}
         </option>
       </select>
     </div>
@@ -25,6 +16,8 @@
           <th>Component</th>
           <th>Class Average</th>
           <th>Max Mark</th>
+          <th>Your Mark</th>
+          <th>Comparison</th>
         </tr>
       </thead>
       <tbody>
@@ -32,9 +25,14 @@
           <td>{{ comp.component_name }}</td>
           <td>{{ comp.average_mark ? Number(comp.average_mark).toFixed(2) : '-' }}</td>
           <td>{{ comp.max_mark }}</td>
+          <td>{{ getStudentMark(comp.component_id) }}</td>
+          <td>{{ compareToAverage(comp) }}</td>
         </tr>
       </tbody>
     </table>
+    <div v-else-if="selectedSectionId && !averages.length && !errorMessage" class="info-message">
+      No components found for this section.
+    </div>
     <div v-if="errorMessage" class="error-message">{{ errorMessage }}</div>
   </div>
 </template>
@@ -42,60 +40,48 @@
 <script>
 export default {
   data() {
+    const user = JSON.parse(sessionStorage.getItem('user'));
     return {
-      studentID: null,
-      courses: [],
-      sections: [],
+      studentId: user.studentId,
+      enrollments: [],
       averages: [],
-      selectedCourseId: '',
+      studentMarks: [],
       selectedSectionId: '',
       errorMessage: ''
     };
   },
+  async created() {
+    await this.fetchEnrollments();
+  },
   methods: {
-    async getStudentIdFromUserId() {
-      const userData = sessionStorage.getItem('user');
-      if (userData) {
-        const user = JSON.parse(userData);
-        const userId = user.user_id;
-        try {
-          const res = await fetch(`http://localhost:3000/student-id?user_id=${userId}`);
-          if (!res.ok) throw new Error('Failed to fetch student_id');
-          const data = await res.json();
-          this.studentID = data.student_id;
-          return true;
-        } catch (err) {
-          this.errorMessage = 'Failed to get student ID.';
-          return false;
-        }
-      }
-      return false;
-    },
-    async fetchCourses() {
+    async fetchEnrollments() {
       try {
-        const res = await fetch('http://localhost:3000/courses');
+        const res = await fetch(`http://localhost:3000/student/enrollments?student_id=${this.studentId}`);
         if (!res.ok) {
-          this.errorMessage = 'Server error loading courses';
+          this.errorMessage = 'Server error loading enrollments';
           return;
         }
-        this.courses = await res.json();
+        this.enrollments = await res.json();
+        // Auto-select first section if available
+        if (this.enrollments.length && !this.selectedSectionId) {
+          this.selectedSectionId = this.enrollments[0].section_id;
+          await this.fetchAveragesAndMarks();
+        }
       } catch (err) {
-        this.errorMessage = 'Failed to load courses.';
+        this.errorMessage = 'Failed to load enrollments.';
       }
     },
-    async fetchSections() {
-      try {
-        this.sections = [];
-        const res = await fetch(`http://localhost:3000/sections?course_id=${this.selectedCourseId}`);
-        this.sections = await res.json();
-      } catch {
-        this.errorMessage = 'Failed to load sections.';
-      }
+    async fetchAveragesAndMarks() {
+      if (!this.selectedSectionId) return;
+      await Promise.all([
+        this.fetchAverages(),
+        this.fetchStudentMarks()
+      ]);
     },
     async fetchAverages() {
       try {
         this.averages = [];
-        const url = `http://localhost:3000/class/component-averages?course_id=${this.selectedCourseId}&section_id=${this.selectedSectionId}`;
+        const url = `http://localhost:3000/class/component-averages?section_id=${this.selectedSectionId}`;
         const res = await fetch(url);
         if (!res.ok) {
           this.errorMessage = 'Failed to load averages (server error).';
@@ -105,17 +91,36 @@ export default {
       } catch (err) {
         this.errorMessage = 'Failed to load averages (network error).';
       }
-    }
-  },
-  mounted() {
-    this.getStudentIdFromUserId().then(success => {
-      if (success) {
-        this.fetchCourses();
-      } else {
-        this.errorMessage = 'Authentication required. Please login.';
-        this.$router.push('/login');
+    },
+    async fetchStudentMarks() {
+      try {
+        this.studentMarks = [];
+        const url = `http://localhost:3000/student/marks?student_id=${this.studentId}&section_id=${this.selectedSectionId}`;
+        const res = await fetch(url);
+        if (!res.ok) return;
+        const data = await res.json();
+        this.studentMarks = Array.isArray(data.marks)
+          ? data.marks.map(mark => ({
+              component_id: mark.componentId,
+              mark: mark.mark
+            }))
+          : [];
+      } catch (err) {
+        // ignore, just show empty
       }
-    });
+    },
+    getStudentMark(component_id) {
+      const found = this.studentMarks.find(m => String(m.component_id) === String(component_id));
+      return found ? found.mark : '-';
+    },
+    compareToAverage(comp) {
+      const mark = Number(this.getStudentMark(comp.component_id));
+      const avg = Number(comp.average_mark);
+      if (isNaN(mark) || isNaN(avg)) return '-';
+      if (mark > avg) return 'Above Average';
+      if (mark < avg) return 'Below Average';
+      return 'At Average';
+    }
   }
 };
 </script>
@@ -156,6 +161,10 @@ th {
 }
 .error-message {
   color: red;
+  margin-top: 10px;
+}
+.info-message {
+  color: #007bff;
   margin-top: 10px;
 }
 </style> 

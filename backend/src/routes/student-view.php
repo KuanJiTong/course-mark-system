@@ -239,8 +239,8 @@ $app->get('/class/component-averages', function (Request $request, Response $res
     $pdo = getPDO();
     $params = $request->getQueryParams();
 
-    if (!isset($params['course_id']) || !isset($params['section_id'])) {
-        $response->getBody()->write(json_encode(['error' => 'Missing course_id or section_id']));
+    if (!isset($params['section_id'])) {
+        $response->getBody()->write(json_encode(['error' => 'Missing section_id']));
         return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
     }
 
@@ -252,11 +252,11 @@ $app->get('/class/component-averages', function (Request $request, Response $res
             AVG(m.mark) AS average_mark
         FROM components c
         LEFT JOIN marks m ON c.component_id = m.component_id
-        WHERE c.course_id = ? AND c.section_id = ?
+        WHERE c.section_id = ?
         GROUP BY c.component_id, c.component_name, c.max_mark
         ORDER BY c.component_id
     ");
-    $stmt->execute([$params['course_id'], $params['section_id']]);
+    $stmt->execute([$params['section_id']]);
     $averages = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     $response->getBody()->write(json_encode($averages));
