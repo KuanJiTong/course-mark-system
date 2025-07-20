@@ -1,6 +1,6 @@
 <template>
   <div>
-    <h2>My Advisees</h2>
+    <h2 style="padding: 30px;">My Advisees</h2>
     <table>
       <thead>
         <tr>
@@ -14,7 +14,7 @@
           <td>{{ student.student_name }}</td>
           <td>{{ student.matric_no }}</td>
           <td>
-            <button @click="goToMarksPage(student)">View Marks</button>
+            <button class="btn btn-primary btn-sm" @click="goToMarksPage(student)">View Marks</button>
           </td>
         </tr>
       </tbody>
@@ -25,7 +25,7 @@
       :studentId="selectedAdvisee.student_id"
       :studentName="selectedAdvisee.student_name"
     />
-    <button v-if="selectedAdvisee" @click="selectedAdvisee = null" style="margin-top: 1rem;">Back to Advisees List</button>
+    <button v-if="selectedAdvisee" class="btn btn-secondary mt-3" @click="selectedAdvisee = null">Back to Advisees List</button>
   </div>
 </template>
 

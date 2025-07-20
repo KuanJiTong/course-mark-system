@@ -10,10 +10,10 @@
         <h3>View Component-wise Marks & Total</h3>
         <router-link to="/student-marks">Go to My Marks</router-link>
       </div>
-      <div class="dashboard-card">
+      <!-- <div class="dashboard-card">
         <h3>Progress Bar & Assessment Breakdown</h3>
         <router-link to="/student-progress">View Progress</router-link>
-      </div>
+      </div> -->
       <div class="dashboard-card">
         <h3>Compare with Coursemates</h3>
         <router-link to="/student-compare">Compare Now</router-link>
@@ -22,10 +22,10 @@
         <h3>Class Rank & Percentile</h3>
         <router-link to="/student-rank">View Rank</router-link>
       </div>
-      <div class="dashboard-card">
-        <h3>What-If Simulator</h3>
-        <router-link to="/student-whatif">Simulate Performance</router-link>
-      </div>
+      <!-- <div class="dashboard-card">
+        <h3>Component Average</h3>
+        <router-link to="/student-component-averages">Simulate Performance</router-link>
+      </div> -->
       <div class="dashboard-card">
         <h3>Submit Remark Request</h3>
         <router-link to="/student-remark">Request Remark</router-link>

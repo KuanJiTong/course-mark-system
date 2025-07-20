@@ -1,8 +1,8 @@
 <template>
   <div>
-    <div style="display: flex; align-items: center; gap: 1.5rem; margin-bottom: 1rem;">
-      <router-link to="/advisor-advisees" style="display:inline-block;">&larr; Return to Advisee List</router-link>
-      <button v-if="enrollments.length" @click="downloadCSV">Download CSV Report</button>
+    <div style="display: flex; align-items: center; gap: 1.5rem; margin-bottom: 1rem; padding: 30px">
+      <router-link to="/advisor-advisees" class="btn btn-outline-secondary">&larr; Return to Advisee List</router-link>
+      <button v-if="enrollments.length" class="btn btn-primary" @click="downloadCSV">Download CSV Report</button>
     </div>
     <h2>Full Mark Breakdown for {{ resolvedStudentName }}</h2>
     <div v-if="enrollments.length === 0 && loaded">No enrollments found.</div>
