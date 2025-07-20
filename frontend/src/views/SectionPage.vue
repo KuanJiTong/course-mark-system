@@ -1,6 +1,6 @@
 <template>
-    <button class="btn btn-secondary mb-4" @click="goBack">Back</button>
-    <h2 class="mb-4" v-if="course">Section Page - {{ course.courseCode }} {{ course.courseName }}</h2>
+  <button class="mt-4 btn btn-secondary mb-4" @click="goBack">Back</button>
+  <h2 class="mb-4" v-if="course">Section Page - {{ course.courseCode }} {{ course.courseName }}</h2>
 
   <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
     <div class="d-flex gap-2 flex-wrap">
@@ -13,9 +13,29 @@
           {{ showForm ? 'Cancel' : 'Add Section' }}
         </button>
 
-        <div v-if="showForm" class="d-flex align-items-center gap-2 mb-3">
-          <input type="text" v-model="newSection.sectionNumber" placeholder="Section No." class="form-control" style="width: 150px;">
-          <input type="text" v-model="newSection.capacity" placeholder="Capacity" class="form-control" style="width: 250px;">
+        <div v-if="showForm" class="d-flex align-items-start flex-column gap-2 mb-3">
+          <div>
+            <input
+              type="text"
+              v-model="newSection.sectionNumber"
+              placeholder="Section No."
+              class="form-control"
+              style="width: 150px;"
+            >
+            <small class="text-danger">{{ validationErrors.sectionNumber }}</small>
+          </div>
+
+          <div>
+            <input
+              type="text"
+              v-model="newSection.capacity"
+              placeholder="Capacity"
+              class="form-control"
+              style="width: 250px;"
+            >
+            <small class="text-danger">{{ validationErrors.capacity }}</small>
+          </div>
+
           <button class="btn btn-primary" @click="addSection">Submit</button>
         </div>
       </div>
@@ -55,7 +75,7 @@
             <span v-if="assignLecturerSectionId !== section.sectionId">{{ section.lecturerName }}</span>
             <div v-else class="wrapper">
               <div @click="toggleMenu" class="select-btn">
-                <span><strong>{{ section.lecturerName? section.lecturerName : 'Select Lecturer'}}</strong></span>
+                <span><strong>{{ section.lecturerName ? section.lecturerName : 'Select Lecturer' }}</strong></span>
                 <i class="bi bi-chevron-down"></i>
               </div>
               <div v-show="selectMenu.showMenu" class="content">
@@ -63,7 +83,7 @@
                   <input type="text" placeholder="Search" v-model="searchQuery" @input="searchLecturer">
                 </div>
                 <ul class="options">
-                  <li v-for="lecturer in lecturers" :key="lecturer.lecturerId" @click="selectLecturer(section,lecturer)">
+                  <li v-for="lecturer in lecturers" :key="lecturer.lecturerId" @click="selectLecturer(section, lecturer)">
                     <strong>{{ lecturer.lecturerName }}</strong>
                     <small> {{ lecturer.email }}</small>
                   </li>
@@ -74,41 +94,22 @@
 
           <td>
             <div class="icon-row">
-              <!-- Default view -->
               <template v-if="editingSectionId !== section.sectionId && assignLecturerSectionId !== section.sectionId">
-                <i
-                  class="bi bi-person-plus-fill mx-2"
-                  data-bs-toggle="tooltip"
-                  title="Assign Lecturer"
-                  @click="startAssignLecturer(section)"
-                ></i>
-                <i
-                  class="bi bi-pencil-square text-primary mx-2"
-                  data-bs-toggle="tooltip"
-                  title="Edit"
-                  @click="startEdit(section)"
-                ></i>
-                <i
-                  class="bi bi-trash-fill text-danger mx-2"
-                  data-bs-toggle="tooltip"
-                  title="Delete"
-                  @click="deleteSection(section.sectionId)"
-                ></i>
+                <i class="bi bi-person-plus-fill mx-2" title="Assign Lecturer" @click="startAssignLecturer(section)"></i>
+                <i class="bi bi-pencil-square text-primary mx-2" title="Edit" @click="startEdit(section)"></i>
+                <i class="bi bi-trash-fill text-danger mx-2" title="Delete" @click="deleteSection(section.sectionId)"></i>
               </template>
 
-              <!-- Edit mode -->
               <template v-else-if="editingSectionId === section.sectionId">
                 <button class="btn btn-sm btn-primary mx-1" @click="updateSection(section)">Submit</button>
                 <button class="btn btn-sm btn-danger mx-1" @click="cancelEdit(section)">Cancel</button>
               </template>
 
-              <!-- Assign lecturer mode -->
               <template v-else-if="assignLecturerSectionId === section.sectionId">
                 <button class="btn btn-sm btn-success mx-1" @click="assignLecturer(section)">Assign</button>
                 <button class="btn btn-sm btn-secondary mx-1" @click="cancelAssignLecturer(section)">Cancel</button>
               </template>
             </div>
-
           </td>
         </tr>
       </tbody>
@@ -131,6 +132,10 @@ export default {
         capacity: null,
         courseId: null
       },
+      validationErrors: {
+        sectionNumber: '',
+        capacity: ''
+      },
       sections: [],
       lecturers: [],
       showForm: false,
@@ -141,61 +146,46 @@ export default {
       lecturer: null
     };
   },
-  async created(){
-    // Check authentication
+  async created() {
     const user = JSON.parse(sessionStorage.getItem('user'));
     if (!user || !user.user_id) {
       this.$router.push('/login?message=Please login to access section management');
       return;
     }
-    
+
     this.userID = user.user_id;
-    console.log('Authenticated user ID for section management:', this.userID);
-    
     this.courseId = this.$route.params.courseId;
     await this.fetchCourse();
     await this.fetchAllSections();
     await this.fetchAllLecturers();
   },
   methods: {
-    async fetchAllSections(){
+    async fetchAllSections() {
       try {
-        const courseId = this.courseId; 
-        const url = `http://localhost:3000/section?course_id=${courseId}`;
-
+        const url = `http://localhost:3000/section?course_id=${this.courseId}`;
         const response = await fetch(url);
         if (!response.ok) throw new Error('Failed to fetch sections');
-
-        const data = await response.json();
-        this.sections = data; 
+        this.sections = await response.json();
       } catch (error) {
         console.error('Error fetching sections:', error);
       }
     },
-    async fetchCourse(){
+    async fetchCourse() {
       try {
-        const courseId = this.courseId; 
-        const url = `http://localhost:3000/course/${courseId}`;
-
+        const url = `http://localhost:3000/course/${this.courseId}`;
         const response = await fetch(url);
-        if (!response.ok) throw new Error('Failed to fetch sections');
-
-        const data = await response.json();
-        this.course = data; 
+        if (!response.ok) throw new Error('Failed to fetch course');
+        this.course = await response.json();
       } catch (error) {
-        console.error('Error fetching sections:', error);
+        console.error('Error fetching course:', error);
       }
     },
-    async fetchAllLecturers(){
+    async fetchAllLecturers() {
       try {
-        const facultyId = this.course.facultyId; 
-        const url = `http://localhost:3000/lecturers/${facultyId}`;
-
+        const url = `http://localhost:3000/lecturers/${this.course.facultyId}`;
         const response = await fetch(url);
         if (!response.ok) throw new Error('Failed to fetch lecturers');
-
-        const data = await response.json();
-        this.lecturers = data; 
+        this.lecturers = await response.json();
       } catch (error) {
         console.error('Error fetching lecturers:', error);
       }
@@ -203,53 +193,49 @@ export default {
     goBack() {
       this.$router.back();
     },
-    reset(){
+    reset() {
       this.newSection.sectionNumber = '';
       this.newSection.capacity = null;
+      this.validationErrors.sectionNumber = '';
+      this.validationErrors.capacity = '';
       this.showForm = false;
     },
-    toggleForm(){
+    toggleForm() {
       this.showForm = true;
     },
-    toggleMenu(){
+    toggleMenu() {
       this.selectMenu.showMenu = !this.selectMenu.showMenu;
     },
-    selectLecturer(section,lecturer){
+    selectLecturer(section, lecturer) {
       section.lecturerId = lecturer.lecturerId;
       section.lecturerName = lecturer.lecturerName;
       this.toggleMenu();
     },
     async searchLecturer() {
       try {
-        const facultyId = this.course.facultyId; 
-
-        const trimmedKeyword = this.searchQuery.trim();
-        if (trimmedKeyword === '') {
+        const keyword = this.searchQuery.trim();
+        if (keyword === '') {
           await this.fetchAllLecturers();
           return;
         }
-
-        const url = `http://localhost:3000/lecturers/${facultyId}?keyword=${encodeURIComponent(trimmedKeyword)}`;
-        
+        const url = `http://localhost:3000/lecturers/${this.course.facultyId}?keyword=${encodeURIComponent(keyword)}`;
         const response = await fetch(url);
-        if (!response.ok) throw new Error('Failed to fetch lecturers');
-
-        const data = await response.json();
-        this.lecturers = data;
+        if (!response.ok) throw new Error('Failed to search lecturers');
+        this.lecturers = await response.json();
       } catch (error) {
         console.error('Error searching lecturers:', error);
       }
     },
     startEdit(section) {
       if (this.editingSectionId) {
-        const prevSection = this.sections.find(c => c.sectionId === this.editingSectionId);
-        if (prevSection && prevSection._backup) {
-          Object.assign(prevSection, prevSection._backup);
-          delete prevSection._backup;
+        const prev = this.sections.find(c => c.sectionId === this.editingSectionId);
+        if (prev && prev._backup) {
+          Object.assign(prev, prev._backup);
+          delete prev._backup;
         }
       }
-      this.editingSectionId = section.sectionId;
       section._backup = { ...section };
+      this.editingSectionId = section.sectionId;
     },
     cancelEdit(section) {
       if (section._backup) {
@@ -258,18 +244,18 @@ export default {
       }
       this.editingSectionId = null;
     },
-    startAssignLecturer(section){
+    startAssignLecturer(section) {
       if (this.assignLecturerSectionId) {
-        const prevSection = this.sections.find(c => c.sectionId === this.assignLecturerSectionId);
-        if (prevSection && prevSection._backup) {
-          Object.assign(prevSection, prevSection._backup);
-          delete prevSection._backup;
+        const prev = this.sections.find(c => c.sectionId === this.assignLecturerSectionId);
+        if (prev && prev._backup) {
+          Object.assign(prev, prev._backup);
+          delete prev._backup;
         }
       }
       section._backup = { ...section };
       this.assignLecturerSectionId = section.sectionId;
     },
-    cancelAssignLecturer(section){
+    cancelAssignLecturer(section) {
       if (section._backup) {
         Object.assign(section, section._backup);
         delete section._backup;
@@ -277,103 +263,89 @@ export default {
       this.assignLecturerSectionId = null;
     },
     async addSection() {
-      // Prepare the data to be sent
+      this.validationErrors.sectionNumber = '';
+      this.validationErrors.capacity = '';
+
+      const { sectionNumber, capacity } = this.newSection;
+      let hasError = false;
+
+      if (!sectionNumber.trim()) {
+        this.validationErrors.sectionNumber = 'Section number is required.';
+        hasError = true;
+      }
+
+      if (capacity === null || capacity === '') {
+        this.validationErrors.capacity = 'Capacity is required.';
+        hasError = true;
+      } else if (isNaN(capacity) || Number(capacity) < 0) {
+        this.validationErrors.capacity = 'Capacity must be a non-negative number.';
+        hasError = true;
+      }
+
+      if (hasError) return;
+
       this.newSection.courseId = this.courseId;
-      const newSection = this.newSection;
 
-      // Send POST request
-      await fetch('http://localhost:3000/section', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(newSection)
-      })
-      .then(async response => {
-        if (!response.ok) {
-          throw new Error('Failed to add section');
-        }
-        return await response.json();
-      })
-      .then(data => {
-        alert('Section added:', data);
+      try {
+        const response = await fetch('http://localhost:3000/section', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(this.newSection)
+        });
 
+        if (!response.ok) throw new Error('Failed to add section');
+        alert('Section added successfully.');
         this.reset();
-
-        // Fetch the updated section list
         this.fetchAllSections();
-      })
-      .catch(error => {
-        console.error('Error:', error);
-      });
-    },    
-    async updateSection(section){
+      } catch (error) {
+        console.error('Error adding section:', error);
+        alert('Error adding section.');
+      }
+    },
+    async updateSection(section) {
       this.editingSectionId = null;
       delete section._backup;
       try {
         const response = await fetch(`http://localhost:3000/section/${section.sectionId}`, {
           method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(section),
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(section)
         });
-
-        if (!response.ok) {
-          const error = await response.json();
-          console.error('Update failed:', error);
-          alert('Failed to update section.');
-        } else {
-          alert('Section updated successfully.');
-          this.fetchAllSections();
-        }
+        if (!response.ok) throw new Error();
+        alert('Section updated successfully.');
+        this.fetchAllSections();
       } catch (err) {
-        console.error('Request error:', err);
-        alert('Network error.');
+        console.error('Update error:', err);
+        alert('Failed to update section.');
       }
     },
-    async assignLecturer(section){
+    async assignLecturer(section) {
       this.assignLecturerSectionId = null;
       delete section._backup;
-
-      const lecturer = {
-        lecturerId: section.lecturerId
-      }
       try {
         const response = await fetch(`http://localhost:3000/section/${section.sectionId}`, {
           method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(lecturer),
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ lecturerId: section.lecturerId })
         });
-
-        if (!response.ok) {
-          const error = await response.json();
-          console.error('Update failed:', error);
-          alert(`Failed to assign lecturer to Section ${section.sectionNumber}.`);
-        } else {
-          alert(`Lecturer assigned successfully to Section ${section.sectionNumber}.`);
-          this.fetchAllSections();
-        }
+        if (!response.ok) throw new Error();
+        alert(`Lecturer assigned successfully to Section ${section.sectionNumber}.`);
+        this.fetchAllSections();
       } catch (err) {
-        console.error('Request error:', err);
-        alert('Network error.');
+        console.error('Assign error:', err);
+        alert(`Failed to assign lecturer to Section ${section.sectionNumber}.`);
       }
     },
     async deleteSection(sectionId) {
       if (!confirm('Are you sure you want to delete this section?')) return;
-
       try {
         const response = await fetch(`http://localhost:3000/section/${sectionId}`, {
           method: 'DELETE',
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          headers: { 'Content-Type': 'application/json' }
         });
-
         const result = await response.json();
-
         if (response.ok) {
           alert(result.message || 'Section deleted successfully.');
           this.fetchAllSections();
@@ -385,9 +357,10 @@ export default {
         alert('An error occurred while deleting.');
       }
     }
-  },
+  }
 };
 </script>
+
 
 <style scoped>
 .table-responsive {

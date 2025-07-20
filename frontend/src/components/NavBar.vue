@@ -34,12 +34,6 @@
           v-show="isDropdownOpen"
         >
             <li>
-                <router-link class="dropdown-item" to="/profile">Profile</router-link>
-            </li>
-            <li>
-                <hr class="dropdown-divider" />
-            </li>
-            <li>
                 <button class="dropdown-item" @click="logout">Sign out</button>
             </li>
         </ul>
@@ -52,7 +46,7 @@
 export default {
   data() {
     return {
-      imageUrl: 'https://media.licdn.com/dms/image/v2/D4E03AQGIyRHDpvcumQ/profile-displayphoto-shrink_400_400/profile-displayphoto-shrink_400_400/0/1676035880861?e=1755129600&v=beta&t=eIPrfOSOkKmfUYfnKmaeKucBScrx0LknuOsEKJEYUlQ',
+      imageUrl: null,
       isDropdownOpen: false,
       userSession: null,
     };

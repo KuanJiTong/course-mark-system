@@ -42,15 +42,10 @@
     </table>
 
     <button class="btn btn-success mt-3" @click="submitAllMarks" :disabled="!studentMarks.length">
-      💾 Save All
+      Save All
     </button>
-
-    <div v-if="successMessage" class="success-message mt-2">{{ successMessage }}</div>
-    <div v-if="errorMessage" class="error-message mt-2">{{ errorMessage }}</div>
   </div>
 </template>
-
-
 
 <script>
 export default {
@@ -61,9 +56,7 @@ export default {
       lecturerId: user?.lecturerId || '',
       selectedSectionId: '',
       courses: [],
-      studentMarks: [],
-      successMessage: '',
-      errorMessage: ''
+      studentMarks: []
     };
   },
   computed: {
@@ -89,6 +82,7 @@ export default {
           await this.fetchStudentsAndMarks();
         }
       } catch (err) {
+        alert("Error fetching courses.");
         console.error("Error fetching courses", err);
       }
     },
@@ -103,10 +97,7 @@ export default {
         const marks = await marksRes.json();
 
         this.studentMarks = students.map(student => {
-          const existing = marks.find(m =>
-            m.studentId === student.studentId
-          );
-
+          const existing = marks.find(m => m.studentId === student.studentId);
           return {
             studentId: student.studentId,
             studentName: student.studentName,
@@ -114,11 +105,8 @@ export default {
             mark: existing ? existing.mark : ''
           };
         });
-
-        this.successMessage = '';
-        this.errorMessage = '';
       } catch (err) {
-        this.errorMessage = 'Failed to load students or marks.';
+        alert('Failed to load students or marks.');
         console.error(err);
       }
     },
@@ -139,12 +127,10 @@ export default {
         );
 
         await Promise.all(requests);
-        this.successMessage = 'All final exam marks saved successfully!';
-        this.errorMessage = '';
+        alert('All final exam marks saved successfully.');
         await this.fetchStudentsAndMarks();
       } catch (err) {
-        this.errorMessage = 'Failed to save marks.';
-        this.successMessage = '';
+        alert('Failed to save marks.');
         console.error(err);
       }
     }
@@ -187,12 +173,5 @@ button {
 button:hover {
   background-color: #0056b3;
 }
-.success-message {
-  margin-top: 15px;
-  color: green;
-}
-.error-message {
-  margin-top: 15px;
-  color: red;
-}
 </style>
+

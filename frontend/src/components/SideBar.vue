@@ -41,6 +41,7 @@ export default {
       { name: "Final Exam Entry", link: "/add-final-exam-marks", icon: "bi bi-pencil-square", access: "lecturer" },
       { name: "Performance Trend", link: "/performance-trend", icon: "bi bi-bar-chart-line", access: "lecturer" },
       { name: "View Mark Breakdown", link: "/view-mark-breakdown", icon: "bi bi-list-columns-reverse", access: "lecturer" },
+      { name: "Remark Request", link: "/remark-requests", icon: "bi bi-chat-dots", access: "lecturer" },
 
       // Student
       { name: "My Marks", link: "/student-marks", icon: "bi bi-clipboard-data", access: "student" },
