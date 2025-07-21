@@ -89,7 +89,6 @@ export default {
       }
     },
     toggleEnroll(studentId) {
-      console.log(this.enrollList);
       const index = this.enrollList.indexOf(studentId);
       if (index === -1) {
         this.enrollList.push(studentId);

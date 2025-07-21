@@ -66,18 +66,14 @@ export default {
       }
     },
     async login() {
-      console.log('Login button clicked');
       this.message = null;
       try {
-        console.log('Sending login request...');
         const res = await fetch('http://localhost:3000/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ loginID: this.loginID, password: this.password })
         });
-        console.log('Response received:', res.status);
         const data = await res.json();
-        console.log('Response data:', data);
         if (res.ok && data.token) {
           sessionStorage.setItem('jwt', data.token);
           sessionStorage.setItem('user', JSON.stringify(data.user));

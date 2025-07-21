@@ -67,7 +67,6 @@ export default {
         const res = await fetch(`http://localhost:3000/advisor/advisees?advisor_id=${this.advisorId}`);
         if (!res.ok) throw new Error('Failed to fetch advisees');
         this.advisees = await res.json();
-        console.log('Fetched advisees:', this.advisees);
       } catch (error) {
         console.error('Error fetching advisees:', error);
         this.errorMessage = 'Failed to load advisees.';

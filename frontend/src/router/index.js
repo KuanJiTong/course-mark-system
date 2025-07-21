@@ -16,7 +16,6 @@ import LoginPage from '../views/LoginPage.vue'
 import StudentEnrollmentPage from '../views/StudentEnrollmentPage.vue'
 import ComponentMarksPage from '../views/ComponentMarksPage.vue'
 import AddFinalExamMarksPage from '../views/AddFinalExamMarksPage.vue'
-import AddPerformanceTrendPage from '../views/AddPerformanceTrendPage.vue'
 import CoursePage from '../views/CoursePage';
 import SectionPage from '../views/SectionPage';
 import UserPage from '../views/UserPage';
@@ -33,7 +32,6 @@ const routes = [
       { path: '/', name: 'Home', component: HomePage, meta: { roles: ['Admin', 'Lecturer', 'Advisor', 'Student'] } },
       { path: '/manage-component-marks', name: 'ComponentMarks', component: ComponentMarksPage, meta: { roles: ['Lecturer'] } },
       { path: '/add-final-exam-marks', name: 'AddFinalExamMarks', component: AddFinalExamMarksPage, meta: { roles: ['Lecturer'] } },
-      { path: '/performance-trend', name: 'AddPerformanceTrend', component: AddPerformanceTrendPage, meta: { roles: ['Lecturer'] } },
       { path: '/course-management', name: 'CoursePage', component: CoursePage, meta: { roles: ['Admin'] } },
       { path: '/course-management/section/:courseId', name: 'SectionPage', component: SectionPage, meta: { roles: ['Admin'] } },
       { path: '/user-management', name: 'UserPage', component: UserPage, meta: { roles: ['Admin'] } },

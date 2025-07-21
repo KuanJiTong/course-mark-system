@@ -160,7 +160,6 @@ export default {
     openEditModal(user) {
       this.selectedUser = { ...user };
       this.showModal = true;
-      console.log(user);
     },
     closeModal() {
       this.showModal = false;
