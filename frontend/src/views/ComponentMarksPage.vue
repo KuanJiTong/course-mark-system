@@ -2,11 +2,10 @@
   <div class="container mt-4">
     <h2 class="mt-4 mb-4">Continuous Assessment Components</h2>
     <div class="text-center mb-4">
-      <div v-if="components.length" class="mt-2">
+      <div class="mt-2">
         <strong>Total Component Marks:</strong>
         {{ totalComponentMark }} /
-        <span v-if="maxComponentMark">{{ maxComponentMark }}</span>
-        <span v-else class="text-danger">Not Available</span>
+        <span>{{ maxComponentMark }}</span>
       </div>
     </div>
 
@@ -119,16 +118,22 @@ export default {
     },
     maxComponentMark() {
       const cm = this.selectedCourse?.maxCm;
-      return cm !== null && cm !== undefined ? cm : null;
+      return cm !== null && cm !== undefined ? cm : 0;
     },
+
     totalComponentMark() {
-      return this.components.reduce((sum, c) => {
+      return this.components?.reduce((sum, c) => {
         const mark = parseFloat(c.maxMark);
         return sum + (isNaN(mark) ? 0 : mark);
-      }, 0);
+      }, 0) ?? 0;
     }
   },
   async created() {
+    const savedSectionId = localStorage.getItem('selectedSectionId');
+    if (savedSectionId) {
+      this.selectedSectionId = savedSectionId;
+      await this.fetchComponents();
+    }
     await this.fetchAllLecturerCourses();
   },
   methods: {
@@ -141,6 +146,7 @@ export default {
         if (this.courses.length && !this.selectedSectionId) {
           this.selectedSectionId = this.courses[0].sectionId;
           await this.fetchComponents();
+          localStorage.setItem('selectedSectionId', this.selectedSectionId);
         }
       } catch (error) {
         console.error('Error fetching courses:', error);
@@ -149,6 +155,7 @@ export default {
     async fetchComponents() {
       try {
         const res = await fetch(`http://localhost:3000/components?section_id=${this.selectedSectionId}`);
+        localStorage.setItem('selectedSectionId', this.selectedSectionId);
         if (!res.ok) throw new Error('Failed to fetch components');
         this.components = await res.json();
       } catch (error) {
