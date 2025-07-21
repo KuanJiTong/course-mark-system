@@ -7,7 +7,7 @@
     <h2 h2 class="mt-4 mb-4">Full Mark Breakdown for {{ resolvedStudentName }}</h2>
     <div v-if="enrollments.length === 0 && loaded">No enrollments found.</div>
     <div v-for="enrollment in enrollments" :key="enrollment.section_id" class="course-section">
-      <h3>{{ enrollment.course_name }} (Section {{ enrollment.section_number }})</h3>
+      <h3>{{ enrollment.course_code }}-{{ enrollment.section_number }} {{ enrollment.course_name }}</h3>
       <table v-if="marks[enrollment.section_id]">
         <thead>
           <tr>
@@ -57,7 +57,7 @@ export default {
       const userData = sessionStorage.getItem('user');
       if (userData) {
         const user = JSON.parse(userData);
-        this.advisorID = user.lecturerId; // Use lecturerId for clarity
+        this.advisorID = user.lecturerId; 
         console.log('Authenticated advisor (lecturer) ID for advisee marks:', this.advisorID);
         return true;
       }
@@ -91,6 +91,7 @@ export default {
     },
   },
   mounted() {
+    this.$emit('update-active-tab', 'My Advisees');
     if (this.getAuthenticatedUser()) {
       this.fetchEnrollments();
     } else {
