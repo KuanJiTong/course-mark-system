@@ -109,7 +109,7 @@ $app->get('/advisor/section-marks', function ($request, $response) {
         $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         // Get all components for this section
-        $compStmt = $pdo->prepare("SELECT component_id, component_name FROM components WHERE section_id = ? AND component_name != 'Final Exam'");
+        $compStmt = $pdo->prepare("SELECT component_id, component_name FROM components WHERE section_id = ?");      
         $compStmt->execute([$section_id]);
         $components = $compStmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -117,10 +117,18 @@ $app->get('/advisor/section-marks', function ($request, $response) {
         foreach ($results as &$row) {
             $marksObj = [];
             foreach ($components as $comp) {
-                $markStmt = $pdo->prepare("SELECT mark FROM marks WHERE student_id = ? AND component_id = ?");
-                $markStmt->execute([$row['student_id'], $comp['component_id']]);
-                $markRow = $markStmt->fetch(PDO::FETCH_ASSOC);
-                $marksObj[$comp['component_name']] = $markRow ? floatval($markRow['mark']) : 0;
+                if ($comp['component_name'] === 'Final Exam') {
+                    // Fetch from final_exam table
+                    $feStmt = $pdo->prepare("SELECT mark FROM final_exam WHERE student_id = ? AND section_id = ?");
+                    $feStmt->execute([$row['student_id'], $section_id]);
+                    $feRow = $feStmt->fetch(PDO::FETCH_ASSOC);
+                    $marksObj[$comp['component_name']] = $feRow ? floatval($feRow['mark']) : 0;
+                } else {
+                    $markStmt = $pdo->prepare("SELECT mark FROM marks WHERE student_id = ? AND component_id = ?");
+                    $markStmt->execute([$row['student_id'], $comp['component_id']]);
+                    $markRow = $markStmt->fetch(PDO::FETCH_ASSOC);
+                    $marksObj[$comp['component_name']] = $markRow ? floatval($markRow['mark']) : 0;
+                }
             }
             $row['marks'] = $marksObj;
             $row['is_advisee'] = in_array($row['student_id'], $advisee_ids);

@@ -7,7 +7,7 @@
     <h2 h2 class="mt-4 mb-4">Full Mark Breakdown for {{ resolvedStudentName }}</h2>
     <div v-if="enrollments.length === 0 && loaded">No enrollments found.</div>
     <div v-for="enrollment in enrollments" :key="enrollment.section_id" class="course-section">
-      <h3>{{ enrollment.course_name }} (Section {{ enrollment.section_number }})</h3>
+      <h3>{{ enrollment.course_code }}-{{ enrollment.section_number }} {{ enrollment.course_name }}</h3>
       <table v-if="marks[enrollment.section_id]">
         <thead>
           <tr>
@@ -21,6 +21,16 @@
             <td>{{ mark.componentName }}</td>
             <td>{{ mark.mark }}</td>
             <td>{{ mark.maxMark }}</td>
+          </tr>
+          <tr v-if="finalExams[enrollment.section_id]">
+            <td>Final Exam</td>
+            <td>{{ finalExams[enrollment.section_id].mark }}</td>
+            <td>{{ finalExams[enrollment.section_id].maxFm }}</td>
+          </tr>
+          <tr>
+            <td><b>Total</b></td>
+            <td><b>{{ getTotalMark(enrollment.section_id) }}</b></td>
+            <td><b>100</b></td>
           </tr>
         </tbody>
       </table>
@@ -38,10 +48,11 @@ export default {
   },
   data() {
     return {
-      advisorID: null, // For reference, not used in API calls
+      advisorID: null, 
       enrollments: [],
       marks: {},
       loaded: false,
+      finalExams: {},
     };
   },
   computed: {
@@ -57,7 +68,7 @@ export default {
       const userData = sessionStorage.getItem('user');
       if (userData) {
         const user = JSON.parse(userData);
-        this.advisorID = user.lecturerId; // Use lecturerId for clarity
+        this.advisorID = user.lecturerId; 
         console.log('Authenticated advisor (lecturer) ID for advisee marks:', this.advisorID);
         return true;
       }
@@ -84,13 +95,32 @@ export default {
         if (!res.ok) throw new Error('Failed to fetch marks');
         const data = await res.json();
         this.marks[enrollment.section_id] = Array.isArray(data.marks) ? data.marks : [];
+        this.finalExams[enrollment.section_id] = data.finalExam || null;
       } catch (error) {
         console.error('Error fetching marks:', error);
         this.marks[enrollment.section_id] = [];
+        this.finalExams[enrollment.section_id] = null;
       }
+        },
+    getFinalExam(sectionId) {
+      const arr = this.marks[sectionId] || [];
+      const fe = arr.find(m => m.componentName === 'Final Exam');
+      if (fe) return { mark: fe.mark, maxFm: fe.maxMark };
+      // If not found, return null
+      return null;
+    },
+    getTotalMark(sectionId) {
+     
+      const arr = this.marks[sectionId] || [];
+      let total = 0;
+      arr.forEach(m => { total += Number(m.mark) || 0; });
+      const fe = this.finalExams[sectionId];
+      if (fe && fe.mark) total += Number(fe.mark);
+      return total.toFixed(2);
     },
   },
   mounted() {
+    this.$emit('update-active-tab', 'My Advisees');
     if (this.getAuthenticatedUser()) {
       this.fetchEnrollments();
     } else {
