@@ -10,6 +10,7 @@
         </option>
       </select>
     </div>
+    <button v-if="selectedAdviseeId && enrollments.length" class="btn btn-primary mb-3" @click="downloadCSV">Download CSV Report</button>
     <div v-if="enrollments.length">
       <div v-for="enrollment in enrollments" :key="enrollment.section_id" class="course-section-summary">
         <h2>{{ enrollment.course_code }}-{{ enrollment.section_number }} {{ enrollment.course_name }}</h2>
@@ -164,6 +165,32 @@ export default {
     },
     getRankInfo(section_id) {
       return this.rankInfo[section_id] || null;
+      },
+    downloadCSV() {
+      if (!this.selectedAdviseeId || !this.enrollments.length) return;
+      let csv = 'Course,Section,Component,Mark,Max Mark,Class Average,Final Exam,Total,Rank,Percentile\n';
+      this.enrollments.forEach(enrollment => {
+        const sectionMarks = this.marks[enrollment.section_id] || [];
+        const classAverages = this.classAverages[enrollment.section_id] || [];
+        const finalExam = this.getFinalExamMark(enrollment.section_id);
+        const total = this.getTotalMark(enrollment.section_id);
+        const rankInfo = this.getRankInfo(enrollment.section_id) || {};
+        sectionMarks.forEach(mark => {
+          const avgObj = classAverages.find(a => a.component_id == mark.component_id);
+          const avg = avgObj && avgObj.average_mark ? Number(avgObj.average_mark).toFixed(2) : '-';
+          csv += `"${enrollment.course_name}","${enrollment.section_number}","${mark.component_name}","${mark.mark}","${mark.max_mark}","${avg}","${finalExam}","${total}","${rankInfo.rank || ''}","${rankInfo.percentile || ''}"\n`;
+        });
+      });
+      // Download CSV
+      const advisee = this.advisees.find(a => a.student_id == this.selectedAdviseeId);
+      const filename = advisee ? `${advisee.student_name}_overall_performance.csv` : 'advisee_overall_performance.csv';
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     }
   },
   async mounted() {

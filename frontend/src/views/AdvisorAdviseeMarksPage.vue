@@ -2,7 +2,7 @@
   <div>
     <div style="display: flex; align-items: center; gap: 1.5rem; margin-bottom: 1rem; padding: 30px">
       <router-link to="/advisor-advisees" class="btn btn-outline-secondary">&larr; Return to Advisee List</router-link>
-      <button v-if="enrollments.length" class="btn btn-primary" @click="downloadCSV">Download CSV Report</button>
+      
     </div>
     <h2 h2 class="mt-4 mb-4">Full Mark Breakdown for {{ resolvedStudentName }}</h2>
     <div v-if="enrollments.length === 0 && loaded">No enrollments found.</div>
@@ -21,6 +21,16 @@
             <td>{{ mark.componentName }}</td>
             <td>{{ mark.mark }}</td>
             <td>{{ mark.maxMark }}</td>
+          </tr>
+          <tr v-if="finalExams[enrollment.section_id]">
+            <td>Final Exam</td>
+            <td>{{ finalExams[enrollment.section_id].mark }}</td>
+            <td>{{ finalExams[enrollment.section_id].maxFm }}</td>
+          </tr>
+          <tr>
+            <td><b>Total</b></td>
+            <td><b>{{ getTotalMark(enrollment.section_id) }}</b></td>
+            <td><b>100</b></td>
           </tr>
         </tbody>
       </table>
@@ -42,6 +52,7 @@ export default {
       enrollments: [],
       marks: {},
       loaded: false,
+      finalExams: {},
     };
   },
   computed: {
@@ -83,17 +94,29 @@ export default {
         if (!res.ok) throw new Error('Failed to fetch marks');
         const data = await res.json();
         this.marks[enrollment.section_id] = Array.isArray(data.marks) ? data.marks : [];
+        this.finalExams[enrollment.section_id] = data.finalExam || null;
       } catch (error) {
         console.error('Error fetching marks:', error);
         this.marks[enrollment.section_id] = [];
+        this.finalExams[enrollment.section_id] = null;
       }
+        },
+    getFinalExam(sectionId) {
+      const arr = this.marks[sectionId] || [];
+      const fe = arr.find(m => m.componentName === 'Final Exam');
+      if (fe) return { mark: fe.mark, maxFm: fe.maxMark };
+      // If not found, return null
+      return null;
     },
-    downloadCSV() {
-      this.enrollments.forEach(enrollment => {
-        const url = `http://localhost:3000/all_marks_csv?course_id=${enrollment.course_id}&section_id=${enrollment.section_id}`;
-        window.open(url, '_blank');
-      });
-    }
+    getTotalMark(sectionId) {
+     
+      const arr = this.marks[sectionId] || [];
+      let total = 0;
+      arr.forEach(m => { total += Number(m.mark) || 0; });
+      const fe = this.finalExams[sectionId];
+      if (fe && fe.mark) total += Number(fe.mark);
+      return total.toFixed(2);
+    },
   },
   mounted() {
     this.$emit('update-active-tab', 'My Advisees');
