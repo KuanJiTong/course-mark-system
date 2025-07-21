@@ -22,6 +22,16 @@
             <td>{{ mark.mark }}</td>
             <td>{{ mark.maxMark }}</td>
           </tr>
+          <tr v-if="finalExams[enrollment.section_id]">
+            <td>Final Exam</td>
+            <td>{{ finalExams[enrollment.section_id].mark }}</td>
+            <td>{{ finalExams[enrollment.section_id].maxFm }}</td>
+          </tr>
+          <tr>
+            <td><b>Total</b></td>
+            <td><b>{{ getTotalMark(enrollment.section_id) }}</b></td>
+            <td><b>100</b></td>
+          </tr>
         </tbody>
       </table>
       <div v-else>Loading marks...</div>
@@ -38,10 +48,11 @@ export default {
   },
   data() {
     return {
-      advisorID: null, // For reference, not used in API calls
+      advisorID: null, 
       enrollments: [],
       marks: {},
       loaded: false,
+      finalExams: {},
     };
   },
   computed: {
@@ -84,10 +95,28 @@ export default {
         if (!res.ok) throw new Error('Failed to fetch marks');
         const data = await res.json();
         this.marks[enrollment.section_id] = Array.isArray(data.marks) ? data.marks : [];
+        this.finalExams[enrollment.section_id] = data.finalExam || null;
       } catch (error) {
         console.error('Error fetching marks:', error);
         this.marks[enrollment.section_id] = [];
+        this.finalExams[enrollment.section_id] = null;
       }
+        },
+    getFinalExam(sectionId) {
+      const arr = this.marks[sectionId] || [];
+      const fe = arr.find(m => m.componentName === 'Final Exam');
+      if (fe) return { mark: fe.mark, maxFm: fe.maxMark };
+      // If not found, return null
+      return null;
+    },
+    getTotalMark(sectionId) {
+     
+      const arr = this.marks[sectionId] || [];
+      let total = 0;
+      arr.forEach(m => { total += Number(m.mark) || 0; });
+      const fe = this.finalExams[sectionId];
+      if (fe && fe.mark) total += Number(fe.mark);
+      return total.toFixed(2);
     },
   },
   mounted() {
