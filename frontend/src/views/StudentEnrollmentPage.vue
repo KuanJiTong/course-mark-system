@@ -48,7 +48,7 @@
           </td>
           <td class="text-center">
             <div class="icon-row">
-              <i class="bi bi bi-trash-fill text-danger mx-2" data-bs-toggle="tooltip" title="Remove Student" @click="deleteStudent(student.enrollmentId)"></i>
+              <i class="bi bi bi-trash-fill text-danger mx-2" data-bs-toggle="tooltip" title="Remove Student" @click.stop="deleteStudent(student.enrollmentId)"></i>
             </div>
           </td>
         </tr>
@@ -177,7 +177,7 @@ export default {
 
         if (response.ok) {
           alert(result.message || 'Student removed successfully.');
-          this.fetchAllUsers();
+          await this.fetchAllStudents();
         } else {
           alert(result.error || 'Failed to remove student.');
         }
