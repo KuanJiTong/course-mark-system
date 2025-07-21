@@ -2,7 +2,7 @@
   <div>
     <div style="display: flex; align-items: center; gap: 1.5rem; margin-bottom: 1rem; padding: 30px">
       <router-link to="/advisor-advisees" class="btn btn-outline-secondary">&larr; Return to Advisee List</router-link>
-      <button v-if="enrollments.length" class="btn btn-primary" @click="downloadCSV">Download CSV Report</button>
+      
     </div>
     <h2 h2 class="mt-4 mb-4">Full Mark Breakdown for {{ resolvedStudentName }}</h2>
     <div v-if="enrollments.length === 0 && loaded">No enrollments found.</div>
@@ -89,12 +89,6 @@ export default {
         this.marks[enrollment.section_id] = [];
       }
     },
-    downloadCSV() {
-      this.enrollments.forEach(enrollment => {
-        const url = `http://localhost:3000/all_marks_csv?course_id=${enrollment.course_id}&section_id=${enrollment.section_id}`;
-        window.open(url, '_blank');
-      });
-    }
   },
   mounted() {
     if (this.getAuthenticatedUser()) {
