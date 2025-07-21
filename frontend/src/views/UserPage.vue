@@ -285,7 +285,7 @@ export default {
 
         if (response.ok) {
           alert(result.message || 'User deleted successfully.');
-          this.fetchAllUsers();
+          await this.fetchAllUsers();
         } else {
           alert(result.error || 'Failed to delete user.');
         }

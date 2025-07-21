@@ -26,8 +26,13 @@ $app->get('/students/{sectionId}', function ($request, $response, $args) {
                 NOT EXISTS (
                     SELECT 1
                     FROM enrollment e
+                    JOIN sections sec ON e.section_id = sec.section_id
                     WHERE e.student_id = s.student_id
-                    AND e.section_id = ?
+                    AND sec.course_id = (
+                        SELECT course_id 
+                        FROM sections 
+                        WHERE section_id = ?
+                    )
                 )
         ";
 
@@ -147,23 +152,41 @@ $app->post('/student-enrollment', function (Request $request, Response $response
 });
 
 // DELETE enrollment
-$app->delete('/student-enrollment/{id}', function (Request $request, Response $response, array $args) {
+$app->delete('/student-enrollment/{id}', function (Request $request, Response $response, $args) {
     $pdo = getPDO();
     $enrollmentId = (int)$args['id'];
 
-    // Optional: check if user exists before deleting
-    $stmtCheck = $pdo->prepare("SELECT enrollment_id FROM enrollment WHERE enrollment_id = ?");
+    // Check if the enrollment exists and get the student_id
+    $stmtCheck = $pdo->prepare("SELECT student_id FROM enrollment WHERE enrollment_id = ?");
     $stmtCheck->execute([$enrollmentId]);
-    if (!$stmtCheck->fetch()) {
+    $row = $stmtCheck->fetch();
+
+    if (!$row) {
         $response->getBody()->write(json_encode(["error" => "Enrollment not found"]));
         return $response->withStatus(404)->withHeader('Content-Type', 'application/json');
     }
 
-    // Delete user
-    $stmt = $pdo->prepare("DELETE FROM enrollment WHERE enrollment_id = ?");
-    $stmt->execute([$enrollmentId]);
+    $studentId = (int)$row['student_id'];
 
-    $response->getBody()->write(json_encode(["message" => "Enrollment deleted successfully"]));
-    return $response->withStatus(200)->withHeader('Content-Type', 'application/json');
+    // Start transaction
+    $pdo->beginTransaction();
+
+    try {
+        // Delete from related tables using student_id
+        $pdo->prepare("DELETE FROM marks WHERE student_id = ?")->execute([$studentId]);
+        $pdo->prepare("DELETE FROM final_exam WHERE student_id = ?")->execute([$studentId]);
+        $pdo->prepare("DELETE FROM remark_requests WHERE student_id = ?")->execute([$studentId]);
+
+        // Finally delete from enrollment
+        $pdo->prepare("DELETE FROM enrollment WHERE enrollment_id = ?")->execute([$enrollmentId]);
+
+        $pdo->commit();
+        $response->getBody()->write(json_encode(["message" => "Student enrollment and related data deleted successfully."]));
+        return $response->withStatus(200)->withHeader('Content-Type', 'application/json');
+    } catch (Exception $e) {
+        $pdo->rollBack();
+        $response->getBody()->write(json_encode(["error" => "Failed to delete data", "details" => $e->getMessage()]));
+        return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
+    }
 });
 
