@@ -37,26 +37,18 @@ export default {
   components: { AdvisorAdviseeMarksPage },
   data() {
     return {
-      userID: null,
-      advisorID: null,
+      advisorId: null,
       advisees: [],
       loaded: false,
       selectedAdvisee: null,
     };
   },
-  // computed: {
-  //   advisorIdVar() {
-  //     return this.userID;
-  //   }
-  // },
   methods: {
     getAuthenticatedUser() {
       const userData = sessionStorage.getItem('user');
       if (userData) {
         const user = JSON.parse(userData);
-        this.userID = user.user_id;
-        this.advisorID = user.lecturerId;
-        console.log('Authenticated user ID:', this.userID, 'Advisor (lecturer) ID:', this.advisorID);
+        this.advisorId = user.user_id;
         return true;
       }
       return false;
@@ -72,7 +64,7 @@ export default {
     },
     async fetchAdvisees() {
       try {
-        const res = await fetch(`http://localhost:3000/advisor/advisees?advisor_id=${this.advisorID}`);
+        const res = await fetch(`http://localhost:3000/advisor/advisees?advisor_id=${this.advisorId}`);
         if (!res.ok) {
           throw new Error('Failed to fetch advisees');
         }

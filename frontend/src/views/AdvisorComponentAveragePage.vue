@@ -47,7 +47,7 @@
 export default {
   data() {
     return {
-      userID: null,
+      advisorId: null,
       advisees: [],
       selectedAdviseeId: '',
       studentEnrollments: [],
@@ -76,15 +76,14 @@ export default {
       const userData = sessionStorage.getItem('user');
       if (userData) {
         const user = JSON.parse(userData);
-        this.userID = user.lecturerId;
-        console.log('Authenticated advisor (lecturer) ID for component averages:', this.userID);
+        this.advisorId = user.user_id;
         return true;
       }
       return false;
     },
     async fetchAdvisees() {
       try {
-        const res = await fetch(`http://localhost:3000/advisor/advisees?advisor_id=${this.userID}`);
+        const res = await fetch(`http://localhost:3000/advisor/advisees?advisor_id=${this.advisorId}`);
         if (!res.ok) throw new Error('Failed to fetch advisees');
         this.advisees = await res.json();
         console.log('Fetched advisees:', this.advisees);
