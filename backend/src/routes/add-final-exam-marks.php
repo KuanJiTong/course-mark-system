@@ -49,15 +49,6 @@ $app->get('/final_exam', function (Request $request, Response $response) {
     return $response->withHeader('Content-Type', 'application/json');
 });
 
-$app->get('/courses', function ($request, $response, $args) {
-    $pdo = getPDO();
-    $stmt = $pdo->query("SELECT * FROM courses"); // ✅ includes max_fm
-    $courses = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-    $response->getBody()->write(json_encode($courses));
-    return $response->withHeader('Content-Type', 'application/json');
-});
-
 $app->get('/final_exam/student', function (Request $request, Response $response) {
     $pdo = getPDO();
     $params = $request->getQueryParams();

@@ -4,6 +4,16 @@
     <h3><b>{{ component?.courseCode }}-{{ component?.sectionNumber }} {{ component?.courseName }}</b></h3>
     <h3>Enter Marks for: {{ component?.componentName }} (Max: {{ component?.maxMark }})</h3>
 
+    <div v-if="!studentMarks.length" class="mt-4">
+      <p class="text-danger">
+        No students found for this section.<br />
+        Please enroll students first by clicking the button below.
+      </p>
+      <button class="btn btn-danger mt-2" @click="goToEnrollment">
+        Enroll Students
+      </button>
+    </div>
+
     <table class="table table-bordered mt-3" v-if="studentMarks.length">
       <thead>
         <tr>
@@ -31,11 +41,12 @@
       </tbody>
     </table>
 
-    <button class="btn btn-success mt-3" @click="submitAllMarks" :disabled="!studentMarks.length">
+    <button class="btn btn-success mt-3" @click="submitAllMarks" v-if="studentMarks.length">
       Save All
     </button>
   </div>
 </template>
+
 
 <script>
 export default {
@@ -43,6 +54,7 @@ export default {
     return {
       componentId: this.$route.params.componentId,
       component: null,
+      sectionId: null,
       studentMarks: []
     };
   },
@@ -53,6 +65,9 @@ export default {
     await this.fetchStudentsAndMarks();
   },
   methods: {
+    goToEnrollment() {
+      this.$router.push({ name: 'StudentEnrollment', params: { sectionId: this.sectionId } });
+    },
     async fetchComponentDetails() {
       const res = await fetch(`http://localhost:3000/components/${this.componentId}`);
       this.component = await res.json();
@@ -60,7 +75,7 @@ export default {
     async fetchStudentsAndMarks() {
       try {
         const { sectionId } = this.component;
-
+        this.sectionId = sectionId;
         const [studentsRes, marksRes] = await Promise.all([
           fetch(`http://localhost:3000/student-enrollment/${sectionId}`),
           fetch(`http://localhost:3000/marks?section_id=${sectionId}`)

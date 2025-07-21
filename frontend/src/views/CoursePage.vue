@@ -93,11 +93,23 @@
             <td>{{ course.numOfSections }}</td>
             <td>
               <span v-if="editingCourseId !== course.courseId">{{ course.maxCm }}</span>
-              <input v-else style="width: 50px;" v-model.number="course.maxCm" type="number" />
+              <input
+                v-else
+                style="width: 50px;"
+                v-model.number="course.maxCm"
+                type="number"
+                @input="course.maxFm = 100 - course.maxCm"
+              />
             </td>
             <td>
               <span v-if="editingCourseId !== course.courseId">{{ course.maxFm }}</span>
-              <input v-else style="width: 50px;" v-model.number="course.maxFm" type="number" />
+              <input
+                v-else
+                v-model.number="course.maxFm"
+                type="number"
+                readonly
+                style="width: 50px; border: none; background: transparent; padding: 0; text-align: left;"
+              />
             </td>
 
             <td class="text-center">
