@@ -78,7 +78,7 @@ export default {
         this.sectionId = sectionId;
         const [studentsRes, marksRes] = await Promise.all([
           fetch(`http://localhost:3000/student-enrollment/${sectionId}`),
-          fetch(`http://localhost:3000/marks?section_id=${sectionId}`)
+          fetch(`http://localhost:3000/marks?section_id=${sectionId}&component_id=${this.componentId}`)
         ]);
 
         const students = await studentsRes.json();

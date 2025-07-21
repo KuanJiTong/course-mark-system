@@ -1,0 +1,8 @@
+in command prompt,
+go to path:
+...../course-mark-system>
+
+to run the command below:
+npm run dev
+
+both backend and frontend will be run
