@@ -38,7 +38,7 @@ export default {
   },
   data() {
     return {
-      advisorID: null, // For reference, not used in API calls
+      advisorId: null, 
       enrollments: [],
       marks: {},
       loaded: false,
@@ -57,8 +57,7 @@ export default {
       const userData = sessionStorage.getItem('user');
       if (userData) {
         const user = JSON.parse(userData);
-        this.advisorID = user.lecturerId; 
-        console.log('Authenticated advisor (lecturer) ID for advisee marks:', this.advisorID);
+        this.advisorId = user.user_id; 
         return true;
       }
       return false;

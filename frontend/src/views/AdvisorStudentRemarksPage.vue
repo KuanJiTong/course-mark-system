@@ -47,18 +47,16 @@ export default {
       const userData = sessionStorage.getItem('user');
       if (userData) {
         const user = JSON.parse(userData);
-        this.userID = user.lecturerId; // Use lecturerId as advisor_id
-        console.log('Authenticated advisor (lecturer) ID for student remarks:', this.userID);
+        this.advisorId = user.user_id; 
         return true;
       }
       return false;
     },
     async fetchAdvisees() {
       try {
-        const res = await fetch(`http://localhost:3000/advisor/advisees?advisor_id=${this.userID}`);
+        const res = await fetch(`http://localhost:3000/advisor/advisees?advisor_id=${this.advisorId}`);
         if (!res.ok) throw new Error('Failed to fetch advisees');
         this.advisees = await res.json();
-        console.log('Fetched advisees:', this.advisees);
       } catch (error) {
         console.error('Error fetching advisees:', error);
       }

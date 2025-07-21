@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jul 21, 2025 at 01:11 PM
+-- Generation Time: Jul 21, 2025 at 02:38 PM
 -- Server version: 11.5.2-MariaDB
 -- PHP Version: 8.0.30
 
@@ -38,8 +38,8 @@ CREATE TABLE `advisor_advisee` (
 --
 
 INSERT INTO `advisor_advisee` (`advisor_id`, `student_id`, `assigned_at`) VALUES
-(1, 1, '2025-06-22 19:19:51'),
-(1, 3, '2025-06-22 19:19:51');
+(9, 1, '2025-07-21 20:24:16'),
+(9, 3, '2025-07-21 20:24:16');
 
 -- --------------------------------------------------------
 
@@ -749,7 +749,7 @@ ALTER TABLE `users`
 -- Constraints for table `advisor_advisee`
 --
 ALTER TABLE `advisor_advisee`
-  ADD CONSTRAINT `advisor_advisee_ibfk_1` FOREIGN KEY (`advisor_id`) REFERENCES `lecturers` (`lecturer_id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `advisor_advisee_ibfk_1` FOREIGN KEY (`advisor_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE,
   ADD CONSTRAINT `advisor_advisee_ibfk_2` FOREIGN KEY (`student_id`) REFERENCES `students` (`student_id`) ON DELETE CASCADE;
 
 --
