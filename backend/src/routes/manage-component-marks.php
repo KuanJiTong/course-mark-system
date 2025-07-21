@@ -44,6 +44,7 @@ $app->get('/marks', function (Request $request, Response $response) {
     $pdo = getPDO();
     $params = $request->getQueryParams();
     $sectionId = $params['section_id'];
+    $componentId = $params['component_id'];
     if (!isset($sectionId)) {
         $response->getBody()->write(json_encode(['error' => 'Missing section_id']));
         return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
@@ -53,9 +54,9 @@ $app->get('/marks', function (Request $request, Response $response) {
         SELECT m.mark_id AS markId, m.student_id AS studentId, m.mark
         FROM marks m
         JOIN components c ON m.component_id = c.component_id
-        WHERE c.section_id = ?
+        WHERE c.section_id = ? AND c.component_id = ?
     ");
-    $stmt->execute([$sectionId]);
+    $stmt->execute([$sectionId,$componentId]);
     $marks = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     $response->getBody()->write(json_encode($marks));
@@ -100,49 +101,6 @@ $app->post('/marks', function (Request $request, Response $response) {
         ]));
         return $response->withHeader('Content-Type', 'application/json')->withStatus(500);
     }
-});
-
-$app->get('/students', function (Request $request, Response $response) {
-    $pdo = getPDO();
-    $params = $request->getQueryParams();
-    $sectionId = $params['section_id'];
-
-    if (!isset($sectionId)) {
-        $response->getBody()->write(json_encode(['error' => 'Missing section_id']));
-        return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
-    }
-
-    $stmt = $pdo->prepare("
-        SELECT s.student_id, s.matric_no, u.name AS student_name
-        FROM students s
-        JOIN users u ON s.user_id = u.user_id
-        JOIN enrollment e ON s.student_id = e.student_id
-        JOIN sections sec ON e.section_id = sec.section_id
-        WHERE sec.section_id = ?
-    ");
-    $stmt->execute([$sectionId]);
-    $students = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-    $response->getBody()->write(json_encode($students));
-    return $response->withHeader('Content-Type', 'application/json');
-});
-
-
-$app->get('/sections', function (Request $request, Response $response) {
-    $pdo = getPDO();
-    $courseId = $request->getQueryParams()['course_id'] ?? null;
-
-    if (!$courseId) {
-        $response->getBody()->write(json_encode(['error' => 'Missing course_id']));
-        return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
-    }
-
-    $stmt = $pdo->prepare("SELECT section_id, section_number FROM sections WHERE course_id = ?");
-    $stmt->execute([$courseId]);
-    $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-    $response->getBody()->write(json_encode($data));
-    return $response->withHeader('Content-Type', 'application/json');
 });
 
 $app->get('/components/{id}', function (Request $request, Response $response, $args) {

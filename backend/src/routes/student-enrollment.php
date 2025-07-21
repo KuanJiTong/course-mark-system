@@ -20,23 +20,30 @@ $app->get('/students/{sectionId}', function ($request, $response, $args) {
                 u.name AS studentName
             FROM 
                 students s
-            JOIN 
-                users u ON s.user_id = u.user_id
-            WHERE 
-                NOT EXISTS (
-                    SELECT 1
-                    FROM enrollment e
-                    JOIN sections sec ON e.section_id = sec.section_id
-                    WHERE e.student_id = s.student_id
-                    AND sec.course_id = (
-                        SELECT course_id 
-                        FROM sections 
-                        WHERE section_id = ?
-                    )
+            JOIN users u ON s.user_id = u.user_id
+            WHERE NOT EXISTS (
+                -- Exclude if enrolled in the same section
+                SELECT 1
+                FROM enrollment e
+                WHERE e.student_id = s.student_id
+                AND e.section_id = ?
+            )
+            AND NOT EXISTS (
+                -- Exclude if enrolled in any section of the same course
+                SELECT 1
+                FROM enrollment e
+                JOIN sections sec ON e.section_id = sec.section_id
+                WHERE e.student_id = s.student_id
+                AND sec.course_id = (
+                    SELECT course_id
+                    FROM sections
+                    WHERE section_id = ?
+                    LIMIT 1
                 )
+            )
         ";
 
-        $paramsToBind = [$sectionId];
+        $paramsToBind = [$sectionId, $sectionId];
 
         // Add keyword filter if present
         if ($keyword) {

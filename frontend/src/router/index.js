@@ -1,4 +1,12 @@
 // src/router/index.js
+
+// Group 4:
+
+// 1. KUAN JI TONG (A22EC0062)
+// 2. TAM JIA HAO (A22EC0106)
+// 3. TAN YOU CHUN (A22EC0108)
+// 4. KHAIRUL AZHAR BIN ZUHRY (A20EC3001)
+
 import { createRouter, createWebHistory } from 'vue-router'
 import { jwtDecode } from 'jwt-decode';
 
@@ -85,7 +93,7 @@ router.beforeEach((to, from, next) => {
   }
 
   try {
-    const decoded = jwtDecode(jwt) // ✅ correct usage
+    const decoded = jwtDecode(jwt) 
     const now = Date.now() / 1000
     if (decoded.exp < now) {
       console.log('Token expired')

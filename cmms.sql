@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jul 21, 2025 at 10:44 AM
+-- Generation Time: Jul 21, 2025 at 01:11 PM
 -- Server version: 11.5.2-MariaDB
 -- PHP Version: 8.0.30
 
@@ -87,7 +87,8 @@ CREATE TABLE `courses` (
 INSERT INTO `courses` (`course_id`, `course_code`, `course_name`, `faculty_id`, `credit`, `max_cm`, `max_fm`) VALUES
 (1, 'SECJ3483', 'WEB TECHNOLOGY', 1, 3, 60, 40),
 (2, 'SECJ3623', 'MOBILE APPLICATION PROGRAMMING', 1, 3, 10, 90),
-(3, 'SECJ3563', 'COMPUTATIONAL INTELLIGENCE', 1, 3, NULL, NULL);
+(3, 'SECJ3563', 'COMPUTATIONAL INTELLIGENCE', 1, 3, NULL, NULL),
+(4, 'SECJ1111', 'MAP', 1, 3, 60, 40);
 
 -- --------------------------------------------------------
 
@@ -108,7 +109,24 @@ CREATE TABLE `enrollment` (
 INSERT INTO `enrollment` (`enrollment_id`, `student_id`, `section_id`) VALUES
 (1, 1, 1),
 (2, 2, 1),
-(3, 26, 1);
+(3, 26, 1),
+(14, 16, 1),
+(15, 32, 1),
+(16, 19, 1),
+(17, 31, 1),
+(18, 5, 1),
+(19, 30, 1),
+(20, 11, 1),
+(21, 25, 1),
+(22, 20, 1),
+(23, 15, 1),
+(24, 23, 1),
+(25, 8, 1),
+(26, 21, 1),
+(27, 14, 1),
+(28, 6, 1),
+(29, 18, 1),
+(30, 24, 1);
 
 -- --------------------------------------------------------
 
@@ -150,7 +168,24 @@ CREATE TABLE `final_exam` (
 INSERT INTO `final_exam` (`exam_id`, `student_id`, `section_id`, `mark`) VALUES
 (2, 1, 1, 30.00),
 (3, 2, 1, 25.00),
-(5, 26, 1, 27.00);
+(5, 26, 1, 27.00),
+(6, 5, 1, 31.00),
+(7, 6, 1, 39.00),
+(8, 8, 1, 38.00),
+(9, 11, 1, 37.00),
+(10, 14, 1, 36.00),
+(11, 15, 1, 36.00),
+(12, 16, 1, 35.00),
+(13, 18, 1, 35.50),
+(14, 19, 1, 33.00),
+(15, 20, 1, 28.00),
+(16, 21, 1, 19.00),
+(17, 23, 1, 21.00),
+(18, 24, 1, 18.00),
+(19, 25, 1, 17.00),
+(20, 30, 1, 16.00),
+(21, 31, 1, 15.00),
+(22, 32, 1, 14.00);
 
 -- --------------------------------------------------------
 
@@ -174,7 +209,8 @@ INSERT INTO `lecturers` (`lecturer_id`, `user_id`, `title`, `staff_no`, `departm
 (1, 9, 'Dr.', 'S001', 'Software Engineering'),
 (2, 10, 'Prof. Madya Dr.', 'S002', 'Software Engineering'),
 (3, 11, 'Assoc. Prof.', 'S003', 'Computer Science'),
-(7, 107, 'Mr.', 'S004', NULL);
+(7, 107, 'Mr.', 'S004', NULL),
+(8, 108, 'Prof. Madya Dr.', 'S006', NULL);
 
 -- --------------------------------------------------------
 
@@ -200,7 +236,60 @@ INSERT INTO `marks` (`mark_id`, `student_id`, `component_id`, `mark`) VALUES
 (4, 2, 1, 9.00),
 (5, 2, 2, 12.00),
 (6, 2, 3, 20.00),
-(10, 26, 1, 8.00);
+(10, 26, 1, 8.00),
+(11, 5, 1, 10.00),
+(12, 6, 1, 4.00),
+(13, 8, 1, 3.00),
+(14, 11, 1, 1.00),
+(15, 14, 1, 6.60),
+(16, 15, 1, 7.80),
+(17, 16, 1, 5.30),
+(18, 18, 1, 10.00),
+(19, 19, 1, 6.20),
+(20, 20, 1, 9.10),
+(21, 21, 1, 9.90),
+(22, 23, 1, 1.50),
+(23, 24, 1, 2.70),
+(24, 25, 1, 6.70),
+(25, 30, 1, 8.70),
+(26, 31, 1, 4.50),
+(27, 32, 1, 5.60),
+(28, 5, 2, 11.00),
+(29, 6, 2, 10.00),
+(30, 8, 2, 9.50),
+(31, 11, 2, 6.30),
+(32, 14, 2, 4.50),
+(33, 15, 2, 3.40),
+(34, 16, 2, 1.20),
+(35, 18, 2, 4.60),
+(36, 19, 2, 7.70),
+(37, 20, 2, 9.80),
+(38, 21, 2, 19.00),
+(39, 23, 2, 20.00),
+(40, 24, 2, 16.00),
+(41, 25, 2, 15.00),
+(42, 26, 2, 13.00),
+(43, 30, 2, 12.00),
+(44, 31, 2, 11.00),
+(45, 32, 2, 10.00),
+(46, 5, 3, 25.00),
+(47, 6, 3, 23.00),
+(48, 8, 3, 22.00),
+(49, 11, 3, 21.00),
+(50, 14, 3, 20.00),
+(51, 15, 3, 19.00),
+(52, 16, 3, 18.00),
+(53, 18, 3, 17.00),
+(54, 19, 3, 16.00),
+(55, 20, 3, 15.00),
+(56, 21, 3, 24.00),
+(57, 23, 3, 25.00),
+(58, 24, 3, 26.00),
+(59, 25, 3, 27.00),
+(60, 26, 3, 28.00),
+(61, 30, 3, 29.00),
+(62, 31, 3, 30.00),
+(63, 32, 3, 29.00);
 
 -- --------------------------------------------------------
 
@@ -277,7 +366,9 @@ INSERT INTO `sections` (`section_id`, `course_id`, `section_number`, `lecturer_i
 (9, 3, '01', NULL, 30),
 (10, 3, '02', NULL, 30),
 (11, 3, '03', NULL, 30),
-(12, 3, '04', NULL, 30);
+(12, 3, '04', NULL, 30),
+(14, 4, '01', 3, 30),
+(15, 4, '02', NULL, 30);
 
 -- --------------------------------------------------------
 
@@ -399,7 +490,8 @@ INSERT INTO `users` (`user_id`, `login_id`, `name`, `email`, `password`, `facult
 (46, 'A22EC0002', 'Bob Student', 'bob@student.edu', 'hashedpassword', 1, '2025-06-20 22:30:13'),
 (104, 'student104', 'Alice Brown', 'student104@example.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 1, '2025-06-25 06:22:50'),
 (106, 'A001', 'Admin 1', 'admin1@gmail.com', '$2y$10$SK/j5XAxk7ZDsu8hKPDD5usc4kQQE0XZxkiRCByRGed5V3NQ6Cowy', 1, '2025-07-07 04:19:51'),
-(107, 'S004', 'Muhammad You Tan bin Seck Tan', 'youtan@graduate.utm.my', '$2y$10$5/X87Ga95AwX/oqQHYczWOxstI9s5qezQoPg7IAJBEpg9dqZ4/IrS', 1, '2025-07-21 16:28:13');
+(107, 'S004', 'Muhammad You Tan bin Seck Tan', 'youtan@graduate.utm.my', '$2y$10$5/X87Ga95AwX/oqQHYczWOxstI9s5qezQoPg7IAJBEpg9dqZ4/IrS', 1, '2025-07-21 16:28:13'),
+(108, 'S006', 'Ali', 'ali@graduate.utm.my', '$2y$10$KAlILKcUqQw3ifVnwMJ87ew/B1LUU/difmQedu.eijTZ2NllZBtLC', 1, '2025-07-21 17:27:20');
 
 -- --------------------------------------------------------
 
@@ -422,6 +514,7 @@ INSERT INTO `user_roles` (`user_id`, `role_id`) VALUES
 (10, 2),
 (11, 2),
 (107, 2),
+(108, 2),
 (9, 3),
 (8, 4),
 (12, 4),
@@ -586,13 +679,13 @@ ALTER TABLE `components`
 -- AUTO_INCREMENT for table `courses`
 --
 ALTER TABLE `courses`
-  MODIFY `course_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `course_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `enrollment`
 --
 ALTER TABLE `enrollment`
-  MODIFY `enrollment_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
+  MODIFY `enrollment_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=31;
 
 --
 -- AUTO_INCREMENT for table `faculty`
@@ -604,19 +697,19 @@ ALTER TABLE `faculty`
 -- AUTO_INCREMENT for table `final_exam`
 --
 ALTER TABLE `final_exam`
-  MODIFY `exam_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `exam_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
 
 --
 -- AUTO_INCREMENT for table `lecturers`
 --
 ALTER TABLE `lecturers`
-  MODIFY `lecturer_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `lecturer_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT for table `marks`
 --
 ALTER TABLE `marks`
-  MODIFY `mark_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+  MODIFY `mark_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=64;
 
 --
 -- AUTO_INCREMENT for table `remark_requests`
@@ -634,7 +727,7 @@ ALTER TABLE `roles`
 -- AUTO_INCREMENT for table `sections`
 --
 ALTER TABLE `sections`
-  MODIFY `section_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
+  MODIFY `section_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
 
 --
 -- AUTO_INCREMENT for table `students`
@@ -646,7 +739,7 @@ ALTER TABLE `students`
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `user_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=108;
+  MODIFY `user_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=109;
 
 --
 -- Constraints for dumped tables
