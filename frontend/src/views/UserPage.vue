@@ -58,7 +58,10 @@
         <td class="p-2">{{ index + 1 }}</td>
         <td class="p-2 text-start">{{ user.loginId }}</td>
         <td class="p-2 text-start">
-          {{ user.title ? user.title + ' ' + user.name : user.name }}
+          <span>
+            {{ user.title ? user.title + ' ' + user.name : user.name }}
+            <span v-if="Number(user.userId) === Number(this.userId)"><b>(You)</b></span>
+          </span>        
         </td>
         <td class="p-2 text-start">{{ user.email }}</td>
         <td class="p-2">{{ user.facultyAbbreviation }}</td>
@@ -108,7 +111,9 @@ export default {
     ResetPasswordModal
   },
   data() {
+    const user = JSON.parse(sessionStorage.getItem('user'));
     return {
+      userId: user.user_id,
       showModal: false,
       showResetPasswordModal: false,
       selectedUserId: null,
@@ -179,8 +184,6 @@ export default {
       this.closeModal();
     },
     async addUser(newUser) {
-      console.log(newUser);
-      // Send POST request
       await fetch('http://localhost:3000/user', {
         method: 'POST',
         headers: {
@@ -194,8 +197,8 @@ export default {
         }
         return await response.json();
       })
-      .then(data => {
-        alert('User added:', data);
+      .then(() => {
+        alert('User added successfully');
 
         // Fetch the updated course list
         this.fetchAllUsers();
@@ -271,6 +274,12 @@ export default {
       }
     },
     async deleteUser(userId) {
+      // Prevent deleting self
+      if (Number(userId) === Number(this.userId)) {
+        alert("You cannot delete your own account.");
+        return;
+      }
+
       if (!confirm('Are you sure you want to delete this user?')) return;
 
       try {

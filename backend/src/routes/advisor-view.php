@@ -134,7 +134,6 @@ $app->get('/advisor/section-marks', function ($request, $response) {
     }
 }); 
 
-// GET: Class average per component for a section (advisor view, with error debug)
 $app->get('/advisor/component-averages', function ($request, $response) {
     try {
         $pdo = getPDO();

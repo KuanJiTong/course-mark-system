@@ -15,8 +15,8 @@
                 id="newPassword"
                 v-model="newPassword"
                 class="form-control"
-                required
               />
+              <div v-if="errorMessage" class="text-danger mt-1">{{ errorMessage }}</div>
             </div>
           </div>
           <div class="modal-footer">
@@ -33,34 +33,30 @@
 export default {
   name: 'ResetPasswordModal',
   props: {
-    visible: {
-      type: Boolean,
-      required: true
-    },
-    userId: {
-      type: Number,
-      required: true
-    },
-    loginId: {
-      type: String,
-      required: true
-    }
+    visible: Boolean,
+    userId: Number,
+    loginId: String
   },
   data() {
     return {
-      newPassword: ''
+      newPassword: '',
+      errorMessage: ''
     };
   },
   methods: {
     submit() {
-        const passwordData = {password: this.newPassword};
-        this.$emit('reset-password', passwordData, this.userId);
-        this.newPassword = '';
+      if (!this.newPassword || this.newPassword.length < 6) {
+        this.errorMessage = "Password is required (min 6 characters).";
+        return;
+      }
+
+      const passwordData = { password: this.newPassword };
+      this.$emit('reset-password', passwordData, this.userId);
+
+      this.newPassword = '';
+      this.errorMessage = '';
     }
   }
 };
 </script>
 
-<style scoped>
-/* Optional: Add transitions or animations */
-</style>
