@@ -159,7 +159,7 @@ $app->get('/components/{id}', function (Request $request, Response $response, $a
         FROM components c
         JOIN sections s ON c.section_id = s.section_id
         JOIN courses cr ON s.course_id = cr.course_id
-        WHERE c.section_id = ?
+        WHERE c.component_id = ?
         ");
     $stmt->execute([$args['id']]);
     $component = $stmt->fetch(PDO::FETCH_ASSOC);
