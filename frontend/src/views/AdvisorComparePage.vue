@@ -84,7 +84,9 @@ export default {
       marks: [],
       components: [],
       selectedComponent: 'total',
-      errorMessage: ''
+      errorMessage: '',
+      selectedSection: null,
+      maxFm: 0,
     };
   },
   computed: {
@@ -217,25 +219,26 @@ export default {
       if (!this.selectedAdviseeId || !this.selectedCourseId || !this.selectedSectionId) return;
       try {
         this.marks = [];
-        const url = `http://localhost:3000/advisor/section-marks?advisor_id=${this.userID}&course_id=${this.selectedCourseId}&section_id=${this.selectedSectionId}`;
+        const url = `http://localhost:3000/all_marks?section_id=${this.selectedSectionId}`;
+
         const res = await fetch(url);
         if (!res.ok) {
           this.errorMessage = 'Failed to load marks (server error).';
           return;
         }
-        const data = await res.json();
-        // Map backend keys to frontend keys for consistency
-        this.marks = (data || []).map(item => ({
-          student_id: item.student_id,
-          student_name: item.student_name,
-          coursework_mark: item.coursework_mark,
-          final_exam_mark: item.final_exam_mark,
-          total_mark: item.total_mark,
-          is_advisee: item.is_advisee,
+         const result = await res.json();
+         const adviseeIds = this.advisees.map(a => a.student_id);
+          this.marks = (result.data || []).map(item => ({
+          student_id: item.studentId,
+          student_name: item.studentName,
+          coursework_mark: null, // not used in chart
+          final_exam_mark: item.finalExamMark,
+          total_mark: item.total,
+          is_advisee: adviseeIds.includes(item.studentId),
           marks: item.marks || {},
         }));
-        // Fetch components for the selected section
-        await this.fetchComponents();
+        this.components = result.components || [];
+        this.maxFm = result.maxFm || 0;
       } catch (err) {
         this.errorMessage = 'Failed to load marks (network error).';
       }
@@ -257,6 +260,7 @@ export default {
         this.components = [];
       }
     },
+    
     getComponentMark(item, componentName) {
       // item.marks is an object: {componentName: mark}
       return item.marks && item.marks[componentName] !== undefined ? item.marks[componentName] : 0;
@@ -274,6 +278,7 @@ export default {
       return comp ? parseFloat(comp.maxMark) : 100;
     },
     getFinalExamMax() {
+      if (this.maxFm) return this.maxFm;
       // Try to find the max mark for the final exam component
       const comp = this.components.find(c => c.componentName === 'Final Exam');
       if (comp && comp.maxMark) return parseFloat(comp.maxMark);
