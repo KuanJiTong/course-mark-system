@@ -55,7 +55,6 @@ export default {
     const userData = sessionStorage.getItem('user');
     if (userData) {
       this.userSession = JSON.parse(userData);
-      console.log('User session loaded:', this.userSession);
     } else {
       console.log('No user session found');
     }
@@ -70,26 +69,19 @@ export default {
   },
   methods: {
     toggleDropdown() {
-      console.log('Toggle dropdown clicked');
       this.isDropdownOpen = !this.isDropdownOpen;
     },
     logout() {
-      console.log('=== LOGOUT METHOD STARTED ===');
-      console.log('Logout method called');
       
-      // Clear session data
       sessionStorage.removeItem('jwt');
       sessionStorage.removeItem('user');
-      
-      console.log('Session data cleared');
+      localStorage.removeItem('selectedSectionId')
       
       // Close dropdown
       this.isDropdownOpen = false;
       
       // Redirect to login page with logout parameter
-      this.$router.push({ path: '/login', query: { logout: 'true' } });
-      
-      console.log("Logged out successfully");
+      this.$router.push({ path: '/login', query: { logout: 'true' } });      
     },
   },
 };

@@ -86,7 +86,6 @@ export default {
         const res = await fetch(`http://localhost:3000/advisor/advisees?advisor_id=${this.advisorId}`);
         if (!res.ok) throw new Error('Failed to fetch advisees');
         this.advisees = await res.json();
-        console.log('Fetched advisees:', this.advisees);
       } catch (error) {
         console.error('Error fetching advisees:', error);
         this.errorMessage = 'Failed to load advisees.';
@@ -115,7 +114,6 @@ export default {
       this.adviseeMarks = [];
       if (this.filteredSections.length) {
         this.selectedSectionId = this.filteredSections[0].section_id;
-        console.log('Auto-selected section:', this.selectedSectionId, this.filteredSections[0]);
         await this.fetchAveragesAndMarks();
       } else {
         this.selectedSectionId = '';
@@ -123,11 +121,6 @@ export default {
     },
     async fetchAveragesAndMarks() {
       if (!this.selectedAdviseeId || !this.selectedCourseId || !this.selectedSectionId) return;
-      console.log('Fetching averages and marks for', {
-        adviseeId: this.selectedAdviseeId,
-        courseId: this.selectedCourseId,
-        sectionId: this.selectedSectionId
-      });
       await this.fetchAverages();
       await this.fetchAdviseeMarks();
     },

@@ -86,7 +86,6 @@ export default {
       if (userData) {
         const user = JSON.parse(userData);
         this.lecturerID = user.user_id;
-        console.log('Authenticated lecturer ID for enrollment management:', this.lecturerID);
         return true;
       }
       return false;
