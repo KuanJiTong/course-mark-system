@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jul 20, 2025 at 11:47 AM
+-- Generation Time: Jul 21, 2025 at 10:44 AM
 -- Server version: 11.5.2-MariaDB
 -- PHP Version: 8.0.30
 
@@ -61,7 +61,8 @@ CREATE TABLE `components` (
 INSERT INTO `components` (`component_id`, `section_id`, `component_name`, `max_mark`) VALUES
 (1, 1, 'Assignment', 10.00),
 (2, 1, 'Quiz', 20.00),
-(3, 1, 'Midterm', 30.00);
+(3, 1, 'Midterm', 30.00),
+(6, 2, 'Quiz 1', 30.00);
 
 -- --------------------------------------------------------
 
@@ -85,7 +86,7 @@ CREATE TABLE `courses` (
 
 INSERT INTO `courses` (`course_id`, `course_code`, `course_name`, `faculty_id`, `credit`, `max_cm`, `max_fm`) VALUES
 (1, 'SECJ3483', 'WEB TECHNOLOGY', 1, 3, 60, 40),
-(2, 'SECJ3623', 'MOBILE APPLICATION PROGRAMMING', 1, 3, NULL, NULL),
+(2, 'SECJ3623', 'MOBILE APPLICATION PROGRAMMING', 1, 3, 10, 90),
 (3, 'SECJ3563', 'COMPUTATIONAL INTELLIGENCE', 1, 3, NULL, NULL);
 
 -- --------------------------------------------------------
@@ -107,8 +108,7 @@ CREATE TABLE `enrollment` (
 INSERT INTO `enrollment` (`enrollment_id`, `student_id`, `section_id`) VALUES
 (1, 1, 1),
 (2, 2, 1),
-(3, 26, 1),
-(4, 3, 1);
+(3, 26, 1);
 
 -- --------------------------------------------------------
 
@@ -150,7 +150,6 @@ CREATE TABLE `final_exam` (
 INSERT INTO `final_exam` (`exam_id`, `student_id`, `section_id`, `mark`) VALUES
 (2, 1, 1, 30.00),
 (3, 2, 1, 25.00),
-(4, 3, 1, 26.00),
 (5, 26, 1, 27.00);
 
 -- --------------------------------------------------------
@@ -175,7 +174,7 @@ INSERT INTO `lecturers` (`lecturer_id`, `user_id`, `title`, `staff_no`, `departm
 (1, 9, 'Dr.', 'S001', 'Software Engineering'),
 (2, 10, 'Prof. Madya Dr.', 'S002', 'Software Engineering'),
 (3, 11, 'Assoc. Prof.', 'S003', 'Computer Science'),
-(4, 102, 'Dr.', 'lecturer102', 'Physics');
+(7, 107, 'Mr.', 'S004', NULL);
 
 -- --------------------------------------------------------
 
@@ -201,9 +200,6 @@ INSERT INTO `marks` (`mark_id`, `student_id`, `component_id`, `mark`) VALUES
 (4, 2, 1, 9.00),
 (5, 2, 2, 12.00),
 (6, 2, 3, 20.00),
-(7, 3, 1, 7.00),
-(8, 3, 2, 14.00),
-(9, 3, 3, 22.00),
 (10, 26, 1, 8.00);
 
 -- --------------------------------------------------------
@@ -401,9 +397,9 @@ INSERT INTO `users` (`user_id`, `login_id`, `name`, `email`, `password`, `facult
 (44, 'A22EC0131', 'Nadiah Binti Zahid', 'nadiah@graduate.utm.my', '$2y$10$r74wUdWpNke7QQU7z1IzKubszWxHo4xMh4moMRq/h7AbQ1iDxrep6', 1, '2025-06-13 21:38:44'),
 (45, 'A22EC0132', 'Yap Qi Ming', 'qiming@graduate.utm.my', '$2y$10$wL4pX7w3rnRBp.nuInQYg.TTD1UqtrDdyw8o5oTd.ja1WeoPZ/Otm', 1, '2025-06-13 21:40:44'),
 (46, 'A22EC0002', 'Bob Student', 'bob@student.edu', 'hashedpassword', 1, '2025-06-20 22:30:13'),
-(102, 'lecturer10', 'Dr. John Smith', 'lecturer102@example.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 1, '2025-06-25 06:22:50'),
 (104, 'student104', 'Alice Brown', 'student104@example.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 1, '2025-06-25 06:22:50'),
-(106, 'A001', 'Admin 1', 'admin1@gmail.com', '$2y$10$SK/j5XAxk7ZDsu8hKPDD5usc4kQQE0XZxkiRCByRGed5V3NQ6Cowy', 1, '2025-07-07 04:19:51');
+(106, 'A001', 'Admin 1', 'admin1@gmail.com', '$2y$10$SK/j5XAxk7ZDsu8hKPDD5usc4kQQE0XZxkiRCByRGed5V3NQ6Cowy', 1, '2025-07-07 04:19:51'),
+(107, 'S004', 'Muhammad You Tan bin Seck Tan', 'youtan@graduate.utm.my', '$2y$10$5/X87Ga95AwX/oqQHYczWOxstI9s5qezQoPg7IAJBEpg9dqZ4/IrS', 1, '2025-07-21 16:28:13');
 
 -- --------------------------------------------------------
 
@@ -425,7 +421,7 @@ INSERT INTO `user_roles` (`user_id`, `role_id`) VALUES
 (9, 2),
 (10, 2),
 (11, 2),
-(102, 2),
+(107, 2),
 (9, 3),
 (8, 4),
 (12, 4),
@@ -584,7 +580,7 @@ ALTER TABLE `user_roles`
 -- AUTO_INCREMENT for table `components`
 --
 ALTER TABLE `components`
-  MODIFY `component_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `component_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT for table `courses`
@@ -596,7 +592,7 @@ ALTER TABLE `courses`
 -- AUTO_INCREMENT for table `enrollment`
 --
 ALTER TABLE `enrollment`
-  MODIFY `enrollment_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `enrollment_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
 
 --
 -- AUTO_INCREMENT for table `faculty`
@@ -614,7 +610,7 @@ ALTER TABLE `final_exam`
 -- AUTO_INCREMENT for table `lecturers`
 --
 ALTER TABLE `lecturers`
-  MODIFY `lecturer_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `lecturer_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT for table `marks`
@@ -650,7 +646,7 @@ ALTER TABLE `students`
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `user_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=107;
+  MODIFY `user_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=108;
 
 --
 -- Constraints for dumped tables
@@ -693,35 +689,35 @@ ALTER TABLE `final_exam`
 -- Constraints for table `lecturers`
 --
 ALTER TABLE `lecturers`
-  ADD CONSTRAINT `lecturers_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`);
+  ADD CONSTRAINT `lecturers_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Constraints for table `marks`
 --
 ALTER TABLE `marks`
-  ADD CONSTRAINT `marks_ibfk_1` FOREIGN KEY (`student_id`) REFERENCES `students` (`student_id`),
-  ADD CONSTRAINT `marks_ibfk_2` FOREIGN KEY (`component_id`) REFERENCES `components` (`component_id`);
+  ADD CONSTRAINT `marks_ibfk_1` FOREIGN KEY (`student_id`) REFERENCES `students` (`student_id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `marks_ibfk_2` FOREIGN KEY (`component_id`) REFERENCES `components` (`component_id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Constraints for table `remark_requests`
 --
 ALTER TABLE `remark_requests`
-  ADD CONSTRAINT `remark_requests_ibfk_1` FOREIGN KEY (`student_id`) REFERENCES `students` (`student_id`),
-  ADD CONSTRAINT `remark_requests_ibfk_3` FOREIGN KEY (`section_id`) REFERENCES `sections` (`section_id`),
-  ADD CONSTRAINT `remark_requests_ibfk_4` FOREIGN KEY (`component_id`) REFERENCES `components` (`component_id`);
+  ADD CONSTRAINT `remark_requests_ibfk_1` FOREIGN KEY (`student_id`) REFERENCES `students` (`student_id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `remark_requests_ibfk_3` FOREIGN KEY (`section_id`) REFERENCES `sections` (`section_id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `remark_requests_ibfk_4` FOREIGN KEY (`component_id`) REFERENCES `components` (`component_id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Constraints for table `sections`
 --
 ALTER TABLE `sections`
-  ADD CONSTRAINT `fk_section_lecturer_1` FOREIGN KEY (`lecturer_id`) REFERENCES `lecturers` (`lecturer_id`),
+  ADD CONSTRAINT `fk_section_lecturer_1` FOREIGN KEY (`lecturer_id`) REFERENCES `lecturers` (`lecturer_id`) ON DELETE SET NULL,
   ADD CONSTRAINT `sections_ibfk_1` FOREIGN KEY (`course_id`) REFERENCES `courses` (`course_id`);
 
 --
 -- Constraints for table `students`
 --
 ALTER TABLE `students`
-  ADD CONSTRAINT `students_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`);
+  ADD CONSTRAINT `students_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Constraints for table `users`
